@@ -4,13 +4,29 @@
     <head>
         <meta charset="utf-8" />
         <title>TownBuilder</title>
+        <link rel="stylesheet" type="text/css" href="stylesheet.css"></script>
+        <script src="//ajax.googleapis.com/ajax/libs/jquery/1.10.2/jquery.min.js" ></script>
         <script src="main.js"></script>
     </head>
     <body>
+        <script>
+            /// <reference path="scripts/jquery-1.10.2-vsdoc.js" />
+        </script>
         <div>
-            Logs: <div id="logs">0</div><button onClick="resource.rawMaterial.logs.add(1)">Get Wood</button>
+            <div>
+                Logs: <span id="logs">0</span><button onClick="resource.rawMaterial.logs.add(1)">Get Wood</button>
+            </div>
+            <div>
+                Stone: <span id="stone">0</span><button onClick="resource.rawMaterial.stone.add(1)">Get Stone</button>
+            </div>
+            <div>
+                Clay: <span id="clay">0</span><button onClick="resource.rawMaterial.clay.add(1)">Get Clay</button>
+            </div>
         </div>
-        <div id="stone">0</div><button onClick="resource.rawMaterial.stone.add(1)">Get Stone</button>
-        <div id="clay"></div>
+
+        <div id="debug">
+            <div style="height: 22px"><div id="debug-button">Debug</div></div>
+            <div id="debug-div">Blah content</div>
+        </div>
     </body>
 </html>

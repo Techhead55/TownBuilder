@@ -1,0 +1,34 @@
+body {
+}
+
+#debug {
+    display: none;
+    position: fixed;
+    right: 0px;
+    bottom: 0px;
+    min-width: 152px;
+    min-height: 22px;
+}
+
+#debug-button {
+    display: block;
+    position: absolute;
+    width: 150px;
+    height: 20px;
+    right: 0px;
+    background: #808080;
+    color: #ffffff;
+    text-align: center;
+    border: 1px solid #000000;
+    border-top-left-radius: 5px;
+    border-top-right-radius: 5px;
+}
+
+#debug-div {
+    display: none;
+    background-color: #cdcdcd;
+    width: 250px;
+    height: 250px;
+    float: left;
+}
+

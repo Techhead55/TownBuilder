@@ -1,4 +1,7 @@
-﻿// ================================
+﻿/// <reference path="scripts/jquery-1.10.2-vsdoc.js" />
+
+
+// ================================
 //   RESOURCES
 // ================================
 
@@ -90,3 +93,17 @@ var resource = {
 //   RENDERING
 // ================================
 
+
+// Debugging Menu
+
+var debugMenu = true;
+
+$(document).ready(function () {
+    $("#debug-button").click(function () {
+        $("#debug-div").slideToggle("slow");
+    });
+
+    if (debugMenu == true){
+        $("#debug").css("display", "block");
+    };
+});

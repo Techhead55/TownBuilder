@@ -1,5 +1,25 @@
 ﻿/// <reference path="scripts/jquery-1.10.2-vsdoc.js" />
 
+// ================================
+//   ENGINE
+// ================================
+
+// Options
+
+var options = {
+    debugMenu: true
+};
+
+// Day Controller
+
+var dayCount = 0
+var dayTimer = setInterval(dailyFunctions, 15000)
+
+function dailyFunctions(){
+    dailyIncome()
+    dayCount++
+    console.log("Day " + dayCount)
+};
 
 // ================================
 //   RESOURCES
@@ -7,35 +27,45 @@
 
 // Resource constructors
 
-function resourceMethods(){
-    this.add = function (num) {
-        this.amount += num;
-        document.getElementById(this.idName).innerHTML = this.amount;
-    };
-
-};
-
 function createResource(publicName, idName, amountCap) {
+    // Name handlers
     this.publicName = publicName;
     this.idName = idName;
+    // Economics
+    this.income = 5;
+    this.expense = 0;
+    this.profit = this.income - this.expense;
+    // Storage
     this.amount = 0;
     this.amountCap = amountCap;
-    console.log("Created " + this.idName);
+    var remainingSpace = this.amountCap - this.amount;
+    var full = false;
 
-    //  Methods
+    console.log("Created " + this.idName); // Debug to check if created
+
+    // Methods
+    // Add an amount to the amount
     this.add = function (num) {
-        this.amount += num;
-        document.getElementById(this.idName).innerHTML = this.amount;
+        if (full == false) {
+            if (remainingSpace == 0) {
+                full = true;
+                return false;
+            } else if (num < remainingSpace) {
+                this.amount += num;
+                document.getElementById(this.idName).innerHTML = this.amount;
+                return true;
+            } else {
+                this.amount += remainingSpace;
+                document.getElementById(this.idName).innerHTML = this.amount;
+                return true;
+            };
+        };
     };
 
     this.subtract = function (num) {
         this.amount -= num;
         document.getElementById(this.idName).innerHTML = this.amount;
     };
-};
-
-function createRawMaterial(){
-    this.income = 0;
 };
 
 var resource = {
@@ -74,8 +104,7 @@ var resource = {
         lead: new createResource("Lead Ingot", "ingotLead", 200),
         silver: new createResource("Silver Ingot", "ingotSilver", 200),
         steel: new createResource("Steel Ingot", "ingotSteel", 200),
-        tin: new createResource("Tin Ingot", "ingotTin", 200),
-        zinc: new createResource("Zinc Ingot", "ingotZinc", 200)
+        tin: new createResource("Tin Ingot", "ingotTin", 200)
     },
     rawFood: {
         grainBarley: new createResource("Barley Grain", "grainBarley", 200),
@@ -89,6 +118,12 @@ var resource = {
     }
 };
 
+// Daily Income
+
+var dailyIncome = function () {
+    resource.rawMaterial.logs.add(resource.rawMaterial.logs.profit)
+};
+
 // ================================
 //   RENDERING
 // ================================
@@ -96,14 +131,12 @@ var resource = {
 
 // Debugging Menu
 
-var debugMenu = true;
-
 $(document).ready(function () {
     $("#debug-button").click(function () {
         $("#debug-div").slideToggle("slow");
     });
 
-    if (debugMenu == true){
+    if (options.debugMenu == true){
         $("#debug").css("display", "block");
     };
 });

@@ -27,8 +27,8 @@ body {
 #debug-div {
     display: none;
     background-color: #cdcdcd;
-    width: 250px;
-    height: 250px;
+    width: fit-content;
+    height: fit-content;
     float: left;
 }
 

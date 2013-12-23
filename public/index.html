@@ -14,19 +14,23 @@
         </script>
         <div>
             <div>
-                Logs: <span id="logs">0</span><button onClick="resource.rawMaterial.logs.add(1)">Get Wood</button>
+                Logs: <span id="logs">0</span>
             </div>
             <div>
-                Stone: <span id="stone">0</span><button onClick="resource.rawMaterial.stone.add(1)">Get Stone</button>
+                Stone: <span id="stone">0</span>
             </div>
             <div>
-                Clay: <span id="clay">0</span><button onClick="resource.rawMaterial.clay.add(1)">Get Clay</button>
+                Clay: <span id="clay">0</span>
             </div>
         </div>
 
         <div id="debug">
             <div style="height: 22px"><div id="debug-button">Debug</div></div>
-            <div id="debug-div">Blah content</div>
+            <div id="debug-div">
+                <button onClick="resource.rawMaterial.logs.add(45)">Get Wood</button>
+                <button onClick="resource.rawMaterial.stone.add(100)">Get Stone</button>
+                <button onClick="resource.rawMaterial.clay.add(100)">Get Clay</button>
+            </div>
         </div>
     </body>
 </html>

@@ -57,6 +57,7 @@ function createResource(publicName, idName, amountCap) {
         } else {
             this.amount += num;
         };
+        this.render();
     };
 
     // Subtract from the amount

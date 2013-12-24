@@ -10,12 +10,35 @@ var options = {
     debugMenu: true
 };
 
+// Countdown Timer
+function countdown(elementID, fn, seconds){
+    var seconds = seconds;
+    var interval = setInterval(function () {
+        var minutes = Math.round((seconds - 30) / 60);
+        var remainingSeconds = seconds % 60;
+        if (remainingSeconds < 10) {
+            remainingSeconds = "0" + remainingSeconds;
+        }
+        document.getElementById(elementID).innerHTML = minutes + ":" + remainingSeconds;
+        if (seconds == 0) {
+            clearInterval(interval);
+            fn();
+        } else {
+            seconds--;
+        };
+    }, 1000)
+};
+
 // Day Controller
 
 var dayCount = 0
-//var dayTimer = setInterval(dailyFunctions, 15000)
+window.onload = function () {
+    countdown("dayTimer", dailyFunctions, 15);
+    countdown("nightTimer", dailyFunctions, 60);
+}
 
 function dailyFunctions(){
+    countdown("dayTimer", dailyFunctions, 15);
     dailyIncome()
     dayCount++
     console.log("Day " + dayCount)
@@ -27,7 +50,7 @@ function dailyFunctions(){
 
 // Resource constructors
 
-function createResource(publicName, idName, amountCap) {
+function resource(publicName, idName, amountCap) {
     
     // Name handlers
     this.publicName = publicName;
@@ -61,59 +84,62 @@ function createResource(publicName, idName, amountCap) {
     };
 
     // Subtract from the amount
-//    this.subtract = function (num) {
-//        this.amount -= num;
-//        document.getElementById(this.idName).innerHTML = this.amount;
-//    };
+    this.subtract = function (num) {
+        if (this.amount >= num) {
+            this.amount -= num;
+        } else {
+            return false;
+        };
+    };
 };
 
 var resource = {
     rawMaterial: {
-        clay: new createResource("Clay", "clay", 200),
-        logs: new createResource("Logs", "logs", 200),
-        stone: new createResource("Uncut Stone", "stone", 200)
+        clay: new resource("Clay", "clay", 200),
+        logs: new resource("Logs", "logs", 200),
+        stone: new resource("Uncut Stone", "stone", 200)
     },
     construction: {
-        planks: new createResource("Planks", "planks", 200),
-        stoneBricks: new createResource("Stone Bricks", "stoneBricks", 200),
-        clayBricks: new createResource("Clay Bricks", "clayBricks", 200)
+        planks: new resource("Planks", "planks", 200),
+        stoneBricks: new resource("Stone Bricks", "stoneBricks", 200),
+        clayBricks: new resource("Clay Bricks", "clayBricks", 200)
     },
     fuel: {
-        firewood: new createResource("Firewood", "firewood", 200),
-        charcoal: new createResource("Charcoal", "charcoal", 200),
-        coal: new createResource("Coal", "coal", 200),
-        coalCoke: new createResource("Coal Coke", "coalCoke", 200),
-        peat: new createResource("Peat", "peat", 200)
+        firewood: new resource("Firewood", "firewood", 200),
+        charcoal: new resource("Charcoal", "charcoal", 200),
+        coal: new resource("Coal", "coal", 200),
+        coalCoke: new resource("Coal Coke", "coalCoke", 200),
+        peat: new resource("Peat", "peat", 200)
     },
     ore: {
-        cinnabar: new createResource("Cinnabar Ore", "oreCinnabar", 200),
-        copper: new createResource("Copper Ore", "oreCopper", 200),
-        galena: new createResource("Galena Ore", "oreGalena", 200),
-        gold: new createResource("Gold Ore", "oreGold", 200),
-        iron: new createResource("Iron Ore", "oreIron", 200),
-        silver: new createResource("Silver Ore", "oreSilver", 200),
-        tin: new createResource("Tin Ore", "oreTin", 200)
+        cinnabar: new resource("Cinnabar Ore", "oreCinnabar", 200),
+        copper: new resource("Copper Ore", "oreCopper", 200),
+        galena: new resource("Galena Ore", "oreGalena", 200),
+        gold: new resource("Gold Ore", "oreGold", 200),
+        iron: new resource("Iron Ore", "oreIron", 200),
+        silver: new resource("Silver Ore", "oreSilver", 200),
+        tin: new resource("Tin Ore", "oreTin", 200)
     },
     ingot: {
-        brass: new createResource("Brass Ingot", "ingotBrass", 200),
-        bronze: new createResource("Bronze Ingot", "ingotBronze", 200),
-        copper: new createResource("Copper Ingot", "ingotCopper", 200),
-        gold: new createResource("Gold Ingot", "ingotGold", 200),
-        iron: new createResource("Iron Ingot", "ingotIron", 200),
-        lead: new createResource("Lead Ingot", "ingotLead", 200),
-        silver: new createResource("Silver Ingot", "ingotSilver", 200),
-        steel: new createResource("Steel Ingot", "ingotSteel", 200),
-        tin: new createResource("Tin Ingot", "ingotTin", 200)
+        brass: new resource("Brass Ingot", "ingotBrass", 200),
+        bronze: new resource("Bronze Ingot", "ingotBronze", 200),
+        copper: new resource("Copper Ingot", "ingotCopper", 200),
+        gold: new resource("Gold Ingot", "ingotGold", 200),
+        iron: new resource("Iron Ingot", "ingotIron", 200),
+        lead: new resource("Lead Ingot", "ingotLead", 200),
+        silver: new resource("Silver Ingot", "ingotSilver", 200),
+        steel: new resource("Steel Ingot", "ingotSteel", 200),
+        tin: new resource("Tin Ingot", "ingotTin", 200)
     },
     rawFood: {
-        grainBarley: new createResource("Barley Grain", "grainBarley", 200),
-        grainWheat: new createResource("Wheat Grain", "grainWheat", 200)
+        grainBarley: new resource("Barley Grain", "grainBarley", 200),
+        grainWheat: new resource("Wheat Grain", "grainWheat", 200)
     },
     ingredient: {
-        flourWheat: new createResource("Wheat Flour", "flourWheat", 200)
+        flourWheat: new resource("Wheat Flour", "flourWheat", 200)
     },
     cookedFood: {
-        bread: new createResource("Bread", "bread", 200)
+        bread: new resource("Bread", "bread", 200)
     }
 };
 

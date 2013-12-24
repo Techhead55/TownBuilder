@@ -13,7 +13,7 @@ var options = {
 // Day Controller
 
 var dayCount = 0
-var dayTimer = setInterval(dailyFunctions, 15000)
+//var dayTimer = setInterval(dailyFunctions, 15000)
 
 function dailyFunctions(){
     dailyIncome()
@@ -28,44 +28,42 @@ function dailyFunctions(){
 // Resource constructors
 
 function createResource(publicName, idName, amountCap) {
+    
     // Name handlers
     this.publicName = publicName;
     this.idName = idName;
+    
     // Economics
     this.income = 5;
     this.expense = 0;
     this.profit = this.income - this.expense;
+    
     // Storage
     this.amount = 0;
     this.amountCap = amountCap;
-    var remainingSpace = this.amountCap - this.amount;
-    var full = false;
 
     console.log("Created " + this.idName); // Debug to check if created
 
     // Methods
-    // Add an amount to the amount
+    // Render the object
+    this.render = function () {
+        document.getElementById(this.idName).innerHTML = this.amount;
+    };
+
+    // Add to the amount
     this.add = function (num) {
-        if (full == false) {
-            if (remainingSpace == 0) {
-                full = true;
-                return false;
-            } else if (num < remainingSpace) {
-                this.amount += num;
-                document.getElementById(this.idName).innerHTML = this.amount;
-                return true;
-            } else {
-                this.amount += remainingSpace;
-                document.getElementById(this.idName).innerHTML = this.amount;
-                return true;
-            };
+        if (this.amount + num > this.amountCap) {
+            this.amount = this.amountCap;
+        } else {
+            this.amount += num;
         };
     };
 
-    this.subtract = function (num) {
-        this.amount -= num;
-        document.getElementById(this.idName).innerHTML = this.amount;
-    };
+    // Subtract from the amount
+//    this.subtract = function (num) {
+//        this.amount -= num;
+//        document.getElementById(this.idName).innerHTML = this.amount;
+//    };
 };
 
 var resource = {
@@ -114,7 +112,7 @@ var resource = {
         flourWheat: new createResource("Wheat Flour", "flourWheat", 200)
     },
     cookedFood: {
-        bread: new createResource("Bread", "bread")
+        bread: new createResource("Bread", "bread", 200)
     }
 };
 

@@ -12,7 +12,7 @@ var options = {
 
 // Countdown Timer
 function countdown(elementID, fn, seconds){
-    var seconds = seconds;
+    var seconds = seconds-1;
     var interval = setInterval(function () {
         var minutes = Math.round((seconds - 30) / 60);
         var remainingSeconds = seconds % 60;
@@ -34,7 +34,6 @@ function countdown(elementID, fn, seconds){
 var dayCount = 0
 window.onload = function () {
     countdown("dayTimer", dailyFunctions, 15);
-    countdown("nightTimer", dailyFunctions, 60);
 }
 
 function dailyFunctions(){
@@ -57,7 +56,7 @@ function resource(publicName, idName, amountCap) {
     this.idName = idName;
     
     // Economics
-    this.income = 5;
+    this.income = 0;
     this.expense = 0;
     this.profit = this.income - this.expense;
     

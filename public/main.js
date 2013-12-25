@@ -31,7 +31,8 @@ function countdown(elementID, fn, seconds){
 
 // Day Controller
 
-var dayCount = 0
+var dayCount = 0;
+
 window.onload = function () {
     countdown("dayTimer", dailyFunctions, 15);
 }
@@ -42,6 +43,11 @@ function dailyFunctions(){
     dayCount++
     console.log("Day " + dayCount)
 };
+
+// Population
+
+var population = 0;
+var totalPopulation = //TODO: Add calculated value of all housing;
 
 // ================================
 //   RESOURCES
@@ -147,6 +153,78 @@ var resource = {
 var dailyIncome = function () {
     resource.rawMaterial.logs.add(resource.rawMaterial.logs.profit)
 };
+
+// ================================
+//   BUILDINGS
+// ================================
+
+// Producers - Provides resources
+
+function buildingWork(publicName, idName, workerCap){
+    this.publicName = publicName;
+    this.idName = idName;
+
+    this.amount = 0;
+    this.worker = 0;
+    this.baseWorkerCap = workerCap;
+    this.totalWorkerCap = this.baseWorkerCap * this.amount;
+
+    // Methods
+    this.add = function (num) {
+        this.amount += num;
+    };
+
+    this.addWorker = function (num) {
+        if (this.worker + num > this.totalWorkerCap) {
+            this.worker = this.totalWorkerCap;
+        } else {
+            this.worker += num;
+        };
+    };
+
+    this.subtractWorker = function (num) {
+        if (this.worker >= num) {
+            this.worker -= num;
+        } else {
+            return false;
+        };
+    };
+};
+
+var buildingWork = {
+    
+    mine: {
+        copper: new buildingWork("Copper Mine", "mineCopper"),
+        galena: new buildingWork("Lead Mine", "mineGalena"),
+        gold: new buildingWork("Gold Mine", "mineGold"),
+        iron: new buildingWork("Iron Mine", "mineIron"),
+        silver: new buildingWork("Silver Mine", "mineSilver"),
+        tin: new buildingWork("Tin Mine", "mineTine")
+    }
+};
+
+// Housing - Provides population
+
+function buildingHouse(publicName, idName, basePop){
+    this.publicName = publicName;
+    this.idName = idName;
+
+    this.amount = 0;
+    this.basePop = basePop;
+    this.totalPop = this.basePop * this.amount;
+
+    //Methods
+    this.add = function (num) {
+        this.amount += num;
+    };
+};
+
+var buildingHouse = {
+    tentSmall: new buildingHouse("Small Tent", "tentSmall", 1),
+    tentLarge: new buildingHouse("Large Tent", "tentLarge", 2),
+    hutSmall: new buildingHouse("Small Hut", "hutSmall", 4)
+};
+
 
 // ================================
 //   RENDERING

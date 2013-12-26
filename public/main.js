@@ -41,13 +41,20 @@ function dailyFunctions(){
     countdown("dayTimer", dailyFunctions, 15);
     dailyIncome()
     dayCount++
-    console.log("Day " + dayCount)
 };
 
 // Population
 
-var population = 0;
-var totalPopulation = //TODO: Add calculated value of all housing;
+var currentPopulation = 0;
+var totalPopulation = 0;
+
+function calculatePopulation(){
+    for(var key in buildingHouse){
+        totalPopulation = buildingHouse[key].amount * buildingHouse[key].basePop;
+        console.log(buildingHouse[key].publicName + "s population: " + (buildingHouse[key].amount * buildingHouse[key].basePop));
+    };
+    console.log("Total: " + totalPopulation);
+};
 
 // ================================
 //   RESOURCES
@@ -69,8 +76,6 @@ function resource(publicName, idName, amountCap) {
     // Storage
     this.amount = 0;
     this.amountCap = amountCap;
-
-    console.log("Created " + this.idName); // Debug to check if created
 
     // Methods
     // Render the object
@@ -211,11 +216,13 @@ function buildingHouse(publicName, idName, basePop){
 
     this.amount = 0;
     this.basePop = basePop;
-    this.totalPop = this.basePop * this.amount;
 
     //Methods
     this.add = function (num) {
         this.amount += num;
+        console.log("Total " + this.publicName + "s: " + this.amount);
+        console.log("Total population from " + this.publicName + ": " + (this.amount * this.basePop));
+        calculatePopulation();
     };
 };
 

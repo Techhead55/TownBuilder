@@ -48,10 +48,12 @@ function dailyFunctions(){
 var currentPopulation = 0;
 var totalPopulation = 0;
 
-function calculatePopulation(){
+function calculateHousing(){
+    totalPopulation = 0;
     for(var key in buildingHouse){
-        totalPopulation = buildingHouse[key].amount * buildingHouse[key].basePop;
-        console.log(buildingHouse[key].publicName + "s population: " + (buildingHouse[key].amount * buildingHouse[key].basePop));
+        var totalPop = buildingHouse[key].amount * buildingHouse[key].basePop;
+        totalPopulation += totalPop;
+        console.log(buildingHouse[key].publicName + "s population: " + totalPop);
     };
     console.log("Total: " + totalPopulation);
 };
@@ -216,13 +218,14 @@ function buildingHouse(publicName, idName, basePop){
 
     this.amount = 0;
     this.basePop = basePop;
+    //this.popModifier = 0; TODO: Add tech tree modifiers here
 
     //Methods
     this.add = function (num) {
         this.amount += num;
         console.log("Total " + this.publicName + "s: " + this.amount);
         console.log("Total population from " + this.publicName + ": " + (this.amount * this.basePop));
-        calculatePopulation();
+        calculateHousing();
     };
 };
 

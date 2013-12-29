@@ -12,7 +12,9 @@
         <script>
             /// <reference path="scripts/jquery-1.10.2-vsdoc.js" />
         </script>
-        <div id="dayTimer"></div>
+        <div id="dayTimer" style="display: inline"></div>
+        <div id="populationCurrent" style="display: inline"></div>
+        <div id="populationTotal" style="display: inline"></div>
         <div>
             <h3>Resources</h3>
             <div id="logs"></div>
@@ -29,9 +31,9 @@
 
         <div>
             <h3>Production</h3>
-            <div id="campLogs"></div>
-            <div id="campStone"></div>
-            <div id="campClay"></div>
+            <div><div id="campLogs" style="display: inline"></div> <button onclick="buildingWork.primary.campLogs.addWorker(1)">+</button> <button onclick="buildingWork.primary.campLogs.subtractWorker(1)">-</button></div>
+            <div><div id="campStone" style="display: inline"></div> <button onclick="buildingWork.primary.campStone.addWorker(1)">+</button> <button onclick="buildingWork.primary.campStone.subtractWorker(1)">-</button></div>
+            <div><div id="campClay" style="display: inline"></div> <button onclick="buildingWork.primary.campClay.addWorker(1)">+</button> <button onclick="buildingWork.primary.campClay.subtractWorker(1)">-</button></div>
         </div>
 
         <div id="debug">
@@ -44,6 +46,10 @@
                 <button onClick="buildingHouse.tentSmall.add(1)">Build Small Tent</button>
                 <button onClick="buildingHouse.tentLarge.add(1)">Build Large Tent</button>
                 <button onclick="buildingHouse.hutSmall.add(1)">Build Small Hut</button>
+                <br />
+                <button onclick="buildingWork.primary.campLogs.add(1)">Build Lumber Camp</button>
+                <button onclick="buildingWork.primary.campStone.add(1)">Build Stone Quarry</button>
+                <button onclick="buildingWork.primary.campClay.add(1)">Build Clay Pit</button>
             </div>
         </div>
     </body>

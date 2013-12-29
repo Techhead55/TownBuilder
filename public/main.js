@@ -33,10 +33,6 @@ function countdown(elementID, fn, seconds){
 
 var dayCount = 0;
 
-//window.onload = function () {
-//    countdown("dayTimer", dailyFunctions, 15);
-//}
-
 function dailyFunctions(){
     countdown("dayTimer", dailyFunctions, 15);
     dailyIncome()
@@ -57,16 +53,18 @@ function calculateHousing(){
         console.log(buildingHouse[key].publicName + "s population: " + totalPop);
     };
     console.log("Total: " + populationTotal);
+    document.getElementById("populationTotal").innerHTML = "Total: " + populationTotal;
 };
 
 function calculateWorkers(){
     populationCurrent = 0;
     for (var key in buildingWork){
-        for (var subkey in key){
-            populationCurrent += buildingWork[key[subkey]].worker;
-            console.log(buildingWork[key[subkey]].publicName + "'s workers: " + buildingWork[key[subkey]].worker);
+        for (var subkey in buildingWork[key]){
+            populationCurrent += buildingWork[key][subkey].worker;
+            console.log(buildingWork[key][subkey].publicName + "'s workers: " + buildingWork[key][subkey].worker);
         };
     };
+    document.getElementById("populationCurrent").innerHTML = "Current: " + populationCurrent;
 };
 
 // ================================
@@ -200,13 +198,14 @@ function buildingWork(publicName, idName, workerCap, incomeResource, expenseReso
     };
 
     this.addWorker = function (num) {
-        if (num <= populationLabourer) {
-            if (this.worker + num > this.totalWorkerCap) {
-                this.worker = this.totalWorkerCap;
+        if (num <= populationTotal - populationCurrent) {
+            if (this.worker + num > this.amount * this.baseWorkerCap) {
+                this.worker = this.amount * this.baseWorkerCap;
             } else {
                 this.worker += num;
             };
             calculateWorkers();
+            this.render();
         } else {
             console.log("Not enough spare workers");
             return false;
@@ -220,6 +219,7 @@ function buildingWork(publicName, idName, workerCap, incomeResource, expenseReso
             return false;
         };
         calculateWorkers();
+        this.render();
     };
 };
 
@@ -275,6 +275,9 @@ var buildingHouse = {
 // ================================
 
 function init(){
+    document.getElementById("populationCurrent").innerHTML = "Current: " + populationCurrent;
+    document.getElementById("populationTotal").innerHTML = "Total: " + populationTotal;
+
     for(var key in resource.rawMaterial){
         console.log(key);
         resource.rawMaterial[key].render();

@@ -33,9 +33,9 @@ function countdown(elementID, fn, seconds){
 
 var dayCount = 0;
 
-window.onload = function () {
-    countdown("dayTimer", dailyFunctions, 15);
-}
+//window.onload = function () {
+//    countdown("dayTimer", dailyFunctions, 15);
+//}
 
 function dailyFunctions(){
     countdown("dayTimer", dailyFunctions, 15);
@@ -45,17 +45,28 @@ function dailyFunctions(){
 
 // Population
 
-var currentPopulation = 0;
-var totalPopulation = 0;
+var populationCurrent = 0;
+var populationTotal = 0;
+var populationLabourer = populationTotal - populationCurrent;
 
 function calculateHousing(){
-    totalPopulation = 0;
+    populationTotal = 0;
     for(var key in buildingHouse){
         var totalPop = buildingHouse[key].amount * buildingHouse[key].basePop;
-        totalPopulation += totalPop;
+        populationTotal += totalPop;
         console.log(buildingHouse[key].publicName + "s population: " + totalPop);
     };
-    console.log("Total: " + totalPopulation);
+    console.log("Total: " + populationTotal);
+};
+
+function calculateWorkers(){
+    populationCurrent = 0;
+    for (var key in buildingWork){
+        for (var subkey in key){
+            populationCurrent += buildingWork[key[subkey]].worker;
+            console.log(buildingWork[key[subkey]].publicName + "'s workers: " + buildingWork[key[subkey]].worker);
+        };
+    };
 };
 
 // ================================
@@ -82,7 +93,7 @@ function resource(publicName, idName, amountCap) {
     // Methods
     // Render the object
     this.render = function () {
-        document.getElementById(this.idName).innerHTML = this.amount;
+        document.getElementById(this.idName).innerHTML = this.publicName + ": " + this.amount;
     };
 
     // Add to the amount
@@ -158,7 +169,7 @@ var resource = {
 // Daily Income
 
 var dailyIncome = function () {
-    resource.rawMaterial.logs.add(resource.rawMaterial.logs.profit)
+    //resource.rawMaterial.logs.add(resource.rawMaterial.logs.profit)
 };
 
 // ================================
@@ -167,25 +178,38 @@ var dailyIncome = function () {
 
 // Producers - Provides resources
 
-function buildingWork(publicName, idName, workerCap){
+function buildingWork(publicName, idName, workerCap, incomeResource, expenseResource){
     this.publicName = publicName;
     this.idName = idName;
 
     this.amount = 0;
     this.worker = 0;
     this.baseWorkerCap = workerCap;
-    this.totalWorkerCap = this.baseWorkerCap * this.amount;
+
+    this.incomeResource = incomeResource;
+    this.expenseResource = expenseResource;
 
     // Methods
+    this.render = function () {
+        document.getElementById(this.idName).innerHTML = this.publicName + "s: " + this.amount + " - Workers: " + this.worker + "/" + (this.amount * this.baseWorkerCap);
+    };
+
     this.add = function (num) {
         this.amount += num;
+        this.render();
     };
 
     this.addWorker = function (num) {
-        if (this.worker + num > this.totalWorkerCap) {
-            this.worker = this.totalWorkerCap;
+        if (num <= populationLabourer) {
+            if (this.worker + num > this.totalWorkerCap) {
+                this.worker = this.totalWorkerCap;
+            } else {
+                this.worker += num;
+            };
+            calculateWorkers();
         } else {
-            this.worker += num;
+            console.log("Not enough spare workers");
+            return false;
         };
     };
 
@@ -195,18 +219,23 @@ function buildingWork(publicName, idName, workerCap){
         } else {
             return false;
         };
+        calculateWorkers();
     };
 };
 
 var buildingWork = {
-    
+    primary: {
+        campClay: new buildingWork("Clay Pit", "campClay", 5, [resource.rawMaterial.clay]),
+        campLogs: new buildingWork("Lumber Camp", "campLogs", 5, [resource.rawMaterial.logs]),
+        campStone: new buildingWork("Stone Quarry", "campStone", 5, [resource.rawMaterial.stone])
+    },
     mine: {
-        copper: new buildingWork("Copper Mine", "mineCopper"),
-        galena: new buildingWork("Lead Mine", "mineGalena"),
-        gold: new buildingWork("Gold Mine", "mineGold"),
-        iron: new buildingWork("Iron Mine", "mineIron"),
-        silver: new buildingWork("Silver Mine", "mineSilver"),
-        tin: new buildingWork("Tin Mine", "mineTine")
+        copper: new buildingWork("Copper Mine", "mineCopper", 5, [resource.ore.copper]),
+        galena: new buildingWork("Lead Mine", "mineGalena", 5, [resource.ore.galena]),
+        gold: new buildingWork("Gold Mine", "mineGold", 5, [resource.ore.gold]),
+        iron: new buildingWork("Iron Mine", "mineIron", 5, [resource.ore.iron]),
+        silver: new buildingWork("Silver Mine", "mineSilver", 5, [resource.ore.silver]),
+        tin: new buildingWork("Tin Mine", "mineTine", 5, [resource.ore.tin])
     }
 };
 
@@ -221,11 +250,16 @@ function buildingHouse(publicName, idName, basePop){
     //this.popModifier = 0; TODO: Add tech tree modifiers here
 
     //Methods
+    this.render = function () {
+        document.getElementById(this.idName).innerHTML = this.publicName + "s: " + this.amount + " - Population: " + (this.amount * this.basePop);
+    };
+
     this.add = function (num) {
         this.amount += num;
         console.log("Total " + this.publicName + "s: " + this.amount);
         console.log("Total population from " + this.publicName + ": " + (this.amount * this.basePop));
         calculateHousing();
+        this.render();
     };
 };
 
@@ -240,6 +274,25 @@ var buildingHouse = {
 //   RENDERING
 // ================================
 
+function init(){
+    for(var key in resource.rawMaterial){
+        console.log(key);
+        resource.rawMaterial[key].render();
+    };
+    for (var key in buildingHouse){
+        console.log(key);
+        buildingHouse[key].render();
+    };
+    for (var key in buildingWork.primary){
+        console.log(key);
+        buildingWork.primary[key].render();
+    };
+};
+
+$(document).ready(function () {
+    countdown("dayTimer", dailyFunctions, 15);
+    init();
+});
 
 // Debugging Menu
 

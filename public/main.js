@@ -35,8 +35,8 @@ var dayCount = 0;
 
 function dailyFunctions(){
     countdown("dayTimer", dailyFunctions, 15);
-    dailyIncome();
     dayCount++;
+    dailyIncome();
 };
 
 // Population
@@ -82,7 +82,6 @@ function resource(publicName, idName, amountCap) {
     // Economics
     this.income = 0;
     this.expense = 0;
-    this.profit = this.income - this.expense;
     
     // Storage
     this.amount = 0;
@@ -95,22 +94,37 @@ function resource(publicName, idName, amountCap) {
     };
 
     // Add to the amount
-    this.add = function (num) {
+    this.changeAmount = function (num) {
+        // Change the number to include the changed value "num"
         if (this.amount + num > this.amountCap) {
             this.amount = this.amountCap;
+        } else if (this.amount + num < 0) {
+            this.amount = 0;
         } else {
             this.amount += num;
         };
+
+        // Push the new value to the screen
         this.render();
     };
 
-    // Subtract from the amount
-    this.subtract = function (num) {
-        if (this.amount >= num) {
-            this.amount -= num;
+    // Check amount for crafting recipes
+    this.checkAmount = function (num) {
+        var number = 0;
+        if (num >= 0) {
+            if (num + this.amount > this.amountCap) {
+                number = num + this.amount - this.amountCap;
+            } else {
+                number = 0;
+            };
         } else {
-            return false;
+            if (this.amount + num < 0) {
+                number = Math.abs(this.amount + num);
+            } else {
+                number = 0;
+            };
         };
+        return number;
     };
 };
 
@@ -142,7 +156,7 @@ var resource = {
         tin:            new resource("Tin Ore",         "oreTin",       200)
     },
     ingot: {                       // Public Name       ID Name         Cap
-        brass:          new resource("Brass Ingot",     "ingotBrass",   200),
+        //brass:          new resource("Brass Ingot",     "ingotBrass",   200),
         bronze:         new resource("Bronze Ingot",    "ingotBronze",  200),
         copper:         new resource("Copper Ingot",    "ingotCopper",  200),
         gold:           new resource("Gold Ingot",      "ingotGold",    200),
@@ -167,11 +181,11 @@ var resource = {
 // Daily Income
 
 var dailyIncome = function () {
-    for (var key in resource) {
-        for (var subkey in resource[key]) {
-            resource[key][subkey].add(resource[key][subkey].profit);
-        };
-    };
+    //for (var key in resource) {
+    //    for (var subkey in resource[key]) {
+    //        resource[key][subkey].changeAmount(resource[key][subkey].income - resource[key][subkey].expense);
+    //    };
+    //};
 };
 
 // ================================

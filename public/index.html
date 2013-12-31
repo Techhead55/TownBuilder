@@ -38,9 +38,13 @@
         <div id="debug">
             <div style="height: 22px"><div id="debug-button">Debug</div></div>
             <div id="debug-div">
-                <button onClick="resource.rawMaterial.logs.add(45)">Get Wood</button>
-                <button onClick="resource.rawMaterial.stone.add(100)">Get Stone</button>
-                <button onClick="resource.rawMaterial.clay.add(100)">Get Clay</button>
+                <button onClick="resource.rawMaterial.logs.changeAmount(45)">Get Wood</button>
+                <button onClick="resource.rawMaterial.stone.changeAmount(100)">Get Stone</button>
+                <button onClick="resource.rawMaterial.clay.changeAmount(100)">Get Clay</button>
+                <br />
+                <button onClick="resource.rawMaterial.logs.changeAmount(-45)">Use Wood</button>
+                <button onClick="resource.rawMaterial.stone.changeAmount(-100)">Use Stone</button>
+                <button onClick="resource.rawMaterial.clay.changeAmount(-100)">Use Clay</button>
                 <br />
                 <button onClick="buildingHouse.tentSmall.add(1)">Build Small Tent</button>
                 <button onClick="buildingHouse.tentLarge.add(1)">Build Large Tent</button>

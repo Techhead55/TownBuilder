@@ -19,7 +19,7 @@ function countdown(elementID, fn, seconds){
         if (remainingSeconds < 10) {
             remainingSeconds = "0" + remainingSeconds;
         }
-        document.getElementById(elementID).innerHTML = minutes + ":" + remainingSeconds;
+        document.getElementById(elementID).innerHTML = minutes + ":" + remainingSeconds + " - Day: " + dayCount;
         if (seconds == 0) {
             clearInterval(interval);
             fn();
@@ -50,10 +50,8 @@ function calculateHousing(){
     for(var key in buildingHouse){
         var totalPop = buildingHouse[key].amount * buildingHouse[key].basePop;
         populationTotal += totalPop;
-        console.log(buildingHouse[key].publicName + "s population: " + totalPop);
     };
-    console.log("Total: " + populationTotal);
-    document.getElementById("populationTotal").innerHTML = "Total: " + populationTotal;
+    updatePopulation();
 };
 
 function calculateWorkers(){
@@ -61,10 +59,13 @@ function calculateWorkers(){
     for (var key in buildingWork){
         for (var subkey in buildingWork[key]){
             populationCurrent += buildingWork[key][subkey].worker;
-            console.log(buildingWork[key][subkey].publicName + "'s workers: " + buildingWork[key][subkey].worker);
         };
     };
-    document.getElementById("populationCurrent").innerHTML = "Current: " + populationCurrent;
+    updatePopulation();
+};
+
+function updatePopulation(){
+    document.getElementById("population").innerHTML = "Used Popluation: " + populationCurrent + "/" + populationTotal;
 };
 
 // ================================
@@ -167,7 +168,11 @@ var resource = {
 // Daily Income
 
 var dailyIncome = function () {
-    //resource.rawMaterial.logs.add(resource.rawMaterial.logs.profit)
+    for (var key in resource) {
+        for (var subkey in resource[key]) {
+            resource[key][subkey].add(resource[key][subkey].profit);
+        };
+    };
 };
 
 // ================================
@@ -256,8 +261,6 @@ function buildingHouse(publicName, idName, basePop){
 
     this.add = function (num) {
         this.amount += num;
-        console.log("Total " + this.publicName + "s: " + this.amount);
-        console.log("Total population from " + this.publicName + ": " + (this.amount * this.basePop));
         calculateHousing();
         this.render();
     };
@@ -275,8 +278,7 @@ var buildingHouse = {
 // ================================
 
 function init(){
-    document.getElementById("populationCurrent").innerHTML = "Current: " + populationCurrent;
-    document.getElementById("populationTotal").innerHTML = "Total: " + populationTotal;
+    updatePopulation();
 
     for(var key in resource.rawMaterial){
         console.log(key);

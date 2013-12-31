@@ -19,7 +19,7 @@ function countdown(elementID, fn, seconds){
         if (remainingSeconds < 10) {
             remainingSeconds = "0" + remainingSeconds;
         }
-        document.getElementById(elementID).innerHTML = minutes + ":" + remainingSeconds;
+        document.getElementById(elementID).innerHTML = minutes + ":" + remainingSeconds + " - Day: " + dayCount;
         if (seconds == 0) {
             clearInterval(interval);
             fn();
@@ -31,16 +31,41 @@ function countdown(elementID, fn, seconds){
 
 // Day Controller
 
-var dayCount = 0
-window.onload = function () {
-    countdown("dayTimer", dailyFunctions, 15);
-}
+var dayCount = 0;
 
 function dailyFunctions(){
     countdown("dayTimer", dailyFunctions, 15);
     dailyIncome()
     dayCount++
-    console.log("Day " + dayCount)
+};
+
+// Population
+
+var populationCurrent = 0;
+var populationTotal = 0;
+var populationLabourer = populationTotal - populationCurrent;
+
+function calculateHousing(){
+    populationTotal = 0;
+    for(var key in buildingHouse){
+        var totalPop = buildingHouse[key].amount * buildingHouse[key].basePop;
+        populationTotal += totalPop;
+    };
+    updatePopulation();
+};
+
+function calculateWorkers(){
+    populationCurrent = 0;
+    for (var key in buildingWork){
+        for (var subkey in buildingWork[key]){
+            populationCurrent += buildingWork[key][subkey].worker;
+        };
+    };
+    updatePopulation();
+};
+
+function updatePopulation(){
+    document.getElementById("population").innerHTML = "Used Popluation: " + populationCurrent + "/" + populationTotal;
 };
 
 // ================================
@@ -64,12 +89,10 @@ function resource(publicName, idName, amountCap) {
     this.amount = 0;
     this.amountCap = amountCap;
 
-    console.log("Created " + this.idName); // Debug to check if created
-
     // Methods
     // Render the object
     this.render = function () {
-        document.getElementById(this.idName).innerHTML = this.amount;
+        document.getElementById(this.idName).innerHTML = this.publicName + ": " + this.amount;
     };
 
     // Add to the amount
@@ -145,13 +168,136 @@ var resource = {
 // Daily Income
 
 var dailyIncome = function () {
-    resource.rawMaterial.logs.add(resource.rawMaterial.logs.profit)
+    for (var key in resource) {
+        for (var subkey in resource[key]) {
+            resource[key][subkey].add(resource[key][subkey].profit);
+        };
+    };
 };
+
+// ================================
+//   BUILDINGS
+// ================================
+
+// Producers - Provides resources
+
+function buildingWork(publicName, idName, workerCap, incomeResource, expenseResource){
+    this.publicName = publicName;
+    this.idName = idName;
+
+    this.amount = 0;
+    this.worker = 0;
+    this.baseWorkerCap = workerCap;
+
+    this.incomeResource = incomeResource;
+    this.expenseResource = expenseResource;
+
+    // Methods
+    this.render = function () {
+        document.getElementById(this.idName).innerHTML = this.publicName + "s: " + this.amount + " - Workers: " + this.worker + "/" + (this.amount * this.baseWorkerCap);
+    };
+
+    this.add = function (num) {
+        this.amount += num;
+        this.render();
+    };
+
+    this.addWorker = function (num) {
+        if (num <= populationTotal - populationCurrent) {
+            if (this.worker + num > this.amount * this.baseWorkerCap) {
+                this.worker = this.amount * this.baseWorkerCap;
+            } else {
+                this.worker += num;
+            };
+            calculateWorkers();
+            this.render();
+        } else {
+            console.log("Not enough spare workers");
+            return false;
+        };
+    };
+
+    this.subtractWorker = function (num) {
+        if (this.worker >= num) {
+            this.worker -= num;
+        } else {
+            return false;
+        };
+        calculateWorkers();
+        this.render();
+    };
+};
+
+var buildingWork = {
+    primary: {
+        campClay: new buildingWork("Clay Pit", "campClay", 5, [resource.rawMaterial.clay]),
+        campLogs: new buildingWork("Lumber Camp", "campLogs", 5, [resource.rawMaterial.logs]),
+        campStone: new buildingWork("Stone Quarry", "campStone", 5, [resource.rawMaterial.stone])
+    },
+    mine: {
+        copper: new buildingWork("Copper Mine", "mineCopper", 5, [resource.ore.copper]),
+        galena: new buildingWork("Lead Mine", "mineGalena", 5, [resource.ore.galena]),
+        gold: new buildingWork("Gold Mine", "mineGold", 5, [resource.ore.gold]),
+        iron: new buildingWork("Iron Mine", "mineIron", 5, [resource.ore.iron]),
+        silver: new buildingWork("Silver Mine", "mineSilver", 5, [resource.ore.silver]),
+        tin: new buildingWork("Tin Mine", "mineTine", 5, [resource.ore.tin])
+    }
+};
+
+// Housing - Provides population
+
+function buildingHouse(publicName, idName, basePop){
+    this.publicName = publicName;
+    this.idName = idName;
+
+    this.amount = 0;
+    this.basePop = basePop;
+    //this.popModifier = 0; TODO: Add tech tree modifiers here
+
+    //Methods
+    this.render = function () {
+        document.getElementById(this.idName).innerHTML = this.publicName + "s: " + this.amount + " - Population: " + (this.amount * this.basePop);
+    };
+
+    this.add = function (num) {
+        this.amount += num;
+        calculateHousing();
+        this.render();
+    };
+};
+
+var buildingHouse = {
+    tentSmall: new buildingHouse("Small Tent", "tentSmall", 1),
+    tentLarge: new buildingHouse("Large Tent", "tentLarge", 2),
+    hutSmall: new buildingHouse("Small Hut", "hutSmall", 4)
+};
+
 
 // ================================
 //   RENDERING
 // ================================
 
+function init(){
+    updatePopulation();
+
+    for(var key in resource.rawMaterial){
+        console.log(key);
+        resource.rawMaterial[key].render();
+    };
+    for (var key in buildingHouse){
+        console.log(key);
+        buildingHouse[key].render();
+    };
+    for (var key in buildingWork.primary){
+        console.log(key);
+        buildingWork.primary[key].render();
+    };
+};
+
+$(document).ready(function () {
+    countdown("dayTimer", dailyFunctions, 15);
+    init();
+});
 
 // Debugging Menu
 

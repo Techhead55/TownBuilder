@@ -32,9 +32,9 @@
 
         <div>
             <h3>Production</h3>
-            <div><div id="campLogs" style="display: inline"></div> <button onclick="buildingWork.primary.campLogs.subtractWorker(1)">-</button> <button onclick="buildingWork.primary.campLogs.addWorker(1)">+</button></div>
-            <div><div id="campStone" style="display: inline"></div> <button onclick="buildingWork.primary.campStone.subtractWorker(1)">-</button> <button onclick="buildingWork.primary.campStone.addWorker(1)">+</button></div>
-            <div><div id="campClay" style="display: inline"></div> <button onclick="buildingWork.primary.campClay.subtractWorker(1)">-</button> <button onclick="buildingWork.primary.campClay.addWorker(1)">+</button></div>
+            <div><div id="campLogs" style="display: inline"></div><div class="button" onclick="buildingWork.primary.campLogs.subtractWorker(1)">-</div><div class="button" onclick="buildingWork.primary.campLogs.addWorker(1)">+</div></div>
+            <div><div id="campStone" style="display: inline"></div><div class="button" onclick="buildingWork.primary.campStone.subtractWorker(1)">-</div><div class="button" onclick="buildingWork.primary.campStone.addWorker(1)">+</div></div>
+            <div><div id="campClay" style="display: inline"></div><div class="button" onclick="buildingWork.primary.campClay.subtractWorker(1)">-</div><div class="button" onclick="buildingWork.primary.campClay.addWorker(1)">+</div></div>
         </div>
 
         <div id="debug">
@@ -50,23 +50,15 @@
                     </div>
                     <div class="scroller content">
                         <div id="debug-tab-resources">
-                            <button onClick="resource.rawMaterial.logs.changeAmount(45)">Get Wood</button>
-                            <button onClick="resource.rawMaterial.stone.changeAmount(100)">Get Stone</button>
-                            <button onClick="resource.rawMaterial.clay.changeAmount(100)">Get Clay</button>
+                            <div class="button" onClick="resource.rawMaterial.logs.changeAmount(45)">Get Wood</div><div class="button" onClick="resource.rawMaterial.stone.changeAmount(100)">Get Stone</div><div class="button" onClick="resource.rawMaterial.clay.changeAmount(100)">Get Clay</div>
                             <br />
-                            <button onClick="resource.rawMaterial.logs.changeAmount(-45)">Use Wood</button>
-                            <button onClick="resource.rawMaterial.stone.changeAmount(-100)">Use Stone</button>
-                            <button onClick="resource.rawMaterial.clay.changeAmount(-100)">Use Clay</button>
+                            <div class="button" onClick="resource.rawMaterial.logs.changeAmount(-45)">Use Wood</div><div class="button" onClick="resource.rawMaterial.stone.changeAmount(-100)">Use Stone</div><div class="button" onClick="resource.rawMaterial.clay.changeAmount(-100)">Use Clay</div>
                         </div>
                         <div id="debug-tab-buildings">
-                            <button onclick="buildingWork.primary.campLogs.add(1)">Build Lumber Camp</button>
-                            <button onclick="buildingWork.primary.campStone.add(1)">Build Stone Quarry</button>
-                            <button onclick="buildingWork.primary.campClay.add(1)">Build Clay Pit</button>
+                            <div class="button" onclick="buildingWork.primary.campLogs.add(1)">Build Lumber Camp</div><div class="button" onclick="buildingWork.primary.campStone.add(1)">Build Stone Quarry</div><div class="button" onclick="buildingWork.primary.campClay.add(1)">Build Clay Pit</div>
                         </div>
                         <div id="debug-tab-houses">
-                            <button onClick="buildingHouse.tentSmall.add(1)">Build Small Tent</button>
-                            <button onClick="buildingHouse.tentLarge.add(1)">Build Large Tent</button>
-                            <button onclick="buildingHouse.hutSmall.add(1)">Build Small Hut</button>
+                            <div class="button" onClick="buildingHouse.tentSmall.add(1)">Build Small Tent</div><div class="button" onClick="buildingHouse.tentLarge.add(1)">Build Large Tent</div><div class="button" onclick="buildingHouse.hutSmall.add(1)">Build Small Hut</div>
                         </div>
                     </div>
                 </div>

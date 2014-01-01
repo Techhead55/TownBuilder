@@ -17,6 +17,33 @@ body {
     -webkit-box-shadow: inset 0 0 5px rgba(0,0,0,0.5); 
 }
 
+.button{
+    background: #ddd;
+    border: 2px solid #111;
+    border-radius: 5px;
+    display: inline-block;
+    cursor: pointer;
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    color: #111;
+    font-family: monospace;
+    font-size: 1em;
+    font-weight: bold;
+    text-align: center;
+    width: auto;
+    height: auto;
+    padding: 3px 5px;
+    margin: 2px;
+}
+.button:hover{
+    background: #ccc;
+}
+.button:active{
+    background: #ddd;
+}
+
+/*Debug Frame*/
+
 #debug {
     display: none;
     position: fixed;
@@ -49,4 +76,42 @@ body {
     width: 400px;
     height: 300px;
     float: left;
+}
+
+#debug-tabs { 
+    background: transparent; 
+    border: none; 
+} 
+#debug-tabs .scroller {
+    overflow: auto;
+}
+#debug-tabs ul{
+    width: 390px;
+}
+#debug-tabs .content{
+    height: 266px;
+}
+#debug-tabs .ui-widget-header { 
+    background: transparent; 
+    border: none; 
+    border-bottom: 1px solid #c0c0c0; 
+    -moz-border-radius: 0px; 
+    -webkit-border-radius: 0px; 
+    border-radius: 0px; 
+} 
+#debug-tabs .ui-tabs-nav .ui-state-default { 
+    background: transparent; 
+    border: none; 
+} 
+#debug-tabs .ui-tabs-nav .ui-state-active { 
+    background: transparent url(img/uiTabsArrow.png) no-repeat bottom center; 
+    border: none; 
+} 
+#debug-tabs .ui-tabs-nav .ui-state-default a { 
+    color: #959595; 
+    font-weight: bold;
+} 
+#debug-tabs .ui-tabs-nav .ui-state-active a { 
+    color: #111;
+    font-weight: bold; 
 }

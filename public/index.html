@@ -4,8 +4,10 @@
     <head>
         <meta charset="utf-8" />
         <title>TownBuilder</title>
-        <link rel="stylesheet" type="text/css" href="stylesheet.css"></script>
+        <link rel="stylesheet" type="text/css" href="stylesheet.css">
+        <link rel="stylesheet" type="text/css" href="css/jquery-ui-1.10.3.tabs.css">
         <script src="//ajax.googleapis.com/ajax/libs/jquery/1.10.2/jquery.min.js" ></script>
+        <script src="//ajax.googleapis.com/ajax/libs/jqueryui/1.10.3/jquery-ui.min.js"></script>
         <script src="main.js"></script>
     </head>
     <body>
@@ -36,23 +38,38 @@
         </div>
 
         <div id="debug">
-            <div style="height: 22px"><div id="debug-button">Debug</div></div>
+            <div style="height: 21px"><div id="debug-button">Debug</div></div>
             <div id="debug-div">
-                <button onClick="resource.rawMaterial.logs.changeAmount(45)">Get Wood</button>
-                <button onClick="resource.rawMaterial.stone.changeAmount(100)">Get Stone</button>
-                <button onClick="resource.rawMaterial.clay.changeAmount(100)">Get Clay</button>
-                <br />
-                <button onClick="resource.rawMaterial.logs.changeAmount(-45)">Use Wood</button>
-                <button onClick="resource.rawMaterial.stone.changeAmount(-100)">Use Stone</button>
-                <button onClick="resource.rawMaterial.clay.changeAmount(-100)">Use Clay</button>
-                <br />
-                <button onClick="buildingHouse.tentSmall.add(1)">Build Small Tent</button>
-                <button onClick="buildingHouse.tentLarge.add(1)">Build Large Tent</button>
-                <button onclick="buildingHouse.hutSmall.add(1)">Build Small Hut</button>
-                <br />
-                <button onclick="buildingWork.primary.campLogs.add(1)">Build Lumber Camp</button>
-                <button onclick="buildingWork.primary.campStone.add(1)">Build Stone Quarry</button>
-                <button onclick="buildingWork.primary.campClay.add(1)">Build Clay Pit</button>
+                <div id="debug-tabs">
+                    <div class="scroller">
+                        <ul>
+                            <li><a href="#debug-tab-resources">Resources</a></li>
+                            <li><a href="#debug-tab-buildings">Buildings</a></li>
+                            <li><a href="#debug-tab-houses">Housing</a></li>
+                        </ul>
+                    </div>
+                    <div class="scroller content">
+                        <div id="debug-tab-resources">
+                            <button onClick="resource.rawMaterial.logs.changeAmount(45)">Get Wood</button>
+                            <button onClick="resource.rawMaterial.stone.changeAmount(100)">Get Stone</button>
+                            <button onClick="resource.rawMaterial.clay.changeAmount(100)">Get Clay</button>
+                            <br />
+                            <button onClick="resource.rawMaterial.logs.changeAmount(-45)">Use Wood</button>
+                            <button onClick="resource.rawMaterial.stone.changeAmount(-100)">Use Stone</button>
+                            <button onClick="resource.rawMaterial.clay.changeAmount(-100)">Use Clay</button>
+                        </div>
+                        <div id="debug-tab-buildings">
+                            <button onclick="buildingWork.primary.campLogs.add(1)">Build Lumber Camp</button>
+                            <button onclick="buildingWork.primary.campStone.add(1)">Build Stone Quarry</button>
+                            <button onclick="buildingWork.primary.campClay.add(1)">Build Clay Pit</button>
+                        </div>
+                        <div id="debug-tab-houses">
+                            <button onClick="buildingHouse.tentSmall.add(1)">Build Small Tent</button>
+                            <button onClick="buildingHouse.tentLarge.add(1)">Build Large Tent</button>
+                            <button onclick="buildingHouse.hutSmall.add(1)">Build Small Hut</button>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
     </body>

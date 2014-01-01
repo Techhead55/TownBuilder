@@ -1,13 +1,29 @@
 body {
 }
 
+::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+}
+ 
+::-webkit-scrollbar-track {
+    -webkit-box-shadow: inset 0 0 5px rgba(0,0,0,0.3); 
+    border-radius: 8px;
+}
+ 
+::-webkit-scrollbar-thumb {
+    border-radius: 8px;
+    background: #c0c0c0;
+    -webkit-box-shadow: inset 0 0 5px rgba(0,0,0,0.5); 
+}
+
 #debug {
     display: none;
     position: fixed;
     right: 0px;
     bottom: 0px;
     min-width: 152px;
-    min-height: 22px;
+    min-height: 21px;
 }
 
 #debug-button {
@@ -20,15 +36,17 @@ body {
     color: #ffffff;
     text-align: center;
     border: 1px solid #000000;
-    border-top-left-radius: 5px;
-    border-top-right-radius: 5px;
+    border-bottom: 0px;
+    border-top-left-radius: 4px;
+    border-top-right-radius: 4px;
 }
 
 #debug-div {
     display: none;
-    background-color: #cdcdcd;
-    width: fit-content;
-    height: fit-content;
+    border-top: 1px solid black;
+    border-left: 1px solid black;
+    border-top-left-radius: 4px;
+    width: 400px;
+    height: 300px;
     float: left;
 }
-

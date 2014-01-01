@@ -319,7 +319,9 @@ $(document).ready(function () {
         $("#debug-div").slideToggle("slow");
     });
 
-    if (options.debugMenu == true){
+    if (options.debugMenu == true) {
         $("#debug").css("display", "block");
     };
+
+    $("#debug-tabs").tabs();
 });

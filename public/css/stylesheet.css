@@ -17,6 +17,22 @@ body {
     -webkit-box-shadow: inset 0 0 5px rgba(0,0,0,0.5); 
 }
 
+input{
+    background: #fff;
+    border: 2px solid #111;
+    border-radius: 5px;
+    display: inline-block;
+    color: #111;
+    font-family: monospace;
+    font-size: 1em;
+    font-weight: normal;
+    text-align: center;
+    width: auto;
+    height: auto;
+    padding: 3px 5px;
+    margin: 2px;
+}
+
 .button{
     background: #ddd;
     border: 2px solid #111;
@@ -73,9 +89,14 @@ body {
     border-top: 1px solid black;
     border-left: 1px solid black;
     border-top-left-radius: 4px;
-    width: 400px;
+    width: 410px;
     height: 300px;
     float: left;
+}
+
+.debugInput{
+    width: 40px;
+    text-align: center;
 }
 
 #debug-tabs { 
@@ -86,7 +107,7 @@ body {
     overflow: auto;
 }
 #debug-tabs ul{
-    width: 390px;
+    width: 400px;
 }
 #debug-tabs .content{
     height: 266px;
@@ -104,7 +125,7 @@ body {
     border: none; 
 } 
 #debug-tabs .ui-tabs-nav .ui-state-active { 
-    background: transparent url(img/uiTabsArrow.png) no-repeat bottom center; 
+    background: transparent url(images/uiTabsArrow.png) no-repeat bottom center; 
     border: none; 
 } 
 #debug-tabs .ui-tabs-nav .ui-state-default a { 

@@ -1,5 +1,9 @@
 ﻿/// <reference path="scripts/jquery-1.10.2-vsdoc.js" />
 
+function gid(id) {
+    return document.getElementById(id);
+}
+
 // ================================
 //   ENGINE
 // ================================
@@ -19,7 +23,7 @@ function countdown(elementID, fn, seconds){
         if (remainingSeconds < 10) {
             remainingSeconds = "0" + remainingSeconds;
         };
-        document.getElementById(elementID).innerHTML = minutes + ":" + remainingSeconds + " - Day: " + dayCount;
+        gid(elementID).innerHTML = minutes + ":" + remainingSeconds + " - Day: " + dayCount;
         if (seconds == 0) {
             clearInterval(interval);
             fn();
@@ -64,7 +68,7 @@ function calculateWorkers(){
 };
 
 function updatePopulation(){
-    document.getElementById("population").innerHTML = "Used Popluation: " + populationCurrent + "/" + populationTotal;
+    gid("population").innerHTML = "Used Popluation: " + populationCurrent + "/" + populationTotal;
 };
 
 // ================================
@@ -90,7 +94,7 @@ function resource(publicName, idName, amountCap) {
     // Methods
     // Render the object
     this.render = function () {
-        document.getElementById(this.idName).innerHTML = this.publicName + ": " + this.amount;
+        gid(this.idName).innerHTML = this.publicName + ": " + this.amount;
     };
 
     // Add to the amount
@@ -124,6 +128,7 @@ function resource(publicName, idName, amountCap) {
                 number = 0;
             };
         };
+        console.log(number);
         return number;
     };
 };
@@ -207,7 +212,7 @@ function buildingWork(publicName, idName, workerCap, incomeResource, expenseReso
 
     // Methods
     this.render = function () {
-        document.getElementById(this.idName).innerHTML = this.publicName + "s: " + this.amount + " - Workers: " + this.worker + "/" + (this.amount * this.baseWorkerCap);
+        gid(this.idName).innerHTML = this.publicName + "s: " + this.amount + " - Workers: " + this.worker + "/" + (this.amount * this.baseWorkerCap);
     };
 
     this.add = function (num) {
@@ -269,7 +274,7 @@ function buildingHouse(publicName, idName, basePop){
 
     //Methods
     this.render = function () {
-        document.getElementById(this.idName).innerHTML = this.publicName + "s: " + this.amount + " - Population: " + (this.amount * this.basePop);
+        gid(this.idName).innerHTML = this.publicName + "s: " + this.amount + " - Population: " + (this.amount * this.basePop);
     };
 
     this.add = function (num) {
@@ -324,4 +329,22 @@ $(document).ready(function () {
     };
 
     $("#debug-tabs").tabs();
+});
+
+function debugChangeInputValue(num){
+    gid("debutInputlogs").value += num;
+}
+
+$(document).ready(function () {
+    $("#test").html(
+        "<div id='debugString" + resource.rawMaterial.logs.idName + "'>" +
+            resource.rawMaterial.logs.publicName + ": " +
+            "<div class='button' onclick='debugChangeInputValue(-5)'>--</div>" +
+            "<div class='button' onclick=''>-</div>" +
+            "<input type='text' class='debugInput' id='debugInputlogs' value='0' />" +
+            "<div class='button' onclick=''>+</div>" +
+            "<div class='button' onclick=''>++</div>" +
+            "<div class='button' onclick='resource.rawMaterial.logs.changeAmount(parseInt(gid(\"debugInputlogs\").value))'>Apply</div>" +
+            "<div class='button' onclick='resource.rawMaterial.logs.checkAmount(parseInt(gid(\"debugInputlogs\").value))'>Check</div>" +
+        "</div>");
 });

@@ -100,36 +100,41 @@ function resource(publicName, idName, amountCap) {
     // Add to the amount
     this.changeAmount = function (num) {
         // Change the number to include the changed value "num"
-        if (this.amount + num > this.amountCap) {
-            this.amount = this.amountCap;
-        } else if (this.amount + num < 0) {
-            this.amount = 0;
-        } else {
-            this.amount += num;
+        if (!isNaN(num)) {
+            if (this.amount + num > this.amountCap) {
+                this.amount = this.amountCap;
+            } else if (this.amount + num < 0) {
+                this.amount = 0;
+            } else {
+                this.amount += num;
+            };
         };
-
         // Push the new value to the screen
         this.render();
     };
 
     // Check amount for crafting recipes
     this.checkAmount = function (num) {
-        var number = 0;
-        if (num >= 0) {
-            if (num + this.amount > this.amountCap) {
-                number = num + this.amount - this.amountCap;
+        if (!isNaN(num)) {
+            var number = 0;
+            if (num >= 0) {
+                if (num + this.amount > this.amountCap) {
+                    number = num + this.amount - this.amountCap;
+                } else {
+                    number = 0;
+                };
             } else {
-                number = 0;
+                if (this.amount + num < 0) {
+                    number = this.amount + num;
+                } else {
+                    number = 0;
+                };
             };
+            console.log(number);
+            return number;
         } else {
-            if (this.amount + num < 0) {
-                number = Math.abs(this.amount + num);
-            } else {
-                number = 0;
-            };
+            return false;
         };
-        console.log(number);
-        return number;
     };
 };
 
@@ -331,20 +336,23 @@ $(document).ready(function () {
     $("#debug-tabs").tabs();
 });
 
-function debugChangeInputValue(num){
-    gid("debutInputlogs").value += num;
+function debugChangeInputValue(num, id){
+    var v = parseInt(gid(id).value);
+    v = isNaN(v) ? 0 : v;
+    v += num;
+    gid(id).value = v;
 }
 
 $(document).ready(function () {
     $("#test").html(
         "<div id='debugString" + resource.rawMaterial.logs.idName + "'>" +
             resource.rawMaterial.logs.publicName + ": " +
-            "<div class='button' onclick='debugChangeInputValue(-5)'>--</div>" +
-            "<div class='button' onclick=''>-</div>" +
+            "<button onclick='debugChangeInputValue(-10, \"debugInputlogs\")'>--</button>" +
+            "<button onclick='debugChangeInputValue(-1, \"debugInputlogs\")'>-</button>" +
             "<input type='text' class='debugInput' id='debugInputlogs' value='0' />" +
-            "<div class='button' onclick=''>+</div>" +
-            "<div class='button' onclick=''>++</div>" +
-            "<div class='button' onclick='resource.rawMaterial.logs.changeAmount(parseInt(gid(\"debugInputlogs\").value))'>Apply</div>" +
-            "<div class='button' onclick='resource.rawMaterial.logs.checkAmount(parseInt(gid(\"debugInputlogs\").value))'>Check</div>" +
+            "<button onclick='debugChangeInputValue(1, \"debugInputlogs\")'>+</button>" +
+            "<button onclick='debugChangeInputValue(10, \"debugInputlogs\")'>++</button>" +
+            "<button onclick='resource.rawMaterial.logs.changeAmount(parseInt(gid(\"debugInputlogs\").value))'>Apply</button>" +
+            "<button onclick='resource.rawMaterial.logs.checkAmount(parseInt(gid(\"debugInputlogs\").value))'>Check</button>" +
         "</div>");
 });

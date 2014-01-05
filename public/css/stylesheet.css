@@ -33,7 +33,7 @@ input{
     margin: 2px;
 }
 
-.button{
+button{
     background: #ddd;
     border: 2px solid #111;
     border-radius: 5px;
@@ -51,10 +51,10 @@ input{
     padding: 3px 5px;
     margin: 2px;
 }
-.button:hover{
+button:hover{
     background: #ccc;
 }
-.button:active{
+button:active{
     background: #ddd;
 }
 

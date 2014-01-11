@@ -15,6 +15,7 @@
             /// <reference path="scripts/jquery-1.10.2-vsdoc.js" />
         </script>
         <div id="dayTimer" style="display: inline"></div>
+        <div id="dayCounter" style="display: inline"></div>
         <div id="population" style="display: inline"></div>
         <div>
             <h3>Resources</h3>
@@ -52,10 +53,7 @@
                     </div>
                     <div class="scroller content">
                         <div id="debug-tab-resources">
-                            <button onClick="resource.rawMaterial.logs.changeAmount(45)">Get Wood</button><button onClick="resource.rawMaterial.stone.changeAmount(100)">Get Stone</button><button onClick="resource.rawMaterial.clay.changeAmount(100)">Get Clay</button>
-                            <br />
-                            <button onClick="resource.rawMaterial.logs.changeAmount(-45)">Use Wood</button><button onClick="resource.rawMaterial.stone.changeAmount(-100)">Use Stone</button><button onClick="resource.rawMaterial.clay.changeAmount(-100)">Use Clay</button>
-                            <div id="test"></div>
+                            <table id="debug-table-resources"></table>
                         </div>
                         <div id="debug-tab-buildings">
                             <button onclick="buildingWork.primary.campLogs.add(1)">Build Lumber Camp</button><button onclick="buildingWork.primary.campStone.add(1)">Build Stone Quarry</button><button onclick="buildingWork.primary.campClay.add(1)">Build Clay Pit</button>

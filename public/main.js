@@ -23,7 +23,7 @@ function countdown(elementID, fn, seconds){
         if (remainingSeconds < 10) {
             remainingSeconds = "0" + remainingSeconds;
         };
-        gid(elementID).innerHTML = minutes + ":" + remainingSeconds + " - Day: " + dayCount;
+        gid(elementID).innerHTML = minutes + ":" + remainingSeconds;
         if (seconds == 0) {
             clearInterval(interval);
             fn();
@@ -37,9 +37,17 @@ function countdown(elementID, fn, seconds){
 
 var dayCount = 0;
 
+function dayRender(){
+    var day = dayCount % 7 + 1;
+    var week = Math.floor(dayCount / 7) + 1;
+    
+    gid("dayCounter").innerHTML = " - Week: " + week + " - Day: " + day;
+}
+
 function dailyFunctions(){
     countdown("dayTimer", dailyFunctions, 15);
     dayCount++;
+    dayRender();
     dailyIncome();
 };
 
@@ -166,7 +174,6 @@ var resource = {
         tin:            new resource("Tin Ore",         "oreTin",       200)
     },
     ingot: {                       // Public Name       ID Name         Cap
-        //brass:          new resource("Brass Ingot",     "ingotBrass",   200),
         bronze:         new resource("Bronze Ingot",    "ingotBronze",  200),
         copper:         new resource("Copper Ingot",    "ingotCopper",  200),
         gold:           new resource("Gold Ingot",      "ingotGold",    200),
@@ -253,17 +260,17 @@ function buildingWork(publicName, idName, workerCap, incomeResource, expenseReso
 
 var buildingWork = {
     primary: {                      // Public Name      ID Name       Cap   Income Resource
-        campClay:   new buildingWork("Clay Pit",        "campClay",     5,  [resource.rawMaterial.clay]),
-        campLogs:   new buildingWork("Lumber Camp",     "campLogs",     5,  [resource.rawMaterial.logs]),
-        campStone:  new buildingWork("Stone Quarry",    "campStone",    5,  [resource.rawMaterial.stone])
+        campClay:   new buildingWork("Clay Pit",        "campClay",     5,  [resource.rawMaterial.clay, 2]),
+        campLogs:   new buildingWork("Lumber Camp",     "campLogs",     5,  [resource.rawMaterial.logs, 2]),
+        campStone:  new buildingWork("Stone Quarry",    "campStone",    5,  [resource.rawMaterial.stone, 2])
     },
     mine: {                         // Public Name      ID Name       Cap   Income Resource
-        copper:     new buildingWork("Copper Mine",     "mineCopper",   5,  [resource.ore.copper]),
-        galena:     new buildingWork("Lead Mine",       "mineGalena",   5,  [resource.ore.galena]),
-        gold:       new buildingWork("Gold Mine",       "mineGold",     5,  [resource.ore.gold]),
-        iron:       new buildingWork("Iron Mine",       "mineIron",     5,  [resource.ore.iron]),
-        silver:     new buildingWork("Silver Mine",     "mineSilver",   5,  [resource.ore.silver]),
-        tin:        new buildingWork("Tin Mine",        "mineTine",     5,  [resource.ore.tin])
+        copper:     new buildingWork("Copper Mine",     "mineCopper",   5,  [resource.ore.copper, 2]),
+        galena:     new buildingWork("Lead Mine",       "mineGalena",   5,  [resource.ore.galena, 2]),
+        gold:       new buildingWork("Gold Mine",       "mineGold",     5,  [resource.ore.gold, 2]),
+        iron:       new buildingWork("Iron Mine",       "mineIron",     5,  [resource.ore.iron, 2]),
+        silver:     new buildingWork("Silver Mine",     "mineSilver",   5,  [resource.ore.silver, 2]),
+        tin:        new buildingWork("Tin Mine",        "mineTine",     5,  [resource.ore.tin, 2])
     }
 };
 
@@ -301,6 +308,8 @@ var buildingHouse = {               // Public Name      ID Name       Pop
 // ================================
 
 function init(){
+    dayRender();
+
     updatePopulation();
 
     for(var key in resource.rawMaterial){
@@ -320,6 +329,7 @@ function init(){
 $(document).ready(function () {
     countdown("dayTimer", dailyFunctions, 15);
     init();
+    debugGenerateResources();
 });
 
 // Debugging Menu
@@ -343,16 +353,17 @@ function debugChangeInputValue(num, id){
     gid(id).value = v;
 }
 
-$(document).ready(function () {
-    $("#test").html(
-        "<div id='debugString" + resource.rawMaterial.logs.idName + "'>" +
-            resource.rawMaterial.logs.publicName + ": " +
-            "<button onclick='debugChangeInputValue(-10, \"debugInputlogs\")'>--</button>" +
-            "<button onclick='debugChangeInputValue(-1, \"debugInputlogs\")'>-</button>" +
-            "<input type='text' class='debugInput' id='debugInputlogs' value='0' />" +
-            "<button onclick='debugChangeInputValue(1, \"debugInputlogs\")'>+</button>" +
-            "<button onclick='debugChangeInputValue(10, \"debugInputlogs\")'>++</button>" +
-            "<button onclick='resource.rawMaterial.logs.changeAmount(parseInt(gid(\"debugInputlogs\").value))'>Apply</button>" +
-            "<button onclick='resource.rawMaterial.logs.checkAmount(parseInt(gid(\"debugInputlogs\").value))'>Check</button>" +
-        "</div>");
-});
+function debugGenerateResources(){
+    for (var key in resource.rawMaterial){
+        $("#debug-table-resources").append(
+            "<div id='debugString" + resource.rawMaterial[key].idName + "'>" +
+                resource.rawMaterial[key].publicName + ": " +
+                "<button onclick='debugChangeInputValue(-10, \"debugInput" + resource.rawMaterial[key].idName + "\")'>--</button>" +
+                "<button onclick='debugChangeInputValue(-1, \"debugInput" + resource.rawMaterial[key].idName + "\")'>-</button>" +
+                "<input type='text' class='debugInput' id='debugInput" + resource.rawMaterial[key].idName + "' value='0' />" +
+                "<button onclick='debugChangeInputValue(1, \"debugInput" + resource.rawMaterial[key].idName + "\")'>+</button>" +
+                "<button onclick='debugChangeInputValue(10, \"debugInput" + resource.rawMaterial[key].idName + "\")'>++</button>" +
+                "<button onclick='resource.rawMaterial." + key + ".changeAmount(parseInt(gid(\"debugInput" + resource.rawMaterial[key].idName + "\").value))'>Apply</button>" +
+                "<button onclick='resource.rawMaterial." + key + ".checkAmount(parseInt(gid(\"debugInput" + resource.rawMaterial[key].idName + "\").value))'>Check</button>" +
+            "</div>")};
+}

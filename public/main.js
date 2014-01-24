@@ -105,7 +105,7 @@ function resource(publicName, idName, amountCap) {
         gid(this.idName).innerHTML = this.publicName + ": " + this.amount;
     };
 
-    // Add to the amount
+    // Change the amount
     this.changeAmount = function (num) {
         // Change the number to include the changed value "num"
         if (!isNaN(num)) {
@@ -211,7 +211,7 @@ var dailyIncome = function () {
 
 // Producers - Provides resources
 
-function buildingWork(publicName, idName, workerCap, incomeResource, expenseResource){
+function buildingWork(publicName, idName, workerCap, incomeResource, expenseResource, toolRequired){
     this.publicName = publicName;
     this.idName = idName;
 
@@ -221,6 +221,7 @@ function buildingWork(publicName, idName, workerCap, incomeResource, expenseReso
 
     this.incomeResource = incomeResource;
     this.expenseResource = expenseResource;
+    this.toolRequired = toolRequired;
 
     // Methods
     this.render = function () {
@@ -259,18 +260,18 @@ function buildingWork(publicName, idName, workerCap, incomeResource, expenseReso
 };
 
 var buildingWork = {
-    primary: {                      // Public Name      ID Name       Cap   Income Resource
-        campClay:   new buildingWork("Clay Pit",        "campClay",     5,  [resource.rawMaterial.clay, 2]),
-        campLogs:   new buildingWork("Lumber Camp",     "campLogs",     5,  [resource.rawMaterial.logs, 2]),
-        campStone:  new buildingWork("Stone Quarry",    "campStone",    5,  [resource.rawMaterial.stone, 2])
+    primary: {                      // Public Name      ID Name       Cap   Income Resource                     Expense Resource        Tool Required
+        campClay:   new buildingWork("Clay Pit",        "campClay",     5,  [resource.rawMaterial.clay, 2],     null,                   [tool.shovel, 1]),
+        campLogs:   new buildingWork("Lumber Camp",     "campLogs",     5,  [resource.rawMaterial.logs, 2],     null,                   [tool.axe, 1]),
+        campStone:  new buildingWork("Stone Quarry",    "campStone",    5,  [resource.rawMaterial.stone, 2],    null,                   [tool.pickaxe, 1])
     },
-    mine: {                         // Public Name      ID Name       Cap   Income Resource
-        copper:     new buildingWork("Copper Mine",     "mineCopper",   5,  [resource.ore.copper, 2]),
-        galena:     new buildingWork("Lead Mine",       "mineGalena",   5,  [resource.ore.galena, 2]),
-        gold:       new buildingWork("Gold Mine",       "mineGold",     5,  [resource.ore.gold, 2]),
-        iron:       new buildingWork("Iron Mine",       "mineIron",     5,  [resource.ore.iron, 2]),
-        silver:     new buildingWork("Silver Mine",     "mineSilver",   5,  [resource.ore.silver, 2]),
-        tin:        new buildingWork("Tin Mine",        "mineTine",     5,  [resource.ore.tin, 2])
+    mine: {                         // Public Name      ID Name       Cap   Income Resource                     Expense Resource        Tool Required
+        copper:     new buildingWork("Copper Mine",     "mineCopper",   5,  [resource.ore.copper, 2],           null,                   [tool.pickaxe, 1]),
+        galena:     new buildingWork("Lead Mine",       "mineGalena",   5,  [resource.ore.galena, 2],           null,                   [tool.pickaxe, 1]),
+        gold:       new buildingWork("Gold Mine",       "mineGold",     5,  [resource.ore.gold, 2],             null,                   [tool.pickaxe, 1]),
+        iron:       new buildingWork("Iron Mine",       "mineIron",     5,  [resource.ore.iron, 2],             null,                   [tool.pickaxe, 1]),
+        silver:     new buildingWork("Silver Mine",     "mineSilver",   5,  [resource.ore.silver, 2],           null,                   [tool.pickaxe, 1]),
+        tin:        new buildingWork("Tin Mine",        "mineTine",     5,  [resource.ore.tin, 2],              null,                   [tool.pickaxe, 1])
     }
 };
 
@@ -301,6 +302,101 @@ var buildingHouse = {               // Public Name      ID Name       Pop
     tentLarge:  new buildingHouse("Large Tent",         "tentLarge",    2),
     hutSmall:   new buildingHouse("Small Hut",          "hutSmall",     4)
 };
+
+// ================================
+//   TOOLS
+// ================================
+
+function tool(publicName, idName){
+    this.publicName = publicName;
+    this.idName = idName;
+
+    this.amount = 0;
+    this.equipped = 0;
+
+    this.changeAmount = function (num) {
+        // Change the number to include the changed value "num"
+        if (!isNaN(num)) {
+            if (this.amount + num < 0) {
+                this.amount = 0;
+            } else {
+                this.amount += num;
+            };
+        };
+    };
+
+    this.equip = function (num) {
+        
+    }
+}
+
+var tool = {
+    axe: {
+        copper: new tool("Copper Axe", "axeCopper"),
+        bronze: new tool("Bronze Axe", "axeBronze"),
+        iron: new tool("Iron Axe", "axeIron"),
+        steel: new tool("Steel Axe", "axeSteel")
+    },
+    pickaxe: {
+        copper: new tool("Copper Pickaxe", "pickaxeCopper"),
+        bronze: new tool("Bronze Pickaxe", "pickaxeBronze"),
+        iron: new tool("Iron Pickaxe", "pickaxeIron"),
+        steel: new tool("Steel Pickaxe", "pickaxeSteel")
+    },
+    saw: {
+        iron: new tool("Iron Saw", "sawIron"),
+        steel: new tool("Steel Saw", "sawSteel")
+    },
+    hoe: {
+        copper: new tool("Copper Hoe", "hoeCopper"),
+        bronze: new tool("Bronze Hoe", "hoeBronze"),
+        iron: new tool("Iron Hoe", "hoeIron"),
+        steel: new tool("Steel Hoe", "hoeSteel")
+    },
+    shovel: {
+        copper: new tool("Copper Shovel", "shovelCopper"),
+        bronze: new tool("Bronze Shovel", "shovelBronze"),
+        iron: new tool("Iron Shovel", "shovelIron"),
+        steel: new tool("Steel Shovel", "shovelSteel")
+    },
+    farming: {
+        sickleCopper: new tool("Copper Sickle", "sickleCopper"),
+        sickleBronze: new tool("Bronze Sickle", "sickleBronze"),
+        sickleIron: new tool("Iron Sickle", "sickleIron"),
+        sickleSteel: new tool("Steel Sickle", "sickleSteel"),
+        sickleGold: new tool("Gold Sickle", "sickleGold"),
+        scytheCopper: new tool("Copper Scythe", "scytheCopper"),
+        scytheBronze: new tool("Bronze Scythe", "scytheBronze"),
+        scytheIron: new tool("Iron Scythe", "scytheIron"),
+        scytheSteel: new tool("Steel Scythe", "scytheSteel")
+    },
+    hammer: {
+        stone: new tool("Stone Hammer", "hammerStone"),
+        copper: new tool("Copper Hammer", "hammerCopper"),
+        bronze: new tool("Bronze Hammer", "hammerBronze"),
+        iron: new tool("Iron Hammer", "hammerIron"),
+        steel: new tool("Steel Hammer", "hammerSteel")
+    },
+    hunting: {
+        spearStone: new tool("Stone Spear", "spearStone"),
+        spearCopper: new tool("Copper Spear", "spearCopper"),
+        spearBronze: new tool("Bronze Spear", "spearBronze"),
+        spearIron: new tool("Iron Spear", "spearIron"),
+        spearSteel: new tool("Steel Spear", "spearSteel"),
+        bowHunting: new tool("Hunting Bow", "bowHunting"),
+        bowReflex: new tool("Reflex Bow", "bowReflex"),
+        knifeStone: new tool("Stone Knife", "knifeStone"),
+        knifeCopper: new tool("Copper Knife", "knifeCopper"),
+        knifeBronze: new tool("Bronze Knife", "knifeBronze"),
+        knifeIron: new tool("Iron Knife", "knifeIron"),
+        knifeSteel: new tool("Steel Knife", "knifeSteel")
+    },
+    fishing: {
+        pole: new tool("Fishing Pole", "fishingPole"),
+        net: new tool("Fishing Net", "fishingNet")
+    }
+}
+
 
 
 // ================================

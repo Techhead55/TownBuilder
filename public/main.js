@@ -53,30 +53,30 @@ function dailyFunctions(){
 
 // Population
 
-var populationCurrent = 0;
-var populationTotal = 0;
-var populationLabourer = populationTotal - populationCurrent;
+var population = {
+    assigned: 0,
+    labourer: function() {return population.cap - population.assigned},
+    cap: 0,
+
+    updatePopulation: function() {gid("population").innerHTML = "Used Popluation: " + population.assigned + "/" + population.cap;}
+}
 
 function calculateHousing(){
-    populationTotal = 0;
+    population.cap = 0;
     for(var key in buildingHouse){
-        populationTotal += buildingHouse[key].amount * buildingHouse[key].basePop;
+        population.cap += buildingHouse[key].amount * buildingHouse[key].basePop;
     };
-    updatePopulation();
+    population.updatePopulation();
 };
 
 function calculateWorkers(){
-    populationCurrent = 0;
+    population.assigned = 0;
     for (var key in buildingWork){
         for (var subkey in buildingWork[key]){
-            populationCurrent += buildingWork[key][subkey].worker;
+            population.assigned += buildingWork[key][subkey].worker;
         };
     };
-    updatePopulation();
-};
-
-function updatePopulation(){
-    gid("population").innerHTML = "Used Popluation: " + populationCurrent + "/" + populationTotal;
+    population.updatePopulation();
 };
 
 // ================================
@@ -211,32 +211,48 @@ var dailyIncome = function () {
 
 // Producers - Provides resources
 
-function buildingWork(publicName, idName, workerCap, incomeResource, expenseResource, toolRequired){
-    this.publicName = publicName;
-    this.idName = idName;
+function buildingWork(publicName, idName, workerCap, incomeResource, incomeAmount, expenseResource, expenseAmount, toolType, toolAmount){
+    // Names
+    this.publicName = publicName; // Name that the player sees on the page
+    this.idName = idName; // Div and button IDs for dynamic rendering
 
+    // Number of buildings
     this.amount = 0;
-    this.worker = 0;
-    this.baseWorkerCap = workerCap;
 
+    // Workers - To be a complex object to add equipped tools in next version
+    this.worker = 0;
+    this.workerCapBase = workerCap;
+
+    // Building income - Array of each for the income calculation loop to easily call it
     this.incomeResource = incomeResource;
+    this.baseIncomeAmount = incomeAmount;
+
+    // Building expense  - Array of each for the income calculation loop to easily call it
     this.expenseResource = expenseResource;
-    this.toolRequired = toolRequired;
+    this.baseExpenseAmount = expenseAmount;
+    
+    // Building tool requirements - What tool the building's worker needs to generate income and how many of each is needed
+    this.toolType = toolType;
+    this.toolAmount = toolAmount;
 
     // Methods
+
+    // Update the HTML on the page
     this.render = function () {
-        gid(this.idName).innerHTML = this.publicName + "s: " + this.amount + " - Workers: " + this.worker + "/" + (this.amount * this.baseWorkerCap);
+        gid(this.idName).innerHTML = this.publicName + "s: " + this.amount + " - Workers: " + this.worker + "/" + (this.amount * this.workerCapBase);
     };
 
+    // Add more of this building type
     this.add = function (num) {
         this.amount += num;
         this.render();
     };
 
+    // Add worker to the building type (Soon to handle equipment and firing workers)
     this.addWorker = function (num) {
-        if (num <= populationTotal - populationCurrent) {
-            if (this.worker + num > this.amount * this.baseWorkerCap) {
-                this.worker = this.amount * this.baseWorkerCap;
+        if (num <= population.cap - population.assigned) {
+            if (this.worker + num > this.amount * this.workerCapBase) {
+                this.worker = this.amount * this.workerCapBase;
             } else {
                 this.worker += num;
             };
@@ -248,6 +264,7 @@ function buildingWork(publicName, idName, workerCap, incomeResource, expenseReso
         };
     };
 
+    // Remove worker from building type (Old and will be replaced)
     this.subtractWorker = function (num) {
         if (this.worker >= num) {
             this.worker -= num;
@@ -260,18 +277,18 @@ function buildingWork(publicName, idName, workerCap, incomeResource, expenseReso
 };
 
 var buildingWork = {
-    primary: {                      // Public Name      ID Name       Cap   Income Resource                     Expense Resource        Tool Required
-        campClay:   new buildingWork("Clay Pit",        "campClay",     5,  [resource.rawMaterial.clay, 2],     null,                   [tool.shovel, 1]),
-        campLogs:   new buildingWork("Lumber Camp",     "campLogs",     5,  [resource.rawMaterial.logs, 2],     null,                   [tool.axe, 1]),
-        campStone:  new buildingWork("Stone Quarry",    "campStone",    5,  [resource.rawMaterial.stone, 2],    null,                   [tool.pickaxe, 1])
+    primary: {                      // Public Name      ID Name       Cap   Income Resource                     Income Amount   Expense Resource        Expense Amount  Tool Type           Tool Amount
+        campClay:   new buildingWork("Clay Pit",        "campClay",     5,  [resource.rawMaterial.clay],        [2],            null,                   null,           [tool.shovel],      [1]),
+        campLogs:   new buildingWork("Lumber Camp",     "campLogs",     5,  [resource.rawMaterial.logs],        [2],            null,                   null,           [tool.axe],         [1]),
+        campStone:  new buildingWork("Stone Quarry",    "campStone",    5,  [resource.rawMaterial.stone],       [2],            null,                   null,           [tool.pickaxe],     [1])
     },
-    mine: {                         // Public Name      ID Name       Cap   Income Resource                     Expense Resource        Tool Required
-        copper:     new buildingWork("Copper Mine",     "mineCopper",   5,  [resource.ore.copper, 2],           null,                   [tool.pickaxe, 1]),
-        galena:     new buildingWork("Lead Mine",       "mineGalena",   5,  [resource.ore.galena, 2],           null,                   [tool.pickaxe, 1]),
-        gold:       new buildingWork("Gold Mine",       "mineGold",     5,  [resource.ore.gold, 2],             null,                   [tool.pickaxe, 1]),
-        iron:       new buildingWork("Iron Mine",       "mineIron",     5,  [resource.ore.iron, 2],             null,                   [tool.pickaxe, 1]),
-        silver:     new buildingWork("Silver Mine",     "mineSilver",   5,  [resource.ore.silver, 2],           null,                   [tool.pickaxe, 1]),
-        tin:        new buildingWork("Tin Mine",        "mineTine",     5,  [resource.ore.tin, 2],              null,                   [tool.pickaxe, 1])
+    mine: {                         // Public Name      ID Name       Cap   Income Resource                     Income Amount   Expense Resource        Expense Amount  Tool Type           Tool Amount
+        copper:     new buildingWork("Copper Mine",     "mineCopper",   5,  [resource.ore.copper],              [2],            null,                   null,           [tool.pickaxe],     [1]),
+        galena:     new buildingWork("Lead Mine",       "mineGalena",   5,  [resource.ore.galena],              [2],            null,                   null,           [tool.pickaxe],     [1]),
+        gold:       new buildingWork("Gold Mine",       "mineGold",     5,  [resource.ore.gold],                [2],            null,                   null,           [tool.pickaxe],     [1]),
+        iron:       new buildingWork("Iron Mine",       "mineIron",     5,  [resource.ore.iron],                [2],            null,                   null,           [tool.pickaxe],     [1]),
+        silver:     new buildingWork("Silver Mine",     "mineSilver",   5,  [resource.ore.silver],              [2],            null,                   null,           [tool.pickaxe],     [1]),
+        tin:        new buildingWork("Tin Mine",        "mineTine",     5,  [resource.ore.tin],                 [2],            null,                   null,           [tool.pickaxe],     [1])
     }
 };
 
@@ -378,6 +395,7 @@ var tool = {
         steel: new tool("Steel Hammer", "hammerSteel")
     },
     hunting: {
+        spearWood:new tool("Spear", "spearWood"),
         spearStone: new tool("Stone Spear", "spearStone"),
         spearCopper: new tool("Copper Spear", "spearCopper"),
         spearBronze: new tool("Bronze Spear", "spearBronze"),
@@ -406,7 +424,7 @@ var tool = {
 function init(){
     dayRender();
 
-    updatePopulation();
+    population.updatePopulation();
 
     for(var key in resource.rawMaterial){
         console.log(key);

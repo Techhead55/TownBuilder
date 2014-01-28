@@ -73,7 +73,7 @@ function calculateWorkers(){
     population.assigned = 0;
     for (var key in buildingWork){
         for (var subkey in buildingWork[key]){
-            population.assigned += buildingWork[key][subkey].worker;
+            population.assigned += buildingWork[key][subkey].worker.amount;
         };
     };
     population.updatePopulation();
@@ -219,9 +219,16 @@ function buildingWork(publicName, idName, workerCap, incomeResource, incomeAmoun
     // Number of buildings
     this.amount = 0;
 
-    // Workers - To be a complex object to add equipped tools in next version
-    this.worker = 0;
-    this.workerCapBase = workerCap;
+    // Workers
+    this.worker = {
+        amount:         0,                                                  // Number of workers employed in this building
+        capBase:        workerCap,                                          // Base amount of workers that can be employed as defined by the building
+        capModifier:    1,                                                  // Modifer to change the base capapacity per building for any upgrade buffs (May be merged with base instead)
+        capTotal:       function(){return this.capBase * this.capModifier}, // Calculator for total worker capacity
+        equippedTools:  {
+            // To be populated by toolType
+        }
+    };
 
     // Building income - Array of each for the income calculation loop to easily call it
     this.incomeResource = incomeResource;
@@ -239,7 +246,7 @@ function buildingWork(publicName, idName, workerCap, incomeResource, incomeAmoun
 
     // Update the HTML on the page
     this.render = function () {
-        gid(this.idName).innerHTML = this.publicName + "s: " + this.amount + " - Workers: " + this.worker + "/" + (this.amount * this.workerCapBase);
+        gid(this.idName).innerHTML = this.publicName + "s: " + this.amount + " - Workers: " + this.worker.amount + "/" + (this.amount * this.worker.capBase);
     };
 
     // Add more of this building type
@@ -251,10 +258,10 @@ function buildingWork(publicName, idName, workerCap, incomeResource, incomeAmoun
     // Add worker to the building type (Soon to handle equipment and firing workers)
     this.addWorker = function (num) {
         if (num <= population.cap - population.assigned) {
-            if (this.worker + num > this.amount * this.workerCapBase) {
-                this.worker = this.amount * this.workerCapBase;
+            if (this.worker.amount + num > this.amount * this.worker.capBase) {
+                this.worker.amount = this.amount * this.worker.capBase;
             } else {
-                this.worker += num;
+                this.worker.amount += num;
             };
             calculateWorkers();
             this.render();
@@ -266,8 +273,8 @@ function buildingWork(publicName, idName, workerCap, incomeResource, incomeAmoun
 
     // Remove worker from building type (Old and will be replaced)
     this.subtractWorker = function (num) {
-        if (this.worker >= num) {
-            this.worker -= num;
+        if (this.worker.amount >= num) {
+            this.worker.amount -= num;
         } else {
             return false;
         };
@@ -454,6 +461,8 @@ $(document).ready(function () {
     init();
     debugGenerateResources();
     debugGenerateTools();
+    debugGenerateBuildingWork();
+    debugGenerateBuildingHouse()
 });
 
 // Debugging Menu
@@ -503,6 +512,42 @@ function debugGenerateTools(){
                 "<button onclick='debugChangeInputValue(1, \"debugInput" + tool.axe[key].idName + "\")'>+</button>" +
                 "<button onclick='debugChangeInputValue(10, \"debugInput" + tool.axe[key].idName + "\")'>++</button>" +
                 "<button onclick='tool.axe." + key + ".changeAmount(parseInt(gid(\"debugInput" + tool.axe[key].idName + "\").value))'>Apply</button>" +
+            "</div>"
+        )
+    };
+}
+
+function debugGenerateBuildingWork(){
+    for (var key in buildingWork){
+        $("#debug-tab-buildings").append(
+        "<h3>" + buildingWork[key] + "</h3>");
+        for (var subkey in buildingWork[key]) {
+            $("#debug-tab-buildings").append(
+                "<div id='debugString" + buildingWork[key][subkey].idName + "'>" +
+                    buildingWork[key][subkey].publicName + ": " +
+                    "<button onclick='debugChangeInputValue(-10, \"debugInput" + buildingWork[key][subkey].idName + "\")'>--</button>" +
+                    "<button onclick='debugChangeInputValue(-1, \"debugInput" + buildingWork[key][subkey].idName + "\")'>-</button>" +
+                    "<input type='text' class='debugInput' id='debugInput" + buildingWork[key][subkey].idName + "' value='0' />" +
+                    "<button onclick='debugChangeInputValue(1, \"debugInput" + buildingWork[key][subkey].idName + "\")'>+</button>" +
+                    "<button onclick='debugChangeInputValue(10, \"debugInput" + buildingWork[key][subkey].idName + "\")'>++</button>" +
+                    "<button onclick='buildingWork." + key + "." + subkey + ".add(parseInt(gid(\"debugInput" + buildingWork[key][subkey].idName + "\").value))'>Apply</button>" +
+                "</div>"
+            )
+        };
+    };
+}
+
+function debugGenerateBuildingHouse(){
+    for (var key in buildingHouse){
+        $("#debug-tab-houses").append(
+            "<div id='debugString" + buildingHouse[key].idName + "'>" +
+                buildingHouse[key].publicName + ": " +
+                "<button onclick='debugChangeInputValue(-10, \"debugInput" + buildingHouse[key].idName + "\")'>--</button>" +
+                "<button onclick='debugChangeInputValue(-1, \"debugInput" + buildingHouse[key].idName + "\")'>-</button>" +
+                "<input type='text' class='debugInput' id='debugInput" + buildingHouse[key].idName + "' value='0' />" +
+                "<button onclick='debugChangeInputValue(1, \"debugInput" + buildingHouse[key].idName + "\")'>+</button>" +
+                "<button onclick='debugChangeInputValue(10, \"debugInput" + buildingHouse[key].idName + "\")'>++</button>" +
+                "<button onclick='buildingHouse." + key + ".add(parseInt(gid(\"debugInput" + buildingHouse[key].idName + "\").value))'>Apply</button>" +
             "</div>"
         )
     };

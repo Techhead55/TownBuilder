@@ -54,9 +54,9 @@ function dailyFunctions(){
 // Population
 
 var population = {
-    assigned: 0,
-    labourer: function() {return population.cap - population.assigned},
-    cap: 0,
+    assigned:   0,
+    labourer:   function() {return population.cap - population.assigned},
+    cap:        0,
 
     updatePopulation: function() {gid("population").innerHTML = "Used Popluation: " + population.assigned + "/" + population.cap;}
 }
@@ -331,6 +331,10 @@ function tool(publicName, idName){
     this.amount = 0;
     this.equipped = 0;
 
+    this.render = function () {
+        gid(this.idName).innerHTML = this.publicName + ": " + this.equipped + "/" + this.amount;
+    };
+
     this.changeAmount = function (num) {
         // Change the number to include the changed value "num"
         if (!isNaN(num)) {
@@ -340,11 +344,12 @@ function tool(publicName, idName){
                 this.amount += num;
             };
         };
+        this.render();
     };
 
-    this.equip = function (num) {
-        
-    }
+    //this.equip = function (num) {
+    //    
+    //}
 }
 
 var tool = {
@@ -430,6 +435,10 @@ function init(){
         console.log(key);
         resource.rawMaterial[key].render();
     };
+    for (var key in tool.axe){
+        console.log(key);
+        tool.axe[key].render();
+    };
     for (var key in buildingHouse){
         console.log(key);
         buildingHouse[key].render();
@@ -444,6 +453,7 @@ $(document).ready(function () {
     countdown("dayTimer", dailyFunctions, 15);
     init();
     debugGenerateResources();
+    debugGenerateTools();
 });
 
 // Debugging Menu
@@ -469,7 +479,7 @@ function debugChangeInputValue(num, id){
 
 function debugGenerateResources(){
     for (var key in resource.rawMaterial){
-        $("#debug-table-resources").append(
+        $("#debug-tab-resources").append(
             "<div id='debugString" + resource.rawMaterial[key].idName + "'>" +
                 resource.rawMaterial[key].publicName + ": " +
                 "<button onclick='debugChangeInputValue(-10, \"debugInput" + resource.rawMaterial[key].idName + "\")'>--</button>" +
@@ -480,4 +490,20 @@ function debugGenerateResources(){
                 "<button onclick='resource.rawMaterial." + key + ".changeAmount(parseInt(gid(\"debugInput" + resource.rawMaterial[key].idName + "\").value))'>Apply</button>" +
                 "<button onclick='resource.rawMaterial." + key + ".checkAmount(parseInt(gid(\"debugInput" + resource.rawMaterial[key].idName + "\").value))'>Check</button>" +
             "</div>")};
+}
+
+function debugGenerateTools(){
+    for (var key in tool.axe){
+        $("#debug-tab-tools").append(
+            "<div id='debugString" + tool.axe[key].idName + "'>" +
+                tool.axe[key].publicName + ": " +
+                "<button onclick='debugChangeInputValue(-10, \"debugInput" + tool.axe[key].idName + "\")'>--</button>" +
+                "<button onclick='debugChangeInputValue(-1, \"debugInput" + tool.axe[key].idName + "\")'>-</button>" +
+                "<input type='text' class='debugInput' id='debugInput" + tool.axe[key].idName + "' value='0' />" +
+                "<button onclick='debugChangeInputValue(1, \"debugInput" + tool.axe[key].idName + "\")'>+</button>" +
+                "<button onclick='debugChangeInputValue(10, \"debugInput" + tool.axe[key].idName + "\")'>++</button>" +
+                "<button onclick='tool.axe." + key + ".changeAmount(parseInt(gid(\"debugInput" + tool.axe[key].idName + "\").value))'>Apply</button>" +
+            "</div>"
+        )
+    };
 }

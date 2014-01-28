@@ -224,7 +224,7 @@ function buildingWork(publicName, idName, workerCap, incomeResource, incomeAmoun
         amount:         0,                                                  // Number of workers employed in this building
         capBase:        workerCap,                                          // Base amount of workers that can be employed as defined by the building
         capModifier:    1,                                                  // Modifer to change the base capapacity per building for any upgrade buffs (May be merged with base instead)
-        capTotal:       function(){return this.capBase * this.capModifier}, // Calculator for total worker capacity
+        capTotal:       function(){return this.capBase * this.capModifier}, // Calculator for total worker capacity - I can't call this when rendering? How do?
         equippedTools:  {
             // To be populated by toolType
         }

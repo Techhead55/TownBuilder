@@ -22,16 +22,16 @@ function countdown(elementID, fn, seconds){
         var remainingSeconds = seconds % 60;
         if (remainingSeconds < 10) {
             remainingSeconds = "0" + remainingSeconds;
-        };
+        }
         gid(elementID).innerHTML = minutes + ":" + remainingSeconds;
-        if (seconds == 0) {
+        if (seconds === 0) {
             clearInterval(interval);
             fn();
         } else {
             seconds--;
-        };
-    }, 1000)
-};
+        }
+    }, 1000);
+}
 
 // Day Controller
 
@@ -49,35 +49,35 @@ function dailyFunctions(){
     dayCount++;
     dayRender();
     dailyIncome();
-};
+}
 
 // Population
 
 var population = {
-    assigned:   0,
-    labourer:   function() {return population.cap - population.assigned},
-    cap:        0,
+    assigned:           0,
+    labourer:           function () { return population.cap - population.assigned; },
+    cap:                0,
 
-    updatePopulation: function() {gid("population").innerHTML = "Used Popluation: " + population.assigned + "/" + population.cap;}
-}
+    updatePopulation:   function () { gid("population").innerHTML = "Used Popluation: " + population.assigned + "/" + population.cap; }
+};
 
 function calculateHousing(){
     population.cap = 0;
     for(var key in buildingHouse){
         population.cap += buildingHouse[key].amount * buildingHouse[key].basePop;
-    };
+    }
     population.updatePopulation();
-};
+}
 
 function calculateWorkers(){
     population.assigned = 0;
     for (var key in buildingWork){
         for (var subkey in buildingWork[key]){
             population.assigned += buildingWork[key][subkey].worker.amount;
-        };
-    };
+        }
+    }
     population.updatePopulation();
-};
+}
 
 // ================================
 //   RESOURCES
@@ -86,7 +86,6 @@ function calculateWorkers(){
 // Resource constructors
 
 function resource(publicName, idName, amountCap) {
-    
     // Name handlers
     this.publicName = publicName;
     this.idName = idName;
@@ -98,53 +97,56 @@ function resource(publicName, idName, amountCap) {
     // Storage
     this.amount = 0;
     this.amountCap = amountCap;
+}
 
-    // Methods
-    // Render the object
-    this.render = function () {
-        gid(this.idName).innerHTML = this.publicName + ": " + this.amount;
-    };
+// Object methods
 
-    // Change the amount
-    this.changeAmount = function (num) {
-        // Change the number to include the changed value "num"
-        if (!isNaN(num)) {
-            if (this.amount + num > this.amountCap) {
-                this.amount = this.amountCap;
-            } else if (this.amount + num < 0) {
-                this.amount = 0;
-            } else {
-                this.amount += num;
-            };
-        };
-        // Push the new value to the screen
-        this.render();
-    };
-
-    // Check amount for crafting recipes
-    this.checkAmount = function (num) {
-        if (!isNaN(num)) {
-            var number = 0;
-            if (num >= 0) {
-                if (num + this.amount > this.amountCap) {
-                    number = num + this.amount - this.amountCap;
-                } else {
-                    number = 0;
-                };
-            } else {
-                if (this.amount + num < 0) {
-                    number = this.amount + num;
-                } else {
-                    number = 0;
-                };
-            };
-            console.log(number);
-            return number;
-        } else {
-            return false;
-        };
-    };
+// Render the object
+resource.prototype.render = function () {
+    gid(this.idName).innerHTML = this.publicName + ": " + this.amount;
 };
+
+// Change the amount
+resource.prototype.changeAmount = function (num) {
+    // Change the number to include the changed value "num"
+    if (!isNaN(num)) {
+        if (this.amount + num > this.amountCap) {
+            this.amount = this.amountCap;
+        } else if (this.amount + num < 0) {
+            this.amount = 0;
+        } else {
+            this.amount += num;
+        }
+    }
+    // Push the new value to the screen
+    this.render();
+};
+
+// Check amount for crafting recipes - May not be needed
+resource.prototype.checkAmount = function (num) {
+    if (!isNaN(num)) {
+        var number = 0;
+        if (num >= 0) {
+            if (num + this.amount > this.amountCap) {
+                number = num + this.amount - this.amountCap;
+            } else {
+                number = 0;
+            }
+        } else {
+            if (this.amount + num < 0) {
+                number = this.amount + num;
+            } else {
+                number = 0;
+            }
+        }
+        console.log(number);
+        return number;
+    } else {
+        return false;
+    }
+};
+
+// Object definitions
 
 var resource = {
     rawMaterial: {                 // Public Name       ID Name         Cap
@@ -197,13 +199,13 @@ var resource = {
 
 // Daily Income
 
-var dailyIncome = function () {
+function dailyIncome() {
     //for (var key in resource) {
     //    for (var subkey in resource[key]) {
     //        resource[key][subkey].changeAmount(resource[key][subkey].income - resource[key][subkey].expense);
     //    };
     //};
-};
+}
 
 // ================================
 //   BUILDINGS
@@ -221,10 +223,10 @@ function buildingWork(publicName, idName, workerCap, incomeResource, incomeAmoun
 
     // Workers
     this.worker = {
-        amount:         0,                                                  // Number of workers employed in this building
-        capBase:        workerCap,                                          // Base amount of workers that can be employed as defined by the building
-        capModifier:    1,                                                  // Modifer to change the base capapacity per building for any upgrade buffs (May be merged with base instead)
-        capTotal:       function(){return this.capBase * this.capModifier}, // Calculator for total worker capacity - I can't call this when rendering? How do?
+        amount:         0,                                                   // Number of workers employed in this building
+        capBase:        workerCap,                                           // Base amount of workers that can be employed as defined by the building
+        capModifier:    1,                                                   // Modifer to change the base capapacity per building for any upgrade buffs (May be merged with base instead)
+        capTotal:       function(){return this.capBase * this.capModifier;}, // Calculator for total worker capacity - I can't call this when rendering? How do?
         equippedTools:  {
             // To be populated by toolType
         }
@@ -241,47 +243,49 @@ function buildingWork(publicName, idName, workerCap, incomeResource, incomeAmoun
     // Building tool requirements - What tool the building's worker needs to generate income and how many of each is needed
     this.toolType = toolType;
     this.toolAmount = toolAmount;
+}
 
-    // Methods
+// Object Methods
 
-    // Update the HTML on the page
-    this.render = function () {
-        gid(this.idName).innerHTML = this.publicName + "s: " + this.amount + " - Workers: " + this.worker.amount + "/" + (this.amount * this.worker.capBase);
-    };
+// Update the HTML on the page
+buildingWork.prototype.render = function () {
+    gid(this.idName).innerHTML = this.publicName + "s: " + this.amount + " - Workers: " + this.worker.amount + "/" + (this.amount * this.worker.capBase);
+};
 
-    // Add more of this building type
-    this.add = function (num) {
-        this.amount += num;
-        this.render();
-    };
+// Add more of this building type
+buildingWork.prototype.add = function (num) {
+    this.amount += num;
+    this.render();
+};
 
-    // Add worker to the building type (Soon to handle equipment and firing workers)
-    this.addWorker = function (num) {
-        if (num <= population.cap - population.assigned) {
-            if (this.worker.amount + num > this.amount * this.worker.capBase) {
-                this.worker.amount = this.amount * this.worker.capBase;
-            } else {
-                this.worker.amount += num;
-            };
-            calculateWorkers();
-            this.render();
+// Add worker to the building type (Soon to handle equipment and firing workers)
+buildingWork.prototype.addWorker = function (num) {
+    if (num <= population.cap - population.assigned) {
+        if (this.worker.amount + num > this.amount * this.worker.capBase) {
+            this.worker.amount = this.amount * this.worker.capBase;
         } else {
-            console.log("Not enough spare workers");
-            return false;
-        };
-    };
-
-    // Remove worker from building type (Old and will be replaced)
-    this.subtractWorker = function (num) {
-        if (this.worker.amount >= num) {
-            this.worker.amount -= num;
-        } else {
-            return false;
-        };
+            this.worker.amount += num;
+        }
         calculateWorkers();
         this.render();
-    };
+    } else {
+        console.log("Not enough spare workers");
+        return false;
+    }
 };
+
+// Remove worker from building type (Old and will be replaced)
+buildingWork.prototype.subtractWorker = function (num) {
+    if (this.worker.amount >= num) {
+        this.worker.amount -= num;
+    } else {
+        return false;
+    }
+    calculateWorkers();
+    this.render();
+};
+
+// Object Definition
 
 var buildingWork = {
     primary: {                      // Public Name      ID Name       Cap   Income Resource                     Income Amount   Expense Resource        Expense Amount  Tool Type           Tool Amount
@@ -308,18 +312,23 @@ function buildingHouse(publicName, idName, basePop){
     this.amount = 0;
     this.basePop = basePop;
     //this.popModifier = 0; TODO: Add tech tree modifiers here
+}
 
-    //Methods
-    this.render = function () {
-        gid(this.idName).innerHTML = this.publicName + "s: " + this.amount + " - Population: " + (this.amount * this.basePop);
-    };
+// Object Methods
 
-    this.add = function (num) {
-        this.amount += num;
-        calculateHousing();
-        this.render();
-    };
+// Update the HTML on the page
+buildingHouse.prototype.render = function () {
+    gid(this.idName).innerHTML = this.publicName + "s: " + this.amount + " - Population: " + (this.amount * this.basePop);
 };
+
+// Add more of this building type
+buildingHouse.prototype.add = function (num) {
+    this.amount += num;
+    calculateHousing();
+    this.render();
+};
+
+// Object Definitions
 
 var buildingHouse = {               // Public Name      ID Name       Pop
     tentSmall:  new buildingHouse("Small Tent",         "tentSmall",    1),
@@ -331,33 +340,37 @@ var buildingHouse = {               // Public Name      ID Name       Pop
 //   TOOLS
 // ================================
 
+// Constructor
+
 function tool(publicName, idName){
     this.publicName = publicName;
     this.idName = idName;
 
     this.amount = 0;
     this.equipped = 0;
-
-    this.render = function () {
-        gid(this.idName).innerHTML = this.publicName + ": " + this.equipped + "/" + this.amount;
-    };
-
-    this.changeAmount = function (num) {
-        // Change the number to include the changed value "num"
-        if (!isNaN(num)) {
-            if (this.amount + num < 0) {
-                this.amount = 0;
-            } else {
-                this.amount += num;
-            };
-        };
-        this.render();
-    };
-
-    //this.equip = function (num) {
-    //    
-    //}
 }
+
+// Object Methods
+
+// Update the HTML on the page
+tool.prototype.render = function () {
+    gid(this.idName).innerHTML = this.publicName + ": " + this.equipped + "/" + this.amount;
+};
+
+// Change the amount
+tool.prototype.changeAmount = function (num) {
+    // Change the number to include the changed value "num"
+    if (!isNaN(num)) {
+        if (this.amount + num < 0) {
+            this.amount = 0;
+        } else {
+            this.amount += num;
+        }
+    }
+    this.render();
+};
+
+// Object Definition
 
 var tool = {
     axe: {
@@ -407,7 +420,7 @@ var tool = {
         steel: new tool("Steel Hammer", "hammerSteel")
     },
     hunting: {
-        spearWood:new tool("Spear", "spearWood"),
+        spearWood: new tool("Spear", "spearWood"),
         spearStone: new tool("Stone Spear", "spearStone"),
         spearCopper: new tool("Copper Spear", "spearCopper"),
         spearBronze: new tool("Bronze Spear", "spearBronze"),
@@ -425,7 +438,7 @@ var tool = {
         pole: new tool("Fishing Pole", "fishingPole"),
         net: new tool("Fishing Net", "fishingNet")
     }
-}
+};
 
 
 
@@ -441,20 +454,20 @@ function init(){
     for(var key in resource.rawMaterial){
         console.log(key);
         resource.rawMaterial[key].render();
-    };
+    }
     for (var key in tool.axe){
         console.log(key);
         tool.axe[key].render();
-    };
+    }
     for (var key in buildingHouse){
         console.log(key);
         buildingHouse[key].render();
-    };
+    }
     for (var key in buildingWork.primary){
         console.log(key);
         buildingWork.primary[key].render();
-    };
-};
+    }
+}
 
 $(document).ready(function () {
     countdown("dayTimer", dailyFunctions, 15);
@@ -462,7 +475,7 @@ $(document).ready(function () {
     debugGenerateResources();
     debugGenerateTools();
     debugGenerateBuildingWork();
-    debugGenerateBuildingHouse()
+    debugGenerateBuildingHouse();
 });
 
 // Debugging Menu
@@ -472,9 +485,9 @@ $(document).ready(function () {
         $("#debug-div").slideToggle("slow");
     });
 
-    if (options.debugMenu == true) {
+    if (options.debugMenu === true) {
         $("#debug").css("display", "block");
-    };
+    }
 
     $("#debug-tabs").tabs();
 });
@@ -487,7 +500,7 @@ function debugChangeInputValue(num, id){
 }
 
 function debugGenerateResources(){
-    for (var key in resource.rawMaterial){
+    for (var key in resource.rawMaterial) {
         $("#debug-tab-resources").append(
             "<div id='debugString" + resource.rawMaterial[key].idName + "'>" +
                 resource.rawMaterial[key].publicName + ": " +
@@ -498,7 +511,8 @@ function debugGenerateResources(){
                 "<button onclick='debugChangeInputValue(10, \"debugInput" + resource.rawMaterial[key].idName + "\")'>++</button>" +
                 "<button onclick='resource.rawMaterial." + key + ".changeAmount(parseInt(gid(\"debugInput" + resource.rawMaterial[key].idName + "\").value))'>Apply</button>" +
                 "<button onclick='resource.rawMaterial." + key + ".checkAmount(parseInt(gid(\"debugInput" + resource.rawMaterial[key].idName + "\").value))'>Check</button>" +
-            "</div>")};
+            "</div>");
+    }
 }
 
 function debugGenerateTools(){
@@ -513,8 +527,8 @@ function debugGenerateTools(){
                 "<button onclick='debugChangeInputValue(10, \"debugInput" + tool.axe[key].idName + "\")'>++</button>" +
                 "<button onclick='tool.axe." + key + ".changeAmount(parseInt(gid(\"debugInput" + tool.axe[key].idName + "\").value))'>Apply</button>" +
             "</div>"
-        )
-    };
+        );
+    }
 }
 
 function debugGenerateBuildingWork(){
@@ -532,9 +546,9 @@ function debugGenerateBuildingWork(){
                     "<button onclick='debugChangeInputValue(10, \"debugInput" + buildingWork[key][subkey].idName + "\")'>++</button>" +
                     "<button onclick='buildingWork." + key + "." + subkey + ".add(parseInt(gid(\"debugInput" + buildingWork[key][subkey].idName + "\").value))'>Apply</button>" +
                 "</div>"
-            )
-        };
-    };
+            );
+        }
+    }
 }
 
 function debugGenerateBuildingHouse(){
@@ -549,6 +563,6 @@ function debugGenerateBuildingHouse(){
                 "<button onclick='debugChangeInputValue(10, \"debugInput" + buildingHouse[key].idName + "\")'>++</button>" +
                 "<button onclick='buildingHouse." + key + ".add(parseInt(gid(\"debugInput" + buildingHouse[key].idName + "\").value))'>Apply</button>" +
             "</div>"
-        )
-    };
+        );
+    }
 }

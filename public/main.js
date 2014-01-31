@@ -4,6 +4,7 @@ function gid(id) {
     return document.getElementById(id);
 }
 
+
 // ================================
 //   ENGINE
 // ================================
@@ -48,7 +49,6 @@ function dailyFunctions(){
     countdown("dayTimer", dailyFunctions, 15);
     dayCount++;
     dayRender();
-    dailyIncome();
 }
 
 // Population
@@ -79,11 +79,14 @@ function calculateWorkers(){
     population.updatePopulation();
 }
 
+
 // ================================
-//   RESOURCES
+//   OBJECT CONSTRUCTORS
 // ================================
 
-// Resource constructors
+// --------------------------------
+// Resources
+// --------------------------------
 
 function resource(publicName, idName, amountCap) {
     // Name handlers
@@ -98,8 +101,6 @@ function resource(publicName, idName, amountCap) {
     this.amount = 0;
     this.amountCap = amountCap;
 }
-
-// Object methods
 
 // Render the object
 resource.prototype.render = function () {
@@ -146,72 +147,10 @@ resource.prototype.checkAmount = function (num) {
     }
 };
 
-// Object definitions
 
-var resource = {
-    rawMaterial: {                 // Public Name       ID Name         Cap
-        clay:           new resource("Clay",            "clay",         200),
-        logs:           new resource("Logs",            "logs",         200),
-        stone:          new resource("Uncut Stone",     "stone",        200)
-    },
-    construction: {                // Public Name       ID Name         Cap
-        planks:         new resource("Planks",          "planks",       200),
-        stoneBricks:    new resource("Stone Bricks",    "stoneBricks",  200),
-        clayBricks:     new resource("Clay Bricks",     "clayBricks",   200)
-    },
-    fuel: {                        // Public Name       ID Name         Cap
-        firewood:       new resource("Firewood",        "firewood",     200),
-        charcoal:       new resource("Charcoal",        "charcoal",     200),
-        coal:           new resource("Coal",            "coal",         200),
-        coalCoke:       new resource("Coal Coke",       "coalCoke",     200),
-        peat:           new resource("Peat",            "peat",         200)
-    },
-    ore: {                         // Public Name       ID Name         Cap
-        cinnabar:       new resource("Cinnabar Ore",    "oreCinnabar",  200),
-        copper:         new resource("Copper Ore",      "oreCopper",    200),
-        galena:         new resource("Galena Ore",      "oreGalena",    200),
-        gold:           new resource("Gold Ore",        "oreGold",      200),
-        iron:           new resource("Iron Ore",        "oreIron",      200),
-        silver:         new resource("Silver Ore",      "oreSilver",    200),
-        tin:            new resource("Tin Ore",         "oreTin",       200)
-    },
-    ingot: {                       // Public Name       ID Name         Cap
-        bronze:         new resource("Bronze Ingot",    "ingotBronze",  200),
-        copper:         new resource("Copper Ingot",    "ingotCopper",  200),
-        gold:           new resource("Gold Ingot",      "ingotGold",    200),
-        iron:           new resource("Iron Ingot",      "ingotIron",    200),
-        lead:           new resource("Lead Ingot",      "ingotLead",    200),
-        silver:         new resource("Silver Ingot",    "ingotSilver",  200),
-        steel:          new resource("Steel Ingot",     "ingotSteel",   200),
-        tin:            new resource("Tin Ingot",       "ingotTin",     200)
-    },
-    foodRaw: {                     // Public Name       ID Name         Cap
-        grainBarley:    new resource("Barley Grain",    "grainBarley",  200),
-        grainWheat:     new resource("Wheat Grain",     "grainWheat",   200)
-    },
-    foodIngredient: {              // Public Name       ID Name         Cap
-        flourWheat:     new resource("Wheat Flour",     "flourWheat",   200)
-    },
-    foodCooked: {                  // Public Name       ID Name         Cap
-        bread:          new resource("Bread",           "bread",        200)
-    }
-};
-
-// Daily Income
-
-function dailyIncome() {
-    //for (var key in resource) {
-    //    for (var subkey in resource[key]) {
-    //        resource[key][subkey].changeAmount(resource[key][subkey].income - resource[key][subkey].expense);
-    //    };
-    //};
-}
-
-// ================================
-//   BUILDINGS
-// ================================
-
-// Producers - Provides resources
+// --------------------------------
+// Production Buildings
+// --------------------------------
 
 function buildingWork(publicName, idName, workerCap, incomeResource, incomeAmount, expenseResource, expenseAmount, toolType, toolAmount){
     // Names
@@ -220,17 +159,6 @@ function buildingWork(publicName, idName, workerCap, incomeResource, incomeAmoun
 
     // Number of buildings
     this.amount = 0;
-
-    // Workers
-    this.worker = {
-        amount:         0,                                                   // Number of workers employed in this building
-        capBase:        workerCap,                                           // Base amount of workers that can be employed as defined by the building
-        capModifier:    1,                                                   // Modifer to change the base capapacity per building for any upgrade buffs (May be merged with base instead)
-        capTotal:       function(){return this.capBase * this.capModifier;}, // Calculator for total worker capacity - I can't call this when rendering? How do?
-        equippedTools:  {
-            // To be populated by toolType
-        }
-    };
 
     // Building income - Array of each for the income calculation loop to easily call it
     this.incomeResource = incomeResource;
@@ -243,9 +171,15 @@ function buildingWork(publicName, idName, workerCap, incomeResource, incomeAmoun
     // Building tool requirements - What tool the building's worker needs to generate income and how many of each is needed
     this.toolType = toolType;
     this.toolAmount = toolAmount;
-}
 
-// Object Methods
+    // Workers
+    this.worker = {
+        amount:         0,                                                   // Number of workers employed in this building
+        capBase:        workerCap,                                           // Base amount of workers that can be employed as defined by the building
+        capModifier:    1,                                                   // Modifer to change the base capapacity per building for any upgrade buffs (May be merged with base instead)
+        capTotal:       function(){return this.capBase * this.capModifier;} // Calculator for total worker capacity - I can't call this when rendering? How do?
+    };
+}
 
 // Update the HTML on the page
 buildingWork.prototype.render = function () {
@@ -285,25 +219,10 @@ buildingWork.prototype.subtractWorker = function (num) {
     this.render();
 };
 
-// Object Definition
 
-var buildingWork = {
-    primary: {                      // Public Name      ID Name       Cap   Income Resource                     Income Amount   Expense Resource        Expense Amount  Tool Type           Tool Amount
-        campClay:   new buildingWork("Clay Pit",        "campClay",     5,  [resource.rawMaterial.clay],        [2],            null,                   null,           [tool.shovel],      [1]),
-        campLogs:   new buildingWork("Lumber Camp",     "campLogs",     5,  [resource.rawMaterial.logs],        [2],            null,                   null,           [tool.axe],         [1]),
-        campStone:  new buildingWork("Stone Quarry",    "campStone",    5,  [resource.rawMaterial.stone],       [2],            null,                   null,           [tool.pickaxe],     [1])
-    },
-    mine: {                         // Public Name      ID Name       Cap   Income Resource                     Income Amount   Expense Resource        Expense Amount  Tool Type           Tool Amount
-        copper:     new buildingWork("Copper Mine",     "mineCopper",   5,  [resource.ore.copper],              [2],            null,                   null,           [tool.pickaxe],     [1]),
-        galena:     new buildingWork("Lead Mine",       "mineGalena",   5,  [resource.ore.galena],              [2],            null,                   null,           [tool.pickaxe],     [1]),
-        gold:       new buildingWork("Gold Mine",       "mineGold",     5,  [resource.ore.gold],                [2],            null,                   null,           [tool.pickaxe],     [1]),
-        iron:       new buildingWork("Iron Mine",       "mineIron",     5,  [resource.ore.iron],                [2],            null,                   null,           [tool.pickaxe],     [1]),
-        silver:     new buildingWork("Silver Mine",     "mineSilver",   5,  [resource.ore.silver],              [2],            null,                   null,           [tool.pickaxe],     [1]),
-        tin:        new buildingWork("Tin Mine",        "mineTine",     5,  [resource.ore.tin],                 [2],            null,                   null,           [tool.pickaxe],     [1])
-    }
-};
-
-// Housing - Provides population
+// --------------------------------
+// Housing Buildings
+// --------------------------------
 
 function buildingHouse(publicName, idName, basePop){
     this.publicName = publicName;
@@ -313,8 +232,6 @@ function buildingHouse(publicName, idName, basePop){
     this.basePop = basePop;
     //this.popModifier = 0; TODO: Add tech tree modifiers here
 }
-
-// Object Methods
 
 // Update the HTML on the page
 buildingHouse.prototype.render = function () {
@@ -328,19 +245,10 @@ buildingHouse.prototype.add = function (num) {
     this.render();
 };
 
-// Object Definitions
 
-var buildingHouse = {               // Public Name      ID Name       Pop
-    tentSmall:  new buildingHouse("Small Tent",         "tentSmall",    1),
-    tentLarge:  new buildingHouse("Large Tent",         "tentLarge",    2),
-    hutSmall:   new buildingHouse("Small Hut",          "hutSmall",     4)
-};
-
-// ================================
-//   TOOLS
-// ================================
-
-// Constructor
+// --------------------------------
+// Tools
+// --------------------------------
 
 function tool(publicName, idName){
     this.publicName = publicName;
@@ -349,8 +257,6 @@ function tool(publicName, idName){
     this.amount = 0;
     this.equipped = 0;
 }
-
-// Object Methods
 
 // Update the HTML on the page
 tool.prototype.render = function () {
@@ -370,77 +276,156 @@ tool.prototype.changeAmount = function (num) {
     this.render();
 };
 
-// Object Definition
 
-var tool = {
-    axe: {
-        copper: new tool("Copper Axe", "axeCopper"),
-        bronze: new tool("Bronze Axe", "axeBronze"),
-        iron: new tool("Iron Axe", "axeIron"),
-        steel: new tool("Steel Axe", "axeSteel")
+// ================================
+//   OBJECT DEFINITIONS
+// ================================
+
+var Resource = {
+    RawMaterial: {                 // Public Name       ID Name         Cap
+        Clay:           new resource("Clay",            "Clay",         200),
+        Logs:           new resource("Logs",            "Logs",         200),
+        Stone:          new resource("Uncut Stone",     "Stone",        200)
     },
-    pickaxe: {
-        copper: new tool("Copper Pickaxe", "pickaxeCopper"),
-        bronze: new tool("Bronze Pickaxe", "pickaxeBronze"),
-        iron: new tool("Iron Pickaxe", "pickaxeIron"),
-        steel: new tool("Steel Pickaxe", "pickaxeSteel")
+    Construction: {                // Public Name       ID Name         Cap
+        Planks:         new resource("Planks",          "Planks",       200),
+        StoneBricks:    new resource("Stone Bricks",    "StoneBricks",  200),
+        ClayBricks:     new resource("Clay Bricks",     "ClayBricks",   200)
     },
-    saw: {
-        iron: new tool("Iron Saw", "sawIron"),
-        steel: new tool("Steel Saw", "sawSteel")
+    Fuel: {                        // Public Name       ID Name         Cap
+        Firewood:       new resource("Firewood",        "Firewood",     200),
+        Charcoal:       new resource("Charcoal",        "Charcoal",     200),
+        Coal:           new resource("Coal",            "Coal",         200),
+        CoalCoke:       new resource("Coal Coke",       "CoalCoke",     200),
+        Peat:           new resource("Peat",            "Peat",         200)
     },
-    hoe: {
-        copper: new tool("Copper Hoe", "hoeCopper"),
-        bronze: new tool("Bronze Hoe", "hoeBronze"),
-        iron: new tool("Iron Hoe", "hoeIron"),
-        steel: new tool("Steel Hoe", "hoeSteel")
+    Ore: {                         // Public Name       ID Name         Cap
+        Cinnabar:       new resource("Cinnabar Ore",    "OreCinnabar",  200),
+        Copper:         new resource("Copper Ore",      "OreCopper",    200),
+        Galena:         new resource("Galena Ore",      "OreGalena",    200),
+        Gold:           new resource("Gold Ore",        "OreGold",      200),
+        Iron:           new resource("Iron Ore",        "OreIron",      200),
+        Silver:         new resource("Silver Ore",      "OreSilver",    200),
+        Tin:            new resource("Tin Ore",         "OreTin",       200)
     },
-    shovel: {
-        copper: new tool("Copper Shovel", "shovelCopper"),
-        bronze: new tool("Bronze Shovel", "shovelBronze"),
-        iron: new tool("Iron Shovel", "shovelIron"),
-        steel: new tool("Steel Shovel", "shovelSteel")
+    Ingot: {                       // Public Name       ID Name         Cap
+        Bronze:         new resource("Bronze Ingot",    "IngotBronze",  200),
+        Copper:         new resource("Copper Ingot",    "IngotCopper",  200),
+        Gold:           new resource("Gold Ingot",      "IngotGold",    200),
+        Iron:           new resource("Iron Ingot",      "IngotIron",    200),
+        Lead:           new resource("Lead Ingot",      "IngotLead",    200),
+        Silver:         new resource("Silver Ingot",    "IngotSilver",  200),
+        Steel:          new resource("Steel Ingot",     "IngotSteel",   200),
+        Tin:            new resource("Tin Ingot",       "IngotTin",     200)
     },
-    farming: {
-        sickleCopper: new tool("Copper Sickle", "sickleCopper"),
-        sickleBronze: new tool("Bronze Sickle", "sickleBronze"),
-        sickleIron: new tool("Iron Sickle", "sickleIron"),
-        sickleSteel: new tool("Steel Sickle", "sickleSteel"),
-        sickleGold: new tool("Gold Sickle", "sickleGold"),
-        scytheCopper: new tool("Copper Scythe", "scytheCopper"),
-        scytheBronze: new tool("Bronze Scythe", "scytheBronze"),
-        scytheIron: new tool("Iron Scythe", "scytheIron"),
-        scytheSteel: new tool("Steel Scythe", "scytheSteel")
+    FoodRaw: {                     // Public Name       ID Name         Cap
+        GrainBarley:    new resource("Barley Grain",    "GrainBarley",  200),
+        GrainWheat:     new resource("Wheat Grain",     "GrainWheat",   200)
     },
-    hammer: {
-        stone: new tool("Stone Hammer", "hammerStone"),
-        copper: new tool("Copper Hammer", "hammerCopper"),
-        bronze: new tool("Bronze Hammer", "hammerBronze"),
-        iron: new tool("Iron Hammer", "hammerIron"),
-        steel: new tool("Steel Hammer", "hammerSteel")
+    FoodIngredient: {              // Public Name       ID Name         Cap
+        FlourWheat:     new resource("Wheat Flour",     "FlourWheat",   200)
     },
-    hunting: {
-        spearWood: new tool("Spear", "spearWood"),
-        spearStone: new tool("Stone Spear", "spearStone"),
-        spearCopper: new tool("Copper Spear", "spearCopper"),
-        spearBronze: new tool("Bronze Spear", "spearBronze"),
-        spearIron: new tool("Iron Spear", "spearIron"),
-        spearSteel: new tool("Steel Spear", "spearSteel"),
-        bowHunting: new tool("Hunting Bow", "bowHunting"),
-        bowReflex: new tool("Reflex Bow", "bowReflex"),
-        knifeStone: new tool("Stone Knife", "knifeStone"),
-        knifeCopper: new tool("Copper Knife", "knifeCopper"),
-        knifeBronze: new tool("Bronze Knife", "knifeBronze"),
-        knifeIron: new tool("Iron Knife", "knifeIron"),
-        knifeSteel: new tool("Steel Knife", "knifeSteel")
+    FoodCooked: {                  // Public Name       ID Name         Cap
+        Bread:          new resource("Bread",           "Bread",        200)
+    }
+};
+
+var BuildingWork = {
+    Primary: {                      // Public Name      ID Name       Cap   Income Resource                     Income Amount   Expense Resource        Expense Amount  Tool Type           Tool Amount
+        CampClay:   new buildingWork("Clay Pit",        "CampClay",     5,  [Resource.RawMaterial.Clay],        [2],            null,                   null,           ["Shovel"],      [1]),
+        CampLogs:   new buildingWork("Lumber Camp",     "CampLogs",     5,  [Resource.RawMaterial.Logs],        [2],            null,                   null,           ["Axe"],         [1]),
+        CampStone:  new buildingWork("Stone Quarry",    "CampStone",    5,  [Resource.RawMaterial.Stone],       [2],            null,                   null,           ["Pickaxe"],     [1])
     },
-    fishing: {
-        pole: new tool("Fishing Pole", "fishingPole"),
-        net: new tool("Fishing Net", "fishingNet")
+    Mine: {                         // Public Name      ID Name       Cap   Income Resource                     Income Amount   Expense Resource        Expense Amount  Tool Type           Tool Amount
+        Copper:     new buildingWork("Copper Mine",     "MineCopper",   5,  [Resource.Ore.Copper],              [2],            null,                   null,           ["Pickaxe"],     [1]),
+        Galena:     new buildingWork("Lead Mine",       "MineGalena",   5,  [Resource.Ore.Galena],              [2],            null,                   null,           ["Pickaxe"],     [1]),
+        Gold:       new buildingWork("Gold Mine",       "MineGold",     5,  [Resource.Ore.Gold],                [2],            null,                   null,           ["Pickaxe"],     [1]),
+        Iron:       new buildingWork("Iron Mine",       "MineIron",     5,  [Resource.Ore.Iron],                [2],            null,                   null,           ["Pickaxe"],     [1]),
+        Silver:     new buildingWork("Silver Mine",     "MineSilver",   5,  [Resource.Ore.Silver],              [2],            null,                   null,           ["Pickaxe"],     [1]),
+        Tin:        new buildingWork("Tin Mine",        "MineTine",     5,  [Resource.Ore.Tin],                 [2],            null,                   null,           ["Pickaxe"],     [1])
+    }
+};
+
+var BuildingHouse = {               // Public Name      ID Name       Pop
+    TentSmall:  new buildingHouse("Small Tent",         "TentSmall",    1),
+    TentLarge:  new buildingHouse("Large Tent",         "TentLarge",    2),
+    HutSmall:   new buildingHouse("Small Hut",          "HutSmall",     4)
+};
+
+var Tool = {
+    Axe: {
+        Copper: new tool("Copper Axe", "AxeCopper"),
+        Bronze: new tool("Bronze Axe", "AxeBronze"),
+        Iron: new tool("Iron Axe", "AxeIron"),
+        Steel: new tool("Steel Axe", "AxeSteel")
+    },
+    Pickaxe: {
+        Copper: new tool("Copper Pickaxe", "PickaxeCopper"),
+        Bronze: new tool("Bronze Pickaxe", "PickaxeBronze"),
+        iron: new tool("Iron Pickaxe", "PickaxeIron"),
+        steel: new tool("Steel Pickaxe", "PickaxeSteel")
+    },
+    Saw: {
+        Iron: new tool("Iron Saw", "AawIron"),
+        Steel: new tool("Steel Saw", "AawSteel")
+    },
+    Hoe: {
+        Copper: new tool("Copper Hoe", "HoeCopper"),
+        Bronze: new tool("Bronze Hoe", "HoeBronze"),
+        Iron: new tool("Iron Hoe", "HoeIron"),
+        Steel: new tool("Steel Hoe", "HoeSteel")
+    },
+    Shovel: {
+        Copper: new tool("Copper Shovel", "ShovelCopper"),
+        Bronze: new tool("Bronze Shovel", "ShovelBronze"),
+        Iron: new tool("Iron Shovel", "ShovelIron"),
+        Steel: new tool("Steel Shovel", "ShovelSteel")
+    },
+    Farming: {
+        SickleCopper: new tool("Copper Sickle", "SickleCopper"),
+        SickleBronze: new tool("Bronze Sickle", "SickleBronze"),
+        SickleIron: new tool("Iron Sickle", "SickleIron"),
+        SickleSteel: new tool("Steel Sickle", "SickleSteel"),
+        SickleGold: new tool("Gold Sickle", "SickleGold"),
+        ScytheCopper: new tool("Copper Scythe", "ScytheCopper"),
+        ScytheBronze: new tool("Bronze Scythe", "ScytheBronze"),
+        ScytheIron: new tool("Iron Scythe", "ScytheIron"),
+        ScytheSteel: new tool("Steel Scythe", "ScytheSteel")
+    },
+    Hammer: {
+        Stone: new tool("Stone Hammer", "HammerStone"),
+        Copper: new tool("Copper Hammer", "HammerCopper"),
+        Bronze: new tool("Bronze Hammer", "HammerBronze"),
+        Iron: new tool("Iron Hammer", "HammerIron"),
+        Steel: new tool("Steel Hammer", "HammerSteel")
+    },
+    Hunting: {
+        SpearWood: new tool("Spear", "SpearWood"),
+        SpearStone: new tool("Stone Spear", "SpearStone"),
+        SpearCopper: new tool("Copper Spear", "SpearCopper"),
+        SpearBronze: new tool("Bronze Spear", "SpearBronze"),
+        SpearIron: new tool("Iron Spear", "SpearIron"),
+        SpearSteel: new tool("Steel Spear", "SpearSteel"),
+        BowHunting: new tool("Hunting Bow", "BowHunting"),
+        BowReflex: new tool("Reflex Bow", "BowReflex"),
+        KnifeStone: new tool("Stone Knife", "KnifeStone"),
+        KnifeCopper: new tool("Copper Knife", "KnifeCopper"),
+        KnifeBronze: new tool("Bronze Knife", "KnifeBronze"),
+        KnifeIron: new tool("Iron Knife", "KnifeIron"),
+        KnifeSteel: new tool("Steel Knife", "KnifeSteel")
+    },
+    Fishing: {
+        Pole: new tool("Fishing Pole", "FishingPole"),
+        Net: new tool("Fishing Net", "FishingNet")
     }
 };
 
 
+// ================================
+//   OBJECT REFERENCE FUNCTIONS
+// ================================
+
+//TODO: Add tool list, crafting requirements, etc.
 
 // ================================
 //   RENDERING
@@ -451,21 +436,21 @@ function init(){
 
     population.updatePopulation();
 
-    for(var key in resource.rawMaterial){
+    for(var key in Resource.RawMaterial){
         console.log(key);
-        resource.rawMaterial[key].render();
+        Resource.RawMaterial[key].render();
     }
-    for (var key in tool.axe){
+    for (var key in Tool.Axe){
         console.log(key);
-        tool.axe[key].render();
+        Tool.Axe[key].render();
     }
-    for (var key in buildingHouse){
+    for (var key in BuildingHouse){
         console.log(key);
-        buildingHouse[key].render();
+        BuildingHouse[key].render();
     }
-    for (var key in buildingWork.primary){
+    for (var key in BuildingWork.Primary){
         console.log(key);
-        buildingWork.primary[key].render();
+        BuildingWork.Primary[key].render();
     }
 }
 
@@ -500,51 +485,51 @@ function debugChangeInputValue(num, id){
 }
 
 function debugGenerateResources(){
-    for (var key in resource.rawMaterial) {
+    for (var key in Resource.RawMaterial) {
         $("#debug-tab-resources").append(
-            "<div id='debugString" + resource.rawMaterial[key].idName + "'>" +
-                resource.rawMaterial[key].publicName + ": " +
-                "<button onclick='debugChangeInputValue(-10, \"debugInput" + resource.rawMaterial[key].idName + "\")'>--</button>" +
-                "<button onclick='debugChangeInputValue(-1, \"debugInput" + resource.rawMaterial[key].idName + "\")'>-</button>" +
-                "<input type='text' class='debugInput' id='debugInput" + resource.rawMaterial[key].idName + "' value='0' />" +
-                "<button onclick='debugChangeInputValue(1, \"debugInput" + resource.rawMaterial[key].idName + "\")'>+</button>" +
-                "<button onclick='debugChangeInputValue(10, \"debugInput" + resource.rawMaterial[key].idName + "\")'>++</button>" +
-                "<button onclick='resource.rawMaterial." + key + ".changeAmount(parseInt(gid(\"debugInput" + resource.rawMaterial[key].idName + "\").value))'>Apply</button>" +
-                "<button onclick='resource.rawMaterial." + key + ".checkAmount(parseInt(gid(\"debugInput" + resource.rawMaterial[key].idName + "\").value))'>Check</button>" +
+            "<div id='debugString" + Resource.RawMaterial[key].idName + "'>" +
+                Resource.RawMaterial[key].publicName + ": " +
+                "<button onclick='debugChangeInputValue(-10, \"debugInput" + Resource.RawMaterial[key].idName + "\")'>--</button>" +
+                "<button onclick='debugChangeInputValue(-1, \"debugInput" + Resource.RawMaterial[key].idName + "\")'>-</button>" +
+                "<input type='text' class='debugInput' id='debugInput" + Resource.RawMaterial[key].idName + "' value='0' />" +
+                "<button onclick='debugChangeInputValue(1, \"debugInput" + Resource.RawMaterial[key].idName + "\")'>+</button>" +
+                "<button onclick='debugChangeInputValue(10, \"debugInput" + Resource.RawMaterial[key].idName + "\")'>++</button>" +
+                "<button onclick='Resource.RawMaterial." + key + ".changeAmount(parseInt(gid(\"debugInput" + Resource.RawMaterial[key].idName + "\").value))'>Apply</button>" +
+                "<button onclick='Resource.RawMaterial." + key + ".checkAmount(parseInt(gid(\"debugInput" + Resource.RawMaterial[key].idName + "\").value))'>Check</button>" +
             "</div>");
     }
 }
 
 function debugGenerateTools(){
-    for (var key in tool.axe){
+    for (var key in Tool.Axe){
         $("#debug-tab-tools").append(
-            "<div id='debugString" + tool.axe[key].idName + "'>" +
-                tool.axe[key].publicName + ": " +
-                "<button onclick='debugChangeInputValue(-10, \"debugInput" + tool.axe[key].idName + "\")'>--</button>" +
-                "<button onclick='debugChangeInputValue(-1, \"debugInput" + tool.axe[key].idName + "\")'>-</button>" +
-                "<input type='text' class='debugInput' id='debugInput" + tool.axe[key].idName + "' value='0' />" +
-                "<button onclick='debugChangeInputValue(1, \"debugInput" + tool.axe[key].idName + "\")'>+</button>" +
-                "<button onclick='debugChangeInputValue(10, \"debugInput" + tool.axe[key].idName + "\")'>++</button>" +
-                "<button onclick='tool.axe." + key + ".changeAmount(parseInt(gid(\"debugInput" + tool.axe[key].idName + "\").value))'>Apply</button>" +
+            "<div id='debugString" + Tool.Axe[key].idName + "'>" +
+                Tool.Axe[key].publicName + ": " +
+                "<button onclick='debugChangeInputValue(-10, \"debugInput" + Tool.Axe[key].idName + "\")'>--</button>" +
+                "<button onclick='debugChangeInputValue(-1, \"debugInput" + Tool.Axe[key].idName + "\")'>-</button>" +
+                "<input type='text' class='debugInput' id='debugInput" + Tool.Axe[key].idName + "' value='0' />" +
+                "<button onclick='debugChangeInputValue(1, \"debugInput" + Tool.Axe[key].idName + "\")'>+</button>" +
+                "<button onclick='debugChangeInputValue(10, \"debugInput" + Tool.Axe[key].idName + "\")'>++</button>" +
+                "<button onclick='Tool.Axe." + key + ".changeAmount(parseInt(gid(\"debugInput" + Tool.Axe[key].idName + "\").value))'>Apply</button>" +
             "</div>"
         );
     }
 }
 
 function debugGenerateBuildingWork(){
-    for (var key in buildingWork){
+    for (var key in BuildingWork){
         $("#debug-tab-buildings").append(
-        "<h3>" + buildingWork[key] + "</h3>");
-        for (var subkey in buildingWork[key]) {
+        "<h3>" + BuildingWork[key] + "</h3>");
+        for (var subkey in BuildingWork[key]) {
             $("#debug-tab-buildings").append(
-                "<div id='debugString" + buildingWork[key][subkey].idName + "'>" +
-                    buildingWork[key][subkey].publicName + ": " +
-                    "<button onclick='debugChangeInputValue(-10, \"debugInput" + buildingWork[key][subkey].idName + "\")'>--</button>" +
-                    "<button onclick='debugChangeInputValue(-1, \"debugInput" + buildingWork[key][subkey].idName + "\")'>-</button>" +
-                    "<input type='text' class='debugInput' id='debugInput" + buildingWork[key][subkey].idName + "' value='0' />" +
-                    "<button onclick='debugChangeInputValue(1, \"debugInput" + buildingWork[key][subkey].idName + "\")'>+</button>" +
-                    "<button onclick='debugChangeInputValue(10, \"debugInput" + buildingWork[key][subkey].idName + "\")'>++</button>" +
-                    "<button onclick='buildingWork." + key + "." + subkey + ".add(parseInt(gid(\"debugInput" + buildingWork[key][subkey].idName + "\").value))'>Apply</button>" +
+                "<div id='debugString" + BuildingWork[key][subkey].idName + "'>" +
+                    BuildingWork[key][subkey].publicName + ": " +
+                    "<button onclick='debugChangeInputValue(-10, \"debugInput" + BuildingWork[key][subkey].idName + "\")'>--</button>" +
+                    "<button onclick='debugChangeInputValue(-1, \"debugInput" + BuildingWork[key][subkey].idName + "\")'>-</button>" +
+                    "<input type='text' class='debugInput' id='debugInput" + BuildingWork[key][subkey].idName + "' value='0' />" +
+                    "<button onclick='debugChangeInputValue(1, \"debugInput" + BuildingWork[key][subkey].idName + "\")'>+</button>" +
+                    "<button onclick='debugChangeInputValue(10, \"debugInput" + BuildingWork[key][subkey].idName + "\")'>++</button>" +
+                    "<button onclick='BuildingWork." + key + "." + subkey + ".add(parseInt(gid(\"debugInput" + BuildingWork[key][subkey].idName + "\").value))'>Apply</button>" +
                 "</div>"
             );
         }
@@ -552,16 +537,16 @@ function debugGenerateBuildingWork(){
 }
 
 function debugGenerateBuildingHouse(){
-    for (var key in buildingHouse){
+    for (var key in BuildingHouse){
         $("#debug-tab-houses").append(
-            "<div id='debugString" + buildingHouse[key].idName + "'>" +
-                buildingHouse[key].publicName + ": " +
-                "<button onclick='debugChangeInputValue(-10, \"debugInput" + buildingHouse[key].idName + "\")'>--</button>" +
-                "<button onclick='debugChangeInputValue(-1, \"debugInput" + buildingHouse[key].idName + "\")'>-</button>" +
-                "<input type='text' class='debugInput' id='debugInput" + buildingHouse[key].idName + "' value='0' />" +
-                "<button onclick='debugChangeInputValue(1, \"debugInput" + buildingHouse[key].idName + "\")'>+</button>" +
-                "<button onclick='debugChangeInputValue(10, \"debugInput" + buildingHouse[key].idName + "\")'>++</button>" +
-                "<button onclick='buildingHouse." + key + ".add(parseInt(gid(\"debugInput" + buildingHouse[key].idName + "\").value))'>Apply</button>" +
+            "<div id='debugString" + BuildingHouse[key].idName + "'>" +
+                BuildingHouse[key].publicName + ": " +
+                "<button onclick='debugChangeInputValue(-10, \"debugInput" + BuildingHouse[key].idName + "\")'>--</button>" +
+                "<button onclick='debugChangeInputValue(-1, \"debugInput" + BuildingHouse[key].idName + "\")'>-</button>" +
+                "<input type='text' class='debugInput' id='debugInput" + BuildingHouse[key].idName + "' value='0' />" +
+                "<button onclick='debugChangeInputValue(1, \"debugInput" + BuildingHouse[key].idName + "\")'>+</button>" +
+                "<button onclick='debugChangeInputValue(10, \"debugInput" + BuildingHouse[key].idName + "\")'>++</button>" +
+                "<button onclick='BuildingHouse." + key + ".add(parseInt(gid(\"debugInput" + BuildingHouse[key].idName + "\").value))'>Apply</button>" +
             "</div>"
         );
     }

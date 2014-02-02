@@ -432,19 +432,26 @@ var Tool = {
 //   OBJECT REFERENCE FUNCTIONS
 // ================================
 
+// Populate buildingWork.worker.equippedTool with each toolType
 buildingWork.prototype.listWorkerTools = function () {
+    // Loop through the toolType array
     for (var i = 0; i < this.toolType.length; i++){
+        // Loop through each tier of tool for that toolType
         for (var property in Tool[this.toolType[i]]) {
             // This line is needed to make sure that it doesn't perform the iteration over inherited properties
             if (Tool[this.toolType[i]].hasOwnProperty(property)) {
+                // Create the tool key as the tool's idName (Unique value)
                 this.worker.equippedTools[this.toolType[i] + property] = 0;
             }
         }
     }
+    // Create a key for unequipped worker
     this.worker.equippedTools.none = 0;
 };
 
+// Function to be run on load to populate the rest of the references
 function pageLoadDefinitions(){
+    // Populate equippedTool for each building type
     for (var key in BuildingWork){
         for (var subkey in BuildingWork[key]){
             BuildingWork[key][subkey].listWorkerTools();

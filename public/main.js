@@ -53,30 +53,30 @@ function dailyFunctions(){
 
 // Population
 
-var population = {
+var Population = {
     assigned:           0,
-    labourer:           function () { return population.cap - population.assigned; },
+    labourer:           function () { return Population.cap - Population.assigned; },
     cap:                0,
 
-    updatePopulation:   function () { gid("population").innerHTML = "Used Popluation: " + population.assigned + "/" + population.cap; }
+    updatePopulation:   function () { gid("Population").innerHTML = "Used Popluation: " + Population.assigned + "/" + Population.cap; }
 };
 
 function calculateHousing(){
-    population.cap = 0;
-    for(var key in buildingHouse){
-        population.cap += buildingHouse[key].amount * buildingHouse[key].basePop;
+    Population.cap = 0;
+    for(var key in BuildingHouse){
+        Population.cap += BuildingHouse[key].amount * BuildingHouse[key].basePop;
     }
-    population.updatePopulation();
+    Population.updatePopulation();
 }
 
 function calculateWorkers(){
-    population.assigned = 0;
-    for (var key in buildingWork){
-        for (var subkey in buildingWork[key]){
-            population.assigned += buildingWork[key][subkey].worker.amount;
+    Population.assigned = 0;
+    for (var key in BuildingWork){
+        for (var subkey in BuildingWork[key]){
+            Population.assigned += BuildingWork[key][subkey].worker.amount;
         }
     }
-    population.updatePopulation();
+    Population.updatePopulation();
 }
 
 
@@ -177,7 +177,8 @@ function buildingWork(publicName, idName, workerCap, incomeResource, incomeAmoun
         amount:         0,                                                   // Number of workers employed in this building
         capBase:        workerCap,                                           // Base amount of workers that can be employed as defined by the building
         capModifier:    1,                                                   // Modifer to change the base capapacity per building for any upgrade buffs (May be merged with base instead)
-        capTotal:       function(){return this.capBase * this.capModifier;} // Calculator for total worker capacity - I can't call this when rendering? How do?
+        capTotal:       function(){return this.capBase * this.capModifier;}, // Calculator for total worker capacity - I can't call this when rendering? How do?
+        equippedTools:  {}
     };
 }
 
@@ -194,7 +195,7 @@ buildingWork.prototype.add = function (num) {
 
 // Add worker to the building type (Soon to handle equipment and firing workers)
 buildingWork.prototype.addWorker = function (num) {
-    if (num <= population.cap - population.assigned) {
+    if (num <= Population.cap - Population.assigned) {
         if (this.worker.amount + num > this.amount * this.worker.capBase) {
             this.worker.amount = this.amount * this.worker.capBase;
         } else {
@@ -362,12 +363,12 @@ var Tool = {
     Pickaxe: {
         Copper: new tool("Copper Pickaxe", "PickaxeCopper"),
         Bronze: new tool("Bronze Pickaxe", "PickaxeBronze"),
-        iron: new tool("Iron Pickaxe", "PickaxeIron"),
-        steel: new tool("Steel Pickaxe", "PickaxeSteel")
+        Iron: new tool("Iron Pickaxe", "PickaxeIron"),
+        Steel: new tool("Steel Pickaxe", "PickaxeSteel")
     },
     Saw: {
-        Iron: new tool("Iron Saw", "AawIron"),
-        Steel: new tool("Steel Saw", "AawSteel")
+        Iron: new tool("Iron Saw", "SawIron"),
+        Steel: new tool("Steel Saw", "SawSteel")
     },
     Hoe: {
         Copper: new tool("Copper Hoe", "HoeCopper"),
@@ -381,12 +382,14 @@ var Tool = {
         Iron: new tool("Iron Shovel", "ShovelIron"),
         Steel: new tool("Steel Shovel", "ShovelSteel")
     },
-    Farming: {
+    Sickle: {
         SickleCopper: new tool("Copper Sickle", "SickleCopper"),
         SickleBronze: new tool("Bronze Sickle", "SickleBronze"),
         SickleIron: new tool("Iron Sickle", "SickleIron"),
         SickleSteel: new tool("Steel Sickle", "SickleSteel"),
-        SickleGold: new tool("Gold Sickle", "SickleGold"),
+        SickleGold: new tool("Gold Sickle", "SickleGold")
+    },
+    Scythe: {
         ScytheCopper: new tool("Copper Scythe", "ScytheCopper"),
         ScytheBronze: new tool("Bronze Scythe", "ScytheBronze"),
         ScytheIron: new tool("Iron Scythe", "ScytheIron"),
@@ -399,15 +402,19 @@ var Tool = {
         Iron: new tool("Iron Hammer", "HammerIron"),
         Steel: new tool("Steel Hammer", "HammerSteel")
     },
-    Hunting: {
+    Spear: {
         SpearWood: new tool("Spear", "SpearWood"),
         SpearStone: new tool("Stone Spear", "SpearStone"),
         SpearCopper: new tool("Copper Spear", "SpearCopper"),
         SpearBronze: new tool("Bronze Spear", "SpearBronze"),
         SpearIron: new tool("Iron Spear", "SpearIron"),
-        SpearSteel: new tool("Steel Spear", "SpearSteel"),
+        SpearSteel: new tool("Steel Spear", "SpearSteel")
+    },
+    Bow: {
         BowHunting: new tool("Hunting Bow", "BowHunting"),
-        BowReflex: new tool("Reflex Bow", "BowReflex"),
+        BowReflex: new tool("Reflex Bow", "BowReflex")
+    },
+    Knife: {
         KnifeStone: new tool("Stone Knife", "KnifeStone"),
         KnifeCopper: new tool("Copper Knife", "KnifeCopper"),
         KnifeBronze: new tool("Bronze Knife", "KnifeBronze"),
@@ -425,7 +432,25 @@ var Tool = {
 //   OBJECT REFERENCE FUNCTIONS
 // ================================
 
-//TODO: Add tool list, crafting requirements, etc.
+buildingWork.prototype.listWorkerTools = function () {
+    for (var i = 0; i < this.toolType.length; i++){
+        for (var property in Tool[this.toolType[i]]) {
+            // This line is needed to make sure that it doesn't perform the iteration over inherited properties
+            if (Tool[this.toolType[i]].hasOwnProperty(property)) {
+                this.worker.equippedTools[this.toolType[i] + property] = 0;
+            }
+        }
+    }
+    this.worker.equippedTools.none = 0;
+};
+
+function pageLoadDefinitions(){
+    for (var key in BuildingWork){
+        for (var subkey in BuildingWork[key]){
+            BuildingWork[key][subkey].listWorkerTools();
+        }
+    }
+}
 
 // ================================
 //   RENDERING
@@ -434,7 +459,7 @@ var Tool = {
 function init(){
     dayRender();
 
-    population.updatePopulation();
+    Population.updatePopulation();
 
     for(var key in Resource.RawMaterial){
         console.log(key);
@@ -456,6 +481,7 @@ function init(){
 
 $(document).ready(function () {
     countdown("dayTimer", dailyFunctions, 15);
+    pageLoadDefinitions();
     init();
     debugGenerateResources();
     debugGenerateTools();

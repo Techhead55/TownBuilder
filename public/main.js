@@ -45,6 +45,7 @@ function countdown(elementID, fn, seconds){
             fn();
         } else {
             seconds--;
+
         }
     }, 1000);
 }
@@ -116,6 +117,7 @@ function resource(publicName, idName, amountCap) {
     this.amount = 0;
     this.amountCap = amountCap;
 }
+
 
 // Render the object
 resource.prototype.render = function () {
@@ -336,6 +338,7 @@ var Resource = {
         Logs:           new resource        ("Logs",            "Logs",         200),
         Stone:          new resource        ("Uncut Stone",     "Stone",        200)
     },
+
     Construction: {                        // Public Name       ID Name         Cap
         Planks:         new resource        ("Planks",          "Planks",       200),
         StoneBricks:    new resource        ("Stone Bricks",    "StoneBricks",  200),

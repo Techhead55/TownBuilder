@@ -60,8 +60,18 @@ function dayRender(){
     gid("dayCounter").innerHTML = " - Week: " + week + " - Day: " + day;
 }
 
+// Doesn't work, returns Resource keys as null. The formula itself works fine if typed manually but it's getting lost in the loop. Wat?
+function dayIncome() {
+    for (var key in Resource) {
+        for (var subkey in Resource[key]){
+            Resource[key][subkey].changeAmount(Resource[key][subkey].income);
+        }
+    }
+}
+
 function dailyFunctions(){
     countdown("dayTimer", dailyFunctions, 15);
+    //dayIncome();
     dayCount++;
     dayRender();
 }
@@ -103,10 +113,10 @@ function calculateWorkers(){
 // Resources
 // --------------------------------
 
-function resource(publicName, idName, amountCap) {
+function resource(strPublicName, strIdName, intAmountCap) {
     // Name handlers
-    this.publicName = publicName;
-    this.idName = idName;
+    this.publicName = strPublicName;
+    this.idName = strIdName;
     
     // Economics
     this.income = 0;
@@ -114,7 +124,7 @@ function resource(publicName, idName, amountCap) {
     
     // Storage
     this.amount = 0;
-    this.amountCap = amountCap;
+    this.amountCap = intAmountCap;
 }
 
 // Render the object
@@ -167,29 +177,29 @@ resource.prototype.checkAmount = function (num) {
 // Production Buildings
 // --------------------------------
 
-function buildingWork(publicName, idName, workerCap, incomeResource, toolIncomeRef, expenseResource, toolExpenseRef, toolType){
+function buildingWork(strPublicName, strIdName, intWorkerCap, arrIncomeResource, arrToolIncomeRef, arrExpenseResource, arrToolExpenseRef, arrToolType){
     // Names
-    this.publicName = publicName; // Name that the player sees on the page
-    this.idName = idName; // Div and button IDs for dynamic rendering
+    this.publicName = strPublicName; // Name that the player sees on the page
+    this.idName = strIdName; // Div and button IDs for dynamic rendering
 
     // Number of buildings
     this.amount = 0;
 
     // Building income - Array of each for the income calculation loop to easily call it
-    this.incomeResource = incomeResource;
-    this.toolIncomeRef = toolIncomeRef;
+    this.incomeResource = arrIncomeResource;
+    this.toolIncomeRef = arrToolIncomeRef;
 
     // Building expense  - Array of each for the income calculation loop to easily call it
-    this.expenseResource = expenseResource;
-    this.toolExpenseRef = toolExpenseRef;
+    this.expenseResource = arrExpenseResource;
+    this.toolExpenseRef = arrToolExpenseRef;
     
     // Building tool requirements - What tool the building's worker needs to generate income
-    this.toolType = toolType;
+    this.toolType = arrToolType;
 
     // Workers
     this.worker = {
         amount:         0,                                                   // Number of workers employed in this building
-        capBase:        workerCap,                                           // Base amount of workers that can be employed as defined by the building
+        capBase:        intWorkerCap,                                        // Base amount of workers that can be employed as defined by the building
         capModifier:    1,                                                   // Modifer to change the base capapacity per building for any upgrade buffs (May be merged with base instead)
         capTotal:       function(){return this.capBase * this.capModifier;}, // Calculator for total worker capacity - I can't call this when rendering? How do?
         equippedTools:  {}
@@ -212,9 +222,9 @@ buildingWork.prototype.changeWorker = function (num) {
     if (isNaN(num) || num === 0) {          // Check if actually a number
         throw ("Stop trying to divide workers by 0");
     } else if (num > 0) {                   // Calculates the smallest amount it can add without going over any of the caps
-        num = Math.min(num, Population.cap - Population.assigned, this.amount * this.worker.capBase - this.worker.amount)
+        num = Math.min(num, Population.cap - Population.assigned, this.amount * this.worker.capBase - this.worker.amount);
     } else if (num < 0) {                   // Calculates the smallest amount it can subtract without going below 0 on anything - TODO: include unequipping
-        num = Math.max(num, this.worker.amount * -1, this.worker.equippedTools.none * -1)
+        num = Math.max(num, this.worker.amount * -1, this.worker.equippedTools.none * -1);
     }
     if (num === 0) {                        // Stop function if nothing to do
         return;
@@ -227,7 +237,7 @@ buildingWork.prototype.changeWorker = function (num) {
 
 // Gets the total of every toolTeir from the toolType
 buildingWork.prototype.getWorkerEquippedToolTotal = function (toolType) {
-    var total = 0
+    var total = 0;
     for (var key in this.worker.equippedTools[toolType]) {
         total += this.worker.equippedTools[toolType][key];
     }
@@ -238,10 +248,10 @@ buildingWork.prototype.getWorkerEquippedToolTotal = function (toolType) {
 buildingWork.prototype.getWorkerEquippedToolNone = function () {
     var totals = [];
     for (var i = 0; i < this.toolType.length; i++) {
-            totals.push(this.getWorkerEquippedToolTotal(this.toolType[i]));
+        totals.push(this.getWorkerEquippedToolTotal(this.toolType[i]));
     }
     return this.worker.amount - totals.max();
-}
+};
 
 // Changes the equipped tool amount
 buildingWork.prototype.changeWorkerEquippedTool = function (num, toolType, toolTeir) {
@@ -255,9 +265,41 @@ buildingWork.prototype.changeWorkerEquippedTool = function (num, toolType, toolT
     if (num === 0) {                        // Stop function if nothing to do
         return;
     }
+
+    var oldIncome = this.getIncomeByToolType(toolType);                     // Gets the old income value before making the change
+
     this.worker.equippedTools[toolType][toolTeir] += num;                   // Change the tool's amount
     Tool[toolType][toolTeir].changeEquipped(num);                           // Change the number of total equipped tools of that type game wide
     this.worker.equippedTools.none = this.getWorkerEquippedToolNone();      // Update the number of unequipped workers
+    this.applyIncomeByToolType(toolType, oldIncome);                        // Applies new income value to the resources
+};
+
+// Get income value for tool type
+buildingWork.prototype.getIncomeByToolType = function (toolType) {
+    var total = 0;
+    // Collect the income rate of each equipped tool in the catagory
+    for (var key in this.worker.equippedTools[toolType]) {
+        total += (this.worker.equippedTools[toolType][key] * Tool[toolType][key].incomeRate);
+    }
+    // Add the carriers for each equipped worker
+    if (total > 0) {
+        total += Math.min(this.worker.equippedTools.none, this.getWorkerEquippedToolTotal(toolType));
+    }
+    return total;
+};
+
+// Apply changes to income rate of a resource after the tool has been changed in the building
+buildingWork.prototype.applyIncomeByToolType = function (toolType, oldIncome) {
+    // Get position of toolType in the array. Used to compare against resource
+    var toolPosition = this.toolType.indexOf(toolType);
+    // Loop through each resource for the building, checking if the tool matches the resource
+    for (var i = 0; i < this.incomeResource.length; i++) {
+        if (toolPosition === this.toolIncomeRef[i]) {
+            // Subtract the old value and add the new one to update the income. This means multiple buildings can provide the same resource
+            objRef(window, this.incomeResource[i]).income -= oldIncome;
+            objRef(window, this.incomeResource[i]).income += this.getIncomeByToolType(toolType);
+        }
+    }
 };
 
 
@@ -265,12 +307,12 @@ buildingWork.prototype.changeWorkerEquippedTool = function (num, toolType, toolT
 // Housing Buildings
 // --------------------------------
 
-function buildingHouse(publicName, idName, basePop){
-    this.publicName = publicName;
-    this.idName = idName;
+function buildingHouse(strPublicName, strIdName, intBasePop){
+    this.publicName = strPublicName;
+    this.idName = strIdName;
 
     this.amount = 0;
-    this.basePop = basePop;
+    this.basePop = intBasePop;
     //this.popModifier = 0; TODO: Add tech tree modifiers here
 }
 
@@ -291,14 +333,14 @@ buildingHouse.prototype.add = function (num) {
 // Tools
 // --------------------------------
 
-function tool(publicName, idName, incomeRate){
-    this.publicName = publicName;
-    this.idName = idName;
+function tool(strPublicName, strIdName, intIncomeRate){
+    this.publicName = strPublicName;
+    this.idName = strIdName;
 
     this.amount = 0;
     this.equipped = 0;
 
-    this.incomeRate = incomeRate;
+    this.incomeRate = intIncomeRate;
 }
 
 // Update the HTML on the page
@@ -323,7 +365,7 @@ tool.prototype.changeAmount = function (num) {
 tool.prototype.changeEquipped = function (num) {
     this.equipped += num; // Temporary
     this.render();
-}
+};
 
 
 // ================================
@@ -382,16 +424,16 @@ var Resource = {
 var BuildingWork = {
     Primary: {                             // Public Name       ID Name       Cap   Income Resource                         Income Tool     Expense Resource        Expense Tool    Tool Type
         CampClay:       new buildingWork    ("Clay Pit",        "CampClay",     5,  ["Resource.RawMaterial.Clay"],          [0],            null,                   null,           ["Shovel"]),
-        CampLogs:       new buildingWork    ("Lumber Camp",     "CampLogs",     5,  [Resource.RawMaterial.Logs],            [0],            null,                   null,           ["Axe"]),
-        CampStone:      new buildingWork    ("Stone Quarry",    "CampStone",    5,  [Resource.RawMaterial.Stone],           [0],            null,                   null,           ["Pickaxe"])
+        CampLogs:       new buildingWork    ("Lumber Camp",     "CampLogs",     5,  ["Resource.RawMaterial.Logs"],          [0],            null,                   null,           ["Axe"]),
+        CampStone:      new buildingWork    ("Stone Quarry",    "CampStone",    5,  ["Resource.RawMaterial.Stone"],         [0],            null,                   null,           ["Pickaxe"])
     },
     Mine: {                                // Public Name       ID Name       Cap   Income Resource                         Income Tool     Expense Resource        Expense Tool    Tool Type
-        Copper:         new buildingWork    ("Copper Mine",     "MineCopper",   5,  [Resource.Ore.Copper],                  [0],            null,                   null,           ["Pickaxe"]),
-        Galena:         new buildingWork    ("Lead Mine",       "MineGalena",   5,  [Resource.Ore.Galena],                  [0],            null,                   null,           ["Pickaxe"]),
-        Gold:           new buildingWork    ("Gold Mine",       "MineGold",     5,  [Resource.Ore.Gold],                    [0],            null,                   null,           ["Pickaxe"]),
-        Iron:           new buildingWork    ("Iron Mine",       "MineIron",     5,  [Resource.Ore.Iron],                    [0],            null,                   null,           ["Pickaxe"]),
-        Silver:         new buildingWork    ("Silver Mine",     "MineSilver",   5,  [Resource.Ore.Silver],                  [0],            null,                   null,           ["Pickaxe"]),
-        Tin:            new buildingWork    ("Tin Mine",        "MineTine",     5,  [Resource.Ore.Tin],                     [0],            null,                   null,           ["Pickaxe"])
+        Copper:         new buildingWork    ("Copper Mine",     "MineCopper",   5,  ["Resource.Ore.Copper"],                [0],            null,                   null,           ["Pickaxe"]),
+        Galena:         new buildingWork    ("Lead Mine",       "MineGalena",   5,  ["Resource.Ore.Galena"],                [0],            null,                   null,           ["Pickaxe"]),
+        Gold:           new buildingWork    ("Gold Mine",       "MineGold",     5,  ["Resource.Ore.Gold"],                  [0],            null,                   null,           ["Pickaxe"]),
+        Iron:           new buildingWork    ("Iron Mine",       "MineIron",     5,  ["Resource.Ore.Iron"],                  [0],            null,                   null,           ["Pickaxe"]),
+        Silver:         new buildingWork    ("Silver Mine",     "MineSilver",   5,  ["Resource.Ore.Silver"],                [0],            null,                   null,           ["Pickaxe"]),
+        Tin:            new buildingWork    ("Tin Mine",        "MineTine",     5,  ["Resource.Ore.Tin"],                   [0],            null,                   null,           ["Pickaxe"])
     }
 };
 
@@ -485,7 +527,7 @@ buildingWork.prototype.listWorkerTools = function () {
     // Loop through the toolType array
     for (var i = 0; i < this.toolType.length; i++) {
         // Create the tool type key
-        this.worker.equippedTools[this.toolType[i]] = {}
+        this.worker.equippedTools[this.toolType[i]] = {};
         // Loop through each tier of tool for that toolType
         for (var property in Tool[this.toolType[i]]) {
             // This line is needed to make sure that it doesn't perform the iteration over inherited properties

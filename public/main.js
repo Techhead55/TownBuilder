@@ -60,18 +60,17 @@ function dayRender(){
     gid("dayCounter").innerHTML = " - Week: " + week + " - Day: " + day;
 }
 
-// Doesn't work, returns Resource keys as null. The formula itself works fine if typed manually but it's getting lost in the loop. Wat?
 function dayIncome() {
-    for (var key in Resource) {
-        for (var subkey in Resource[key]){
-            Resource[key][subkey].changeAmount(Resource[key][subkey].income);
-        }
+    for (var key in Resource.RawMaterial) {
+        //for (var subkey in Resource[key]){
+            Resource.RawMaterial[key].changeAmount(Resource.RawMaterial[key].income);
+        //}
     }
 }
 
 function dailyFunctions(){
     countdown("dayTimer", dailyFunctions, 15);
-    //dayIncome();
+    dayIncome();
     dayCount++;
     dayRender();
 }

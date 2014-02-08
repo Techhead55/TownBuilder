@@ -228,9 +228,18 @@ buildingWork.prototype.changeWorker = function (num) {
     if (num === 0) {                        // Stop function if nothing to do
         return;
     }
+
+    var oldIncome = [];
+    for (var i = 0; i < this.toolType.length; i++) {
+        oldIncome.push(this.getIncomeByToolType(this.toolType[i]));
+    }
+
     this.worker.amount += num;              // Change the worker amount
     this.worker.equippedTools.none += num;  // Change the unequipped tools
     calculateWorkers();                     // Calculate total used workers
+    for (var i = 0; i < this.toolType.length; i++) {
+        this.applyIncomeByToolType(this.toolType[i], oldIncome[i]);
+    }
     this.render();                          // Renders updated amounts to the screen
 };
 

@@ -19,9 +19,10 @@
         <div id="Population" style="display: inline"></div>
         <div>
             <h3>Resources</h3>
+            <div id="Clay"></div>
             <div id="Logs"></div>
             <div id="Stone"></div>
-            <div id="Clay"></div>
+            <div id="Skins"></div>
         </div>
 
         <div>
@@ -44,6 +45,12 @@
             <div><div id="CampLogs" style="display: inline"></div><button onclick="BuildingWork.Primary.CampLogs.changeWorker(-1)">-</button><button onclick="BuildingWork.Primary.CampLogs.changeWorker(1)">+</button></div>
             <div><div id="CampStone" style="display: inline"></div><button onclick="BuildingWork.Primary.CampStone.changeWorker(-1)">-</button><button onclick="BuildingWork.Primary.CampStone.changeWorker(1)">+</button></div>
             <div><div id="CampClay" style="display: inline"></div><button onclick="BuildingWork.Primary.CampClay.changeWorker(-1)">-</button><button onclick="BuildingWork.Primary.CampClay.changeWorker(1)">+</button></div>
+        </div>
+
+        <div>
+            <h3>Items</h3>
+            <div><div id="WoodenShaft" style="display: inline"></div><button onclick="Item.Component.WoodenShaft.applyCraft()">Craft</button> (1 Log produces 8)</div>
+            <div><div id="ToolHandle" style="display: inline"></div><button onclick="Item.Component.ToolHandle.applyCraft()">Craft</button> (1 Wooden Shaft produces 2)</div>
         </div>
 
         

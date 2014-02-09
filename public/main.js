@@ -315,13 +315,16 @@ buildingWork.prototype.applyIncomeByToolType = function (toolType, oldIncome) {
 // Housing Buildings
 // --------------------------------
 
-function buildingHouse(strPublicName, strIdName, intBasePop){
+function buildingHouse(strPublicName, strIdName, intBasePop, arrCraftType, arrCraftAmount){
     this.publicName = strPublicName;
     this.idName = strIdName;
 
     this.amount = 0;
     this.basePop = intBasePop;
     //this.popModifier = 0; TODO: Add tech tree modifiers here
+
+    this.craftType = arrCraftType;
+    this.craftAmount = arrCraftAmount;
 }
 
 // Update the HTML on the page
@@ -341,7 +344,7 @@ buildingHouse.prototype.add = function (num) {
 // Tools
 // --------------------------------
 
-function tool(strPublicName, strIdName, intIncomeRate){
+function tool(strPublicName, strIdName, intIncomeRate, arrCraftType, arrCraftAmount){
     this.publicName = strPublicName;
     this.idName = strIdName;
 
@@ -349,6 +352,9 @@ function tool(strPublicName, strIdName, intIncomeRate){
     this.equipped = 0;
 
     this.incomeRate = intIncomeRate;
+
+    this.craftType = arrCraftType;
+    this.craftAmount = arrCraftAmount;
 }
 
 // Update the HTML on the page
@@ -376,6 +382,84 @@ tool.prototype.changeEquipped = function (num) {
 };
 
 
+// --------------------------------
+// Items
+// --------------------------------
+
+function item(strPublicName, strIdName, intProducedAmount, arrCraftType, arrCraftAmount){
+    this.publicName = strPublicName;
+    this.idName = strIdName;
+
+    this.amount = 0;
+
+    this.producedAmount = intProducedAmount;
+    this.craftType = arrCraftType;
+    this.craftAmount = arrCraftAmount;
+}
+
+item.prototype.render = function (){
+    gid(this.idName).innerHTML = this.publicName + ": " + this.amount;
+}
+
+item.prototype.changeAmount = function (num) {
+    this.amount += num;
+    this.render();
+};
+
+item.prototype.checkCraft = function (num) {
+    // If no extra number is passed then automatically check for 1 craft
+    if (num == null) {
+        num = 1;
+    }
+
+    // Cycle through each required resource and check if there's enough in storage. If not then fail
+    for (var i = 0; i < this.craftType.length; i++) {
+        if (this.craftAmount[i] * num > objRef(window, this.craftType[i]).amount) {
+            return false;
+        }
+    }
+    
+    // Else return true
+    return true;
+};
+
+item.prototype.applyCraft = function (num) {
+    if (num == null) {
+        num = 1;
+    }
+
+    if (this.checkCraft(num)) {
+        for (var i = 0; i < this.craftType.length; i++) {
+            objRef(window, this.craftType[i]).changeAmount((this.craftAmount[i] * num) * -1);
+        }
+        this.amount += this.producedAmount * num;
+        this.render();
+    }
+};
+
+
+// --------------------------------
+// Machinery
+// --------------------------------
+
+function machinery(strPublicName, strIdName, intIncomeRate, arrCraftType, arrCraftAmount){
+    this.publicName = strPublicName;
+    this.idName = strIdName;
+
+    this.amount = 0;
+
+    this.incomeRate = intIncomeRate;
+    
+    this.craftType = arrCraftType;
+    this.crafTAmount = arrCraftAmount;
+
+}
+
+machinery.prototype.changeAmount = function (num) {
+    this.amount += num;
+};
+
+
 // ================================
 //   OBJECT DEFINITIONS
 // ================================
@@ -384,7 +468,8 @@ var Resource = {
     RawMaterial: {                         // Public Name       ID Name         Cap
         Clay:           new resource        ("Clay",            "Clay",         200),
         Logs:           new resource        ("Logs",            "Logs",         200),
-        Stone:          new resource        ("Uncut Stone",     "Stone",        200)
+        Stone:          new resource        ("Uncut Stone",     "Stone",        200),
+        Skins:          new resource        ("Animal Skins",    "Skins",        200)
     },
     Construction: {                        // Public Name       ID Name         Cap
         Planks:         new resource        ("Planks",          "Planks",       200),
@@ -446,83 +531,190 @@ var BuildingWork = {
 };
 
 var BuildingHouse = {                      // Public Name       ID Name         Pop
-    TentSmall:          new buildingHouse   ("Small Tent",      "TentSmall",    1),
-    TentLarge:          new buildingHouse   ("Large Tent",      "TentLarge",    2),
-    HutSmall:           new buildingHouse   ("Small Hut",       "HutSmall",     4)
+    TentSmall:          new buildingHouse   ("Small Tent",      "TentSmall",    1,
+                                            ["Resource.RawMaterial.Skins"],
+                                            [20]),
+    TentLarge:          new buildingHouse   ("Large Tent",      "TentLarge",    2,
+                                            ["Resource.RawMaterial.Skins"],
+                                            [40]),
+    HutSmall:           new buildingHouse   ("Small Hut",       "HutSmall",     4,
+                                            ["Resource.RawMaterial.Logs"],
+                                            [100])
 };
 
 var Tool = {
     Axe: {                                 // Public Name       ID Name             Income Rate
-        Copper:         new tool            ("Copper Axe",      "AxeCopper",        2),
-        Bronze:         new tool            ("Bronze Axe",      "AxeBronze",        4),
-        Iron:           new tool            ("Iron Axe",        "AxeIron",          8),
-        Steel:          new tool            ("Steel Axe",       "AxeSteel",         16)
+        Copper:         new tool            ("Copper Axe",      "AxeCopper",        2,
+                                            ["Resource.Ingot.Copper",   "Item.Component.ToolHandle"],
+                                            [1,                         1]),
+        Bronze:         new tool            ("Bronze Axe",      "AxeBronze",        4,
+                                            ["Resource.Ingot.Bronze",   "Item.Component.ToolHandle"],
+                                            [1,                         1]),
+        Iron:           new tool            ("Iron Axe",        "AxeIron",          8,
+                                            ["Resource.Ingot.Iron",     "Item.Component.ToolHandle"],
+                                            [1,                         1]),
+        Steel:          new tool            ("Steel Axe",       "AxeSteel",         16,
+                                            ["Resource.Ingot.Steel",    "Item.Component.ToolHandle"],
+                                            [1,                         1])
     },
     Pickaxe: {                             // Public Name       ID Name             Income Rate
-        Copper:         new tool            ("Copper Pickaxe",  "PickaxeCopper",    2),
-        Bronze:         new tool            ("Bronze Pickaxe",  "PickaxeBronze",    4),
-        Iron:           new tool            ("Iron Pickaxe",    "PickaxeIron",      8),
-        Steel:          new tool            ("Steel Pickaxe",   "PickaxeSteel",     16)
+        Copper:         new tool            ("Copper Pickaxe",  "PickaxeCopper",    2,
+                                            ["Resource.Ingot.Copper",   "Item.Component.ToolHandle"],
+                                            [1,                         1]),
+        Bronze:         new tool            ("Bronze Pickaxe",  "PickaxeBronze",    4,
+                                            ["Resource.Ingot.Bronze",   "Item.Component.ToolHandle"],
+                                            [1,                         1]),
+        Iron:           new tool            ("Iron Pickaxe",    "PickaxeIron",      8,
+                                            ["Resource.Ingot.Iron",     "Item.Component.ToolHandle"],
+                                            [1,                         1]),
+        Steel:          new tool            ("Steel Pickaxe",   "PickaxeSteel",     16,
+                                            ["Resource.Ingot.Steel",    "Item.Component.ToolHandle"],
+                                            [1,                         1])
     },
     Saw: {                                 // Public Name       ID Name             Income Rate
-        Iron:           new tool            ("Iron Saw",        "SawIron",          8),
-        Steel:          new tool            ("Steel Saw",       "SawSteel",         16)
+        Iron:           new tool            ("Iron Saw",        "SawIron",          8,
+                                            ["Resource.Ingot.Iron",     "Item.Component.ToolHandle"],
+                                            [2,                         1]),
+        Steel:          new tool            ("Steel Saw",       "SawSteel",         16,
+                                            ["Resource.Ingot.Steel",    "Item.Component.ToolHandle"],
+                                            [2,                         1])
     },
     Hoe: {                                 // Public Name       ID Name             Income Rate
-        Copper:         new tool            ("Copper Hoe",      "HoeCopper",        2),
-        Bronze:         new tool            ("Bronze Hoe",      "HoeBronze",        4),
-        Iron:           new tool            ("Iron Hoe",        "HoeIron",          8),
-        Steel:          new tool            ("Steel Hoe",       "HoeSteel",         16)
+        Copper:         new tool            ("Copper Hoe",      "HoeCopper",        2,
+                                            ["Resource.Ingot.Copper",   "Item.Component.ToolHandle"],
+                                            [1,                         1]),
+        Bronze:         new tool            ("Bronze Hoe",      "HoeBronze",        4,
+                                            ["Resource.Ingot.Bronze",   "Item.Component.ToolHandle"],
+                                            [1,                         1]),
+        Iron:           new tool            ("Iron Hoe",        "HoeIron",          8,
+                                            ["Resource.Ingot.Iron",     "Item.Component.ToolHandle"],
+                                            [1,                         1]),
+        Steel:          new tool            ("Steel Hoe",       "HoeSteel",         16,
+                                            ["Resource.Ingot.Steel",    "Item.Component.ToolHandle"],
+                                            [1,                         1])
     },
     Shovel: {                              // Public Name       ID Name             Income Rate
-        Copper:         new tool            ("Copper Shovel",   "ShovelCopper",     2),
-        Bronze:         new tool            ("Bronze Shovel",   "ShovelBronze",     4),
-        Iron:           new tool            ("Iron Shovel",     "ShovelIron",       8),
-        Steel:          new tool            ("Steel Shovel",    "ShovelSteel",      16)
+        Copper:         new tool            ("Copper Shovel",   "ShovelCopper",     2
+                                            ["Resource.Ingot.Copper",   "Item.Component.ToolHandle"],
+                                            [1,                         1]),
+        Bronze:         new tool            ("Bronze Shovel",   "ShovelBronze",     4,
+                                            ["Resource.Ingot.Bronze",   "Item.Component.ToolHandle"],
+                                            [1,                         1]),
+        Iron:           new tool            ("Iron Shovel",     "ShovelIron",       8,
+                                            ["Resource.Ingot.Iron",     "Item.Component.ToolHandle"],
+                                            [1,                         1]),
+        Steel:          new tool            ("Steel Shovel",    "ShovelSteel",      16,
+                                            ["Resource.Ingot.Steel",    "Item.Component.ToolHandle"],
+                                            [1,                         1])
     },
     Sickle: {                              // Public Name       ID Name             Income Rate
-        Copper:         new tool            ("Copper Sickle",   "SickleCopper",     2),
-        Bronze:         new tool            ("Bronze Sickle",   "SickleBronze",     4),
-        Iron:           new tool            ("Iron Sickle",     "SickleIron",       8),
-        Steel:          new tool            ("Steel Sickle",    "SickleSteel",      16),
-        Gold:           new tool            ("Gold Sickle",     "SickleGold",       4)
+        Copper:         new tool            ("Copper Sickle",   "SickleCopper",     2,
+                                            ["Resource.Ingot.Copper",   "Item.Component.ToolHandle"],
+                                            [1,                         1]),
+        Bronze:         new tool            ("Bronze Sickle",   "SickleBronze",     4,
+                                            ["Resource.Ingot.Bronze",   "Item.Component.ToolHandle"],
+                                            [1,                         1]),
+        Iron:           new tool            ("Iron Sickle",     "SickleIron",       8,
+                                            ["Resource.Ingot.Iron",     "Item.Component.ToolHandle"],
+                                            [1,                         1]),
+        Steel:          new tool            ("Steel Sickle",    "SickleSteel",      16,
+                                            ["Resource.Ingot.Steel",    "Item.Component.ToolHandle"],
+                                            [1,                         1]),
+        Gold:           new tool            ("Gold Sickle",     "SickleGold",       4,
+                                            ["Resource.Ingot.Gold",    "Item.Component.ToolHandle"],
+                                            [1,                         1])
     },
     Scythe: {                              // Public Name       ID Name             Income Rate
-        Copper:         new tool            ("Copper Scythe",   "ScytheCopper",     2),
-        Bronze:         new tool            ("Bronze Scythe",   "ScytheBronze",     4),
-        Iron:           new tool            ("Iron Scythe",     "ScytheIron",       8),
-        Steel:          new tool            ("Steel Scythe",    "ScytheSteel",      16)
+        Copper:         new tool            ("Copper Scythe",   "ScytheCopper",     2,
+                                            ["Resource.Ingot.Copper",   "Item.Component.ToolHandle"],
+                                            [2,                         1]),
+        Bronze:         new tool            ("Bronze Scythe",   "ScytheBronze",     4,
+                                            ["Resource.Ingot.Bronze",   "Item.Component.ToolHandle"],
+                                            [2,                         1]),
+        Iron:           new tool            ("Iron Scythe",     "ScytheIron",       8,
+                                            ["Resource.Ingot.Iron",     "Item.Component.ToolHandle"],
+                                            [2,                         1]),
+        Steel:          new tool            ("Steel Scythe",    "ScytheSteel",      16,
+                                            ["Resource.Ingot.Steel",    "Item.Component.ToolHandle"],
+                                            [2,                         1])
     },
     Hammer: {                              // Public Name       ID Name             Income Rate
-        Stone:          new tool            ("Stone Hammer",    "HammerStone",      1),
-        Copper:         new tool            ("Copper Hammer",   "HammerCopper",     2),
-        Bronze:         new tool            ("Bronze Hammer",   "HammerBronze",     4),
-        Iron:           new tool            ("Iron Hammer",     "HammerIron",       8),
-        Steel:          new tool            ("Steel Hammer",    "HammerSteel",      16)
+        Stone:          new tool            ("Stone Hammer",    "HammerStone",      1,
+                                            ["Resource.RawMaterial.Stone",  "Item.Component.ToolHandle"],
+                                            [2,                             1]),
+        Copper:         new tool            ("Copper Hammer",   "HammerCopper",     2,
+                                            ["Resource.Ingot.Copper",   "Item.Component.ToolHandle"],
+                                            [2,                         1]),
+        Bronze:         new tool            ("Bronze Hammer",   "HammerBronze",     4,
+                                            ["Resource.Ingot.Bronze",   "Item.Component.ToolHandle"],
+                                            [2,                         1]),
+        Iron:           new tool            ("Iron Hammer",     "HammerIron",       8,
+                                            ["Resource.Ingot.Iron",     "Item.Component.ToolHandle"],
+                                            [2,                         1]),
+        Steel:          new tool            ("Steel Hammer",    "HammerSteel",      16,
+                                            ["Resource.Ingot.Steel",    "Item.Component.ToolHandle"],
+                                            [2,                         1])
     },
     Spear: {                               // Public Name       ID Name             Income Rate
-        Wood:           new tool            ("Spear",           "SpearWood",        1),
-        Stone:          new tool            ("Stone Spear",     "SpearStone",       1),
-        Copper:         new tool            ("Copper Spear",    "SpearCopper",      2),
-        Bronze:         new tool            ("Bronze Spear",    "SpearBronze",      4),
-        Iron:           new tool            ("Iron Spear",      "SpearIron",        8),
-        Steel:          new tool            ("Steel Spear",     "SpearSteel",       16)
+        Wood:           new tool            ("Spear",           "SpearWood",        1,
+                                            ["Item.Component.ToolHandle"],
+                                            [1]),
+        Copper:         new tool            ("Copper Spear",    "SpearCopper",      2,
+                                            ["Resource.Ingot.Copper",   "Item.Component.ToolHandle"],
+                                            [1,                         1]),
+        Bronze:         new tool            ("Bronze Spear",    "SpearBronze",      4,
+                                            ["Resource.Ingot.Bronze",   "Item.Component.ToolHandle"],
+                                            [1,                         1]),
+        Iron:           new tool            ("Iron Spear",      "SpearIron",        8,
+                                            ["Resource.Ingot.Iron",     "Item.Component.ToolHandle"],
+                                            [1,                         1]),
+        Steel:          new tool            ("Steel Spear",     "SpearSteel",       16,
+                                            ["Resource.Ingot.Steel",    "Item.Component.ToolHandle"],
+                                            [1,                         1])
     },
-    Bow: {                                 // Public Name       ID Name             Income Rate
-        Hunting:        new tool            ("Hunting Bow",     "BowHunting",       8),
-        Reflex:         new tool            ("Reflex Bow",      "BowReflex",        16)
+    Hunting: {                             // Public Name       ID Name             Income Rate
+        Spear:          new tool            ("Hunting Spear",   "HuntingSpear",     2,
+                                            ["Item.Component.ToolHandle"],
+                                            [1]),
+        Hunting:        new tool            ("Hunting Bow",     "HuntingBow",       4),
+        Reflex:         new tool            ("Reflex Bow",      "HuntingReflexBow", 8)
     },
     Knife: {                               // Public Name       ID Name             Income Rate
-        Stone:          new tool            ("Stone Knife",     "KnifeStone",       1),
-        Copper:         new tool            ("Copper Knife",    "KnifeCopper",      2),
-        Bronze:         new tool            ("Bronze Knife",    "KnifeBronze",      4),
-        Iron:           new tool            ("Iron Knife",      "KnifeIron",        8),
-        Steel:          new tool            ("Steel Knife",     "KnifeSteel",       16)
+        Stone:          new tool            ("Stone Knife",     "KnifeStone",       1,
+                                            ["Resource.RawMaterial.Stone",  "Item.Component.ToolHandle"],
+                                            [1,                             1]),
+        Copper:         new tool            ("Copper Knife",    "KnifeCopper",      2,
+                                            ["Resource.Ingot.Copper",   "Item.Component.ToolHandle"],
+                                            [1,                         1]),
+        Bronze:         new tool            ("Bronze Knife",    "KnifeBronze",      4,
+                                            ["Resource.Ingot.Bronze",   "Item.Component.ToolHandle"],
+                                            [1,                         1]),
+        Iron:           new tool            ("Iron Knife",      "KnifeIron",        8,
+                                            ["Resource.Ingot.Iron",     "Item.Component.ToolHandle"],
+                                            [1,                         1]),
+        Steel:          new tool            ("Steel Knife",     "KnifeSteel",       16,
+                                            ["Resource.Ingot.Steel",    "Item.Component.ToolHandle"],
+                                            [1,                         1])
     },
     Fishing: {                             // Public Name       ID Name             Income Rate
         Pole:           new tool            ("Fishing Pole",    "FishingPole",      4),
         Net:            new tool            ("Fishing Net",     "FishingNet",       16)
     }
+};
+
+var Item = {
+    Component:{                            // Public Name       ID Name         Produces
+        WoodenShaft:    new item            ("Wooden Shaft",    "WoodenShaft",  8,
+                                            ["Resource.RawMaterial.Logs"],
+                                            [1]),
+        ToolHandle:     new item            ("Tool Handle",     "ToolHandle",   2,
+                                            ["Item.Component.WoodenShaft"],
+                                            [1])
+    }
+};
+
+var Machinery = {
+
 };
 
 
@@ -584,6 +776,10 @@ function init(){
     for (var key in BuildingWork.Primary){
         console.log(key);
         BuildingWork.Primary[key].render();
+    }
+    for (var key in Item.Component){
+        console.log(key);
+        Item.Component[key].render();
     }
 }
 

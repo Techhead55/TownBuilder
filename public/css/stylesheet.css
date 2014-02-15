@@ -100,7 +100,7 @@ button:active{
 }
 
 #debug-tabs { 
-    background: transparent; 
+    background: #fff; 
     border: none; 
 } 
 #debug-tabs .scroller {

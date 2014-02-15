@@ -95,13 +95,60 @@ function calculateHousing(){
 
 function calculateWorkers(){
     Population.assigned = 0;
-    for (var key in BuildingWork){
-        for (var subkey in BuildingWork[key]){
-            Population.assigned += BuildingWork[key][subkey].worker.amount;
+    for (var key in BuildingPrimary){
+        for (var subkey in BuildingPrimary[key]){
+            Population.assigned += BuildingPrimary[key][subkey].worker.amount;
         }
     }
+    for (var key in BuildingFactory){
+        for (var subkey in BuildingFactory[key]){
+            Population.assigned += BuildingFactory[key][subkey].worker.amount;
+        }
+    }
+
     Population.updatePopulation();
 }
+
+// Crafting
+
+var fnCheckCraft = function (num) {
+    // If no extra number is passed then automatically check for 1 craft
+    if (num == null) {
+        num = 1;
+    }
+
+    // Cycle through each required resource and check if there's enough in storage. If not then fail
+    for (var i = 0; i < this.craftType.length; i++) {
+        if (this.craftAmount[i] * num > objRef(window, this.craftType[i]).amount) {
+            return false;
+        }
+    }
+    
+    // Else return true
+    return true;
+};
+
+var fnApplyCraft = function (num) {
+    // If no extra number is passed then automatically check for 1 craft
+    if (num == null) {
+        num = 1;
+    }
+
+    // Produces 1 unless specified by item
+    var produced = 1;
+
+    if (this.hasOwnProperty("producedAmount")) {
+        produced = this.producedAmount;
+    }
+
+    // If the check returns true then cycle through each resource subtracting the requirement, add the produced amount
+    if (this.checkCraft(num)) {
+        for (var i = 0; i < this.craftType.length; i++) {
+            objRef(window, this.craftType[i]).changeAmount((this.craftAmount[i] * num) * -1);
+        }
+        this.changeAmount(produced * num);
+    }
+};
 
 
 // ================================
@@ -147,36 +194,12 @@ resource.prototype.changeAmount = function (num) {
     this.render();
 };
 
-// Check amount for crafting recipes - May not be needed
-resource.prototype.checkAmount = function (num) {
-    if (!isNaN(num)) {
-        var number = 0;
-        if (num >= 0) {
-            if (num + this.amount > this.amountCap) {
-                number = num + this.amount - this.amountCap;
-            } else {
-                number = 0;
-            }
-        } else {
-            if (this.amount + num < 0) {
-                number = this.amount + num;
-            } else {
-                number = 0;
-            }
-        }
-        console.log(number);
-        return number;
-    } else {
-        return false;
-    }
-};
-
 
 // --------------------------------
 // Production Buildings
 // --------------------------------
 
-function buildingWork(strPublicName, strIdName, intWorkerCap, arrIncomeResource, arrToolIncomeRef, arrExpenseResource, arrToolExpenseRef, arrToolType){
+function buildingPrimary(strPublicName, strIdName, intWorkerCap, arrIncomeResource, arrToolIncomeRef, arrToolType, arrCraftType, arrCraftAmount){
     // Names
     this.publicName = strPublicName; // Name that the player sees on the page
     this.idName = strIdName; // Div and button IDs for dynamic rendering
@@ -187,10 +210,6 @@ function buildingWork(strPublicName, strIdName, intWorkerCap, arrIncomeResource,
     // Building income - Array of each for the income calculation loop to easily call it
     this.incomeResource = arrIncomeResource;
     this.toolIncomeRef = arrToolIncomeRef;
-
-    // Building expense  - Array of each for the income calculation loop to easily call it
-    this.expenseResource = arrExpenseResource;
-    this.toolExpenseRef = arrToolExpenseRef;
     
     // Building tool requirements - What tool the building's worker needs to generate income
     this.toolType = arrToolType;
@@ -203,21 +222,24 @@ function buildingWork(strPublicName, strIdName, intWorkerCap, arrIncomeResource,
         capTotal:       function(){return this.capBase * this.capModifier;}, // Calculator for total worker capacity - I can't call this when rendering? How do?
         equippedTools:  {}
     };
+
+    this.craftType = arrCraftType;
+    this.craftAmount = arrCraftAmount;
 }
 
 // Update the HTML on the page
-buildingWork.prototype.render = function () {
+buildingPrimary.prototype.render = function () {
     gid(this.idName).innerHTML = this.publicName + "s: " + this.amount + " - Workers: " + this.worker.amount + "/" + (this.amount * this.worker.capBase);
 };
 
 // Add more of this building type
-buildingWork.prototype.add = function (num) {
+buildingPrimary.prototype.changeAmount = function (num) {
     this.amount += num;
     this.render();
 };
 
 // Change worker for the building type - TODO: Have it automatically equip the best tool available
-buildingWork.prototype.changeWorker = function (num) {
+buildingPrimary.prototype.changeWorker = function (num) {
     if (isNaN(num) || num === 0) {          // Check if actually a number
         throw ("Stop trying to divide workers by 0");
     } else if (num > 0) {                   // Calculates the smallest amount it can add without going over any of the caps
@@ -243,8 +265,8 @@ buildingWork.prototype.changeWorker = function (num) {
     this.render();                          // Renders updated amounts to the screen
 };
 
-// Gets the total of every toolTeir from the toolType
-buildingWork.prototype.getWorkerEquippedToolTotal = function (toolType) {
+// Gets the total of every toolTier from the toolType
+buildingPrimary.prototype.getWorkerEquippedToolTotal = function (toolType) {
     var total = 0;
     for (var key in this.worker.equippedTools[toolType]) {
         total += this.worker.equippedTools[toolType][key];
@@ -253,7 +275,7 @@ buildingWork.prototype.getWorkerEquippedToolTotal = function (toolType) {
 };
 
 // Gets the total of every toolType and returns the amount of unequipped workers
-buildingWork.prototype.getWorkerEquippedToolNone = function () {
+buildingPrimary.prototype.getWorkerEquippedToolNone = function () {
     var totals = [];
     for (var i = 0; i < this.toolType.length; i++) {
         totals.push(this.getWorkerEquippedToolTotal(this.toolType[i]));
@@ -262,13 +284,13 @@ buildingWork.prototype.getWorkerEquippedToolNone = function () {
 };
 
 // Changes the equipped tool amount
-buildingWork.prototype.changeWorkerEquippedTool = function (num, toolType, toolTeir) {
+buildingPrimary.prototype.changeWorkerEquippedTool = function (num, toolType, toolTier) {
     if (isNaN(num) || num === 0) {          // Check if actually a number
         throw ("Stop trying to divide by 0");
     } else if (num > 0) {                   // Calculates the smallest amount it can add without going over any of the caps
-        num = Math.min(num, this.worker.amount - this.getWorkerEquippedToolTotal(toolType), this.worker.equippedTools.none, Tool[toolType][toolTeir].amount - Tool[toolType][toolTeir].equipped);
+        num = Math.min(num, this.worker.amount - this.getWorkerEquippedToolTotal(toolType), this.worker.equippedTools.none, Tool[toolType][toolTier].amount - Tool[toolType][toolTier].equipped);
     } else if (num < 0) {                   // Calculates the smallest amount it can subtract without going below 0 on anything
-        num = Math.max(num, this.worker.equippedTools[toolType][toolTeir] * -1, Tool[toolType][toolTeir].equipped * -1);
+        num = Math.max(num, this.worker.equippedTools[toolType][toolTier] * -1, Tool[toolType][toolTier].equipped * -1);
     }
     if (num === 0) {                        // Stop function if nothing to do
         return;
@@ -276,14 +298,14 @@ buildingWork.prototype.changeWorkerEquippedTool = function (num, toolType, toolT
 
     var oldIncome = this.getIncomeByToolType(toolType);                     // Gets the old income value before making the change
 
-    this.worker.equippedTools[toolType][toolTeir] += num;                   // Change the tool's amount
-    Tool[toolType][toolTeir].changeEquipped(num);                           // Change the number of total equipped tools of that type game wide
+    this.worker.equippedTools[toolType][toolTier] += num;                   // Change the tool's amount
+    Tool[toolType][toolTier].changeEquipped(num);                           // Change the number of total equipped tools of that type game wide
     this.worker.equippedTools.none = this.getWorkerEquippedToolNone();      // Update the number of unequipped workers
     this.applyIncomeByToolType(toolType, oldIncome);                        // Applies new income value to the resources
 };
 
 // Get income value for tool type
-buildingWork.prototype.getIncomeByToolType = function (toolType) {
+buildingPrimary.prototype.getIncomeByToolType = function (toolType) {
     var total = 0;
     // Collect the income rate of each equipped tool in the catagory
     for (var key in this.worker.equippedTools[toolType]) {
@@ -297,7 +319,7 @@ buildingWork.prototype.getIncomeByToolType = function (toolType) {
 };
 
 // Apply changes to income rate of a resource after the tool has been changed in the building
-buildingWork.prototype.applyIncomeByToolType = function (toolType, oldIncome) {
+buildingPrimary.prototype.applyIncomeByToolType = function (toolType, oldIncome) {
     // Get position of toolType in the array. Used to compare against resource
     var toolPosition = this.toolType.indexOf(toolType);
     // Loop through each resource for the building, checking if the tool matches the resource
@@ -309,6 +331,107 @@ buildingWork.prototype.applyIncomeByToolType = function (toolType, oldIncome) {
         }
     }
 };
+
+buildingPrimary.prototype.checkCraft = fnCheckCraft;
+
+buildingPrimary.prototype.applyCraft = fnApplyCraft;
+
+// --------------------------------
+// Factories
+// --------------------------------
+
+function buildingFactory(strPublicName, strIdName, intWorkerCap, arrIncomeResource, arrMachineIncomeRef, arrIncomeRate, arrExpenseResource, arrMachineExpenseRef, arrExpenseRate, arrMachineType, arrCraftType, arrCraftAmount) {
+    this.publicName = strPublicName;
+    this.idName = strIdName;
+
+    this.amount = 0;
+
+    this.incomeResource = arrIncomeResource;
+    this.incomeMachineReference = arrMachineIncomeRef;
+    this.incomeRate = arrIncomeRate;
+
+    this.expenseResource = arrExpenseResource;
+    this.expenseMachineReference = arrMachineExpenseRef;
+    this.expenseRate = arrExpenseRate;
+
+    this.machineType = arrMachineType;
+    this.equippedMachines = {};
+    this.equippedMachinesOrder = {};
+    
+    this.worker = {
+        amount:             0,                                                   // Number of workers employed in this building
+        capBase:            intWorkerCap                                         // Base amount of workers that can be employed as defined by the building
+    };
+
+    this.craftType = arrCraftType;
+    this.craftAmount = arrCraftAmount;
+}
+
+buildingFactory.prototype.render = function (num) {
+    gid(this.idName).innerHTML = this.publicName + "s: " + this.amount + " - Workers: " + this.worker.amount + "/" + (this.amount * this.worker.capBase);
+};
+
+buildingFactory.prototype.changeAmount = function (num) {
+    this.amount += num;
+    this.render();
+};
+
+buildingFactory.prototype.changeWorker = function (num) {
+    if (isNaN(num) || num === 0) {          // Check if actually a number
+        throw ("Stop trying to divide workers by 0");
+    } else if (num > 0) {                   // Calculates the smallest amount it can add without going over any of the caps
+        num = Math.min(num, Population.cap - Population.assigned, this.amount * this.worker.capBase - this.worker.amount);
+    } else if (num < 0) {                   // Calculates the smallest amount it can subtract without going below 0 on anything - TODO: include unequipping
+        num = Math.max(num, this.worker.amount * -1, this.worker.equippedTools.none * -1);
+    }
+    if (num === 0) {                        // Stop function if nothing to do
+        return;
+    }
+
+    this.worker += num;
+    calculateWorkers();
+    this.render;
+};
+
+buildingFactory.prototype.getEquippedMachineTotal = function (machineType) {
+    var total = 0;
+    for (var key in this.equippedMachines[machineType]) {
+        total += this.equippedMachines[machineType][key];
+    }
+    return total;
+};
+
+buildingFactory.prototype.changeEquippedMachine = function (num, machineType, machineTier) {
+    if (isNaN(num) || num === 0) {
+        throw ("Stop trying to divide by 0");
+    } else if (num > 0) {
+        num = Math.min(num, this.amount - this.getEquippedMachineTotal(machineType), Machine[machineType][machineTier].amount - Machine[machineType][machineTier].equipped)
+    } else if (num < 0) {
+        num = Math.max(num, this.equippedMachines[machineType][machineTier] * -1, Machine[machineType][machineTier].equipped * -1)
+    }
+    if (num === 0) {
+        return;
+    }
+
+    this.equippedMachines[machineType][machineTier] += num;
+    Machine[machineType][machineTier].changeEquipped(num);
+};
+
+buildingFactory.prototype.getIncomeByMachineType = function (machineType) {
+    var total = 0;
+    var remainingWorkers = this.worker.amount;
+
+    if (machineType === "None") {
+        total = this.worker.amount * this.incomeRate;
+    } else {
+        // Sorting and calculation goes here
+        return;
+    }
+}
+
+buildingFactory.prototype.checkCraft = fnCheckCraft;
+
+buildingFactory.prototype.applyCraft = fnApplyCraft;
 
 
 // --------------------------------
@@ -333,11 +456,15 @@ buildingHouse.prototype.render = function () {
 };
 
 // Add more of this building type
-buildingHouse.prototype.add = function (num) {
+buildingHouse.prototype.changeAmount = function (num) {
     this.amount += num;
     calculateHousing();
     this.render();
 };
+
+buildingHouse.prototype.checkCraft = fnCheckCraft;
+
+buildingHouse.prototype.applyCraft = fnApplyCraft;
 
 
 // --------------------------------
@@ -381,6 +508,10 @@ tool.prototype.changeEquipped = function (num) {
     this.render();
 };
 
+tool.prototype.checkCraft = fnCheckCraft;
+
+tool.prototype.applyCraft = fnApplyCraft;
+
 
 // --------------------------------
 // Items
@@ -406,58 +537,45 @@ item.prototype.changeAmount = function (num) {
     this.render();
 };
 
-item.prototype.checkCraft = function (num) {
-    // If no extra number is passed then automatically check for 1 craft
-    if (num == null) {
-        num = 1;
-    }
+item.prototype.checkCraft = fnCheckCraft;
 
-    // Cycle through each required resource and check if there's enough in storage. If not then fail
-    for (var i = 0; i < this.craftType.length; i++) {
-        if (this.craftAmount[i] * num > objRef(window, this.craftType[i]).amount) {
-            return false;
-        }
-    }
-    
-    // Else return true
-    return true;
-};
-
-item.prototype.applyCraft = function (num) {
-    if (num == null) {
-        num = 1;
-    }
-
-    if (this.checkCraft(num)) {
-        for (var i = 0; i < this.craftType.length; i++) {
-            objRef(window, this.craftType[i]).changeAmount((this.craftAmount[i] * num) * -1);
-        }
-        this.amount += this.producedAmount * num;
-        this.render();
-    }
-};
+item.prototype.applyCraft = fnApplyCraft;
 
 
 // --------------------------------
-// Machinery
+// Machine
 // --------------------------------
 
-function machinery(strPublicName, strIdName, intIncomeRate, arrCraftType, arrCraftAmount){
+function machine(strPublicName, strIdName, intTierMultiplier, arrCraftType, arrCraftAmount){
     this.publicName = strPublicName;
     this.idName = strIdName;
 
     this.amount = 0;
+    this.equipped = 0;
 
-    this.incomeRate = intIncomeRate;
+    this.tierMultiplier = intTierMultiplier;
     
     this.craftType = arrCraftType;
     this.crafTAmount = arrCraftAmount;
-
 }
 
-machinery.prototype.changeAmount = function (num) {
-    this.amount += num;
+machine.prototype.render = function () {
+    gid(this.idName).innerHTML = this.publicName + ": " + this.equipped + "/" + this.amount;
 };
+
+machine.prototype.changeAmount = function (num) {
+    this.amount += num;
+    this.render();
+};
+
+machine.prototype.changeEquipped = function (num) {
+    this.equipped += num;
+    this.render();
+};
+
+machine.prototype.checkCraft = fnCheckCraft;
+
+machine.prototype.applyCraft = fnApplyCraft;
 
 
 // ================================
@@ -503,8 +621,9 @@ var Resource = {
         Tin:            new resource        ("Tin Ingot",       "IngotTin",     200)
     },
     FoodRaw: {                             // Public Name       ID Name         Cap
-        GrainBarley:    new resource        ("Barley Grain",    "GrainBarley",  200),
-        GrainWheat:     new resource        ("Wheat Grain",     "GrainWheat",   200)
+        GrainBarley:    new resource        ("Barley Grain",    "RawBarley",    200),
+        GrainWheat:     new resource        ("Wheat Grain",     "RawWheat",     200),
+        Meat:           new resource        ("Meat",            "RawMeat",      200)
     },
     FoodIngredient: {                      // Public Name       ID Name         Cap
         FlourWheat:     new resource        ("Wheat Flour",     "FlourWheat",   200)
@@ -514,21 +633,42 @@ var Resource = {
     }
 };
 
-var BuildingWork = {
-    Primary: {                             // Public Name       ID Name       Cap   Income Resource                         Income Tool     Expense Resource        Expense Tool    Tool Type
-        CampClay:       new buildingWork    ("Clay Pit",        "CampClay",     5,  ["Resource.RawMaterial.Clay"],          [0],            null,                   null,           ["Shovel"]),
-        CampLogs:       new buildingWork    ("Lumber Camp",     "CampLogs",     5,  ["Resource.RawMaterial.Logs"],          [0],            null,                   null,           ["Axe"]),
-        CampStone:      new buildingWork    ("Stone Quarry",    "CampStone",    5,  ["Resource.RawMaterial.Stone"],         [0],            null,                   null,           ["Pickaxe"])
+var BuildingPrimary = {
+    Primary: {                             // Public Name       ID Name       Cap   Income Resource                                             Income Tool     Tool Type
+        CampClay:       new buildingPrimary ("Clay Pit",        "CampClay",     5,  ["Resource.RawMaterial.Clay"],                              [0],            ["Shovel"],
+                                            ["Resource.RawMaterial.Logs"],
+                                            [50]),
+        CampLogs:       new buildingPrimary ("Lumber Camp",     "CampLogs",     5,  ["Resource.RawMaterial.Logs"],                              [0],            ["Axe"],
+                                            ["Resource.RawMaterial.Logs"],
+                                            [50]),
+        CampStone:      new buildingPrimary ("Stone Quarry",    "CampStone",    5,  ["Resource.RawMaterial.Stone"],                             [0],            ["Pickaxe"],
+                                            ["Resource.RawMaterial.Logs"],
+                                            [50]),
+        CampHunting:    new buildingPrimary ("Hunting Camp",    "CampHunting",  5,  ["Resource.RawMaterial.Skins", "Resource.FoodRaw.Meat"],    [0, 1],         ["Knife", "Hunting"],
+                                            ["Resource.RawMaterial.Logs"],
+                                            [50])
     },
-    Mine: {                                // Public Name       ID Name       Cap   Income Resource                         Income Tool     Expense Resource        Expense Tool    Tool Type
-        Copper:         new buildingWork    ("Copper Mine",     "MineCopper",   5,  ["Resource.Ore.Copper"],                [0],            null,                   null,           ["Pickaxe"]),
-        Galena:         new buildingWork    ("Lead Mine",       "MineGalena",   5,  ["Resource.Ore.Galena"],                [0],            null,                   null,           ["Pickaxe"]),
-        Gold:           new buildingWork    ("Gold Mine",       "MineGold",     5,  ["Resource.Ore.Gold"],                  [0],            null,                   null,           ["Pickaxe"]),
-        Iron:           new buildingWork    ("Iron Mine",       "MineIron",     5,  ["Resource.Ore.Iron"],                  [0],            null,                   null,           ["Pickaxe"]),
-        Silver:         new buildingWork    ("Silver Mine",     "MineSilver",   5,  ["Resource.Ore.Silver"],                [0],            null,                   null,           ["Pickaxe"]),
-        Tin:            new buildingWork    ("Tin Mine",        "MineTine",     5,  ["Resource.Ore.Tin"],                   [0],            null,                   null,           ["Pickaxe"])
+    Mine: {                                // Public Name       ID Name       Cap   Income Resource                         Income Tool     Tool Type
+        Coal:           new buildingPrimary ("Coal Mine",       "MineCoal",     5,  ["Resource.Fuel.Coal"],                 [0],            ["Pickaxe"]),
+        Copper:         new buildingPrimary ("Copper Mine",     "MineCopper",   5,  ["Resource.Ore.Copper"],                [0],            ["Pickaxe"]),
+        Galena:         new buildingPrimary ("Lead Mine",       "MineGalena",   5,  ["Resource.Ore.Galena"],                [0],            ["Pickaxe"]),
+        Gold:           new buildingPrimary ("Gold Mine",       "MineGold",     5,  ["Resource.Ore.Gold"],                  [0],            ["Pickaxe"]),
+        Iron:           new buildingPrimary ("Iron Mine",       "MineIron",     5,  ["Resource.Ore.Iron"],                  [0],            ["Pickaxe"]),
+        Silver:         new buildingPrimary ("Silver Mine",     "MineSilver",   5,  ["Resource.Ore.Silver"],                [0],            ["Pickaxe"]),
+        Tin:            new buildingPrimary ("Tin Mine",        "MineTine",     5,  ["Resource.Ore.Tin"],                   [0],            ["Pickaxe"])
     }
 };
+
+var BuildingFactory = {
+    Construction: {
+        Sawmill:        new buildingFactory ("Sawmill",         "ConstructionSawmill",  5,  ["Resource.Construction.Planks"],   [0],    [4],    ["Resource.RawMaterial.Logs"],  [0],    [1],    ["Saw"],
+                                            ["Resource.RawMaterial.Logs"],
+                                            [100])
+    },
+    Smelting: {
+        
+    }
+}
 
 var BuildingHouse = {                      // Public Name       ID Name         Pop
     TentSmall:          new buildingHouse   ("Small Tent",      "TentSmall",    1,
@@ -703,27 +843,44 @@ var Tool = {
 };
 
 var Item = {
-    Component:{                            // Public Name       ID Name         Produces
-        WoodenShaft:    new item            ("Wooden Shaft",    "WoodenShaft",  8,
+    Component: {                           // Public Name           ID Name             Produces
+        WoodenShaft:        new item        ("Wooden Shaft",        "WoodenShaft",      8,
                                             ["Resource.RawMaterial.Logs"],
                                             [1]),
-        ToolHandle:     new item            ("Tool Handle",     "ToolHandle",   2,
+        ToolHandle:         new item        ("Tool Handle",         "ToolHandle",       2,
                                             ["Item.Component.WoodenShaft"],
                                             [1])
+    },
+    Gearing: {                             // Public Name           ID Name             Produces
+        GearWood:           new item        ("Wood Gear Cog",       "GearWood",         5,
+                                            ["Resource.RawMaterial.Logs"],
+                                            [1]),
+        DriveshaftWood:     new item        ("Wood Driveshaft",     "DriveshaftWood",   4,
+                                            ["Resource.RawMaterial.Logs"],
+                                            [1]),
+        GearboxWood:        new item        ("Wood Gearbox",        "GearboxWood",      1,
+                                            ["Item.Component.DriveshaftWood",   "Item.Component.GearWood"],
+                                            [2,                                 10])
     }
 };
 
-var Machinery = {
-
-};
+var Machine = {
+    Saw: {                                 // Public Name           ID Name             Multiplies
+        Basic:              new machine     ("Sawmill Saw",         "SawBasic",         1,
+                                            ["Item.Component.GearboxWood"],
+                                            [1]),
+        Advanced:           new machine     ("Advanced Saw",        "SawAdvanced",      2,
+                                            ["Item.Component.GearboxWood"],
+                                            [4])
+    }};
 
 
 // ================================
 //   OBJECT REFERENCE FUNCTIONS
 // ================================
 
-// Populate buildingWork.worker.equippedTool with each toolType
-buildingWork.prototype.listWorkerTools = function () {
+// Populate buildingPrimary.worker.equippedTool with each toolType to store totals of each equipped in that building type
+buildingPrimary.prototype.listWorkerTools = function () {
     // Loop through the toolType array
     for (var i = 0; i < this.toolType.length; i++) {
         // Create the tool type key
@@ -741,12 +898,50 @@ buildingWork.prototype.listWorkerTools = function () {
     this.worker.equippedTools.none = 0;
 };
 
+// Populate buildingFactory.worker.equippedMachine with each machineType to store totals of each equipped in that building type
+buildingFactory.prototype.listMachines = function () {
+    // Loop through the toolType array
+    for (var i = 0; i < this.machineType.length; i++) {
+        // Checks if the building actually needs a tool
+        if (this.machineType[i] !== "None"){
+            // Create the machine type key
+            this.equippedMachines[this.machineType[i]] = {};
+            // Loop through each tier of tool for that toolType
+            for (var key in Machine[this.machineType[i]]) {
+                // This line is needed to make sure that it doesn't perform the iteration over inherited properties
+                if (Machine[this.machineType[i]].hasOwnProperty(key)) {
+                    // Create the tool tier key
+                    this.equippedMachines[this.machineType[i]][key] = 0;
+                }
+            }
+        }
+    }
+};
+
+// Sorts machines into order of the tier multiplier to calculate income
+buildingFactory.prototype.sortMachines = function () {
+    for (var i = 0; i < this.machineType.length; i++) {
+        if (this.machineType[i] !== "None") {
+            this.equippedMachinesOrder[this.machineType[i]] = Object.keys(Machine[this.machineType[i]]);
+            //this.equippedMachinesOrder[this.machineType[i]].sort(function(a, b){
+            //    return Machine[this.machineType[i]][a].tierMultiplier > Machine[this.machineType[i]][b].tierMultiplier ? -1 : Machine[this.machineType[i]][a].tierMultiplier == Machine[this.machineType[i]][b].tierMultiplier ? 0 : 1;
+            //})
+        }
+    }
+}
+
 // Function to be run on load to populate the rest of the references
 function pageLoadDefinitions(){
-    // Populate equippedTool for each building type
-    for (var key in BuildingWork){
-        for (var subkey in BuildingWork[key]){
-            BuildingWork[key][subkey].listWorkerTools();
+    // Populate equippedTool for each primary producer
+    for (var key in BuildingPrimary){
+        for (var subkey in BuildingPrimary[key]){
+            BuildingPrimary[key][subkey].listWorkerTools();
+        }
+    }
+    // Populate equippedMachine for each factory type
+    for (var key in BuildingFactory){
+        for (var subkey in BuildingFactory[key]){
+            BuildingFactory[key][subkey].listMachines();
         }
     }
 }
@@ -755,6 +950,10 @@ function pageLoadDefinitions(){
 // ================================
 //   RENDERING
 // ================================
+
+//function pageLayout(){
+//    
+//}
 
 function init(){
     dayRender();
@@ -773,9 +972,9 @@ function init(){
         console.log(key);
         BuildingHouse[key].render();
     }
-    for (var key in BuildingWork.Primary){
+    for (var key in BuildingPrimary.Primary){
         console.log(key);
-        BuildingWork.Primary[key].render();
+        BuildingPrimary.Primary[key].render();
     }
     for (var key in Item.Component){
         console.log(key);
@@ -789,7 +988,7 @@ $(document).ready(function () {
     init();
     debugGenerateResources();
     debugGenerateTools();
-    debugGenerateBuildingWork();
+    debugGenerateBuildingPrimary();
     debugGenerateBuildingHouse();
 });
 
@@ -815,51 +1014,53 @@ function debugChangeInputValue(num, id){
 }
 
 function debugGenerateResources(){
-    for (var key in Resource.RawMaterial) {
-        $("#debug-tab-resources").append(
-            "<div id='debugString" + Resource.RawMaterial[key].idName + "'>" +
-                Resource.RawMaterial[key].publicName + ": " +
-                "<button onclick='debugChangeInputValue(-10, \"debugInput" + Resource.RawMaterial[key].idName + "\")'>--</button>" +
-                "<button onclick='debugChangeInputValue(-1, \"debugInput" + Resource.RawMaterial[key].idName + "\")'>-</button>" +
-                "<input type='text' class='debugInput' id='debugInput" + Resource.RawMaterial[key].idName + "' value='0' />" +
-                "<button onclick='debugChangeInputValue(1, \"debugInput" + Resource.RawMaterial[key].idName + "\")'>+</button>" +
-                "<button onclick='debugChangeInputValue(10, \"debugInput" + Resource.RawMaterial[key].idName + "\")'>++</button>" +
-                "<button onclick='Resource.RawMaterial." + key + ".changeAmount(parseInt(gid(\"debugInput" + Resource.RawMaterial[key].idName + "\").value))'>Apply</button>" +
-                "<button onclick='Resource.RawMaterial." + key + ".checkAmount(parseInt(gid(\"debugInput" + Resource.RawMaterial[key].idName + "\").value))'>Check</button>" +
-            "</div>");
+    for (var key in Resource) {
+        for (var subkey in Resource[key]){
+            $("#debug-tab-resources").append(
+                "<div id='debugString" + Resource[key][subkey].idName + "'>" +
+                    Resource[key][subkey].publicName + ": " +
+                    "<button onclick='debugChangeInputValue(-10, \"debugInput" + Resource[key][subkey].idName + "\")'>--</button>" +
+                    "<button onclick='debugChangeInputValue(-1, \"debugInput" + Resource[key][subkey].idName + "\")'>-</button>" +
+                    "<input type='text' class='debugInput' id='debugInput" + Resource[key][subkey].idName + "' value='0' />" +
+                    "<button onclick='debugChangeInputValue(1, \"debugInput" + Resource[key][subkey].idName + "\")'>+</button>" +
+                    "<button onclick='debugChangeInputValue(10, \"debugInput" + Resource[key][subkey].idName + "\")'>++</button>" +
+                    "<button onclick='Resource." + key + "." + subkey + ".changeAmount(parseInt(gid(\"debugInput" + Resource[key][subkey].idName + "\").value))'>Apply</button>" +
+                "</div>"
+            );
+        }
     }
 }
 
 function debugGenerateTools(){
-    for (var key in Tool.Axe){
-        $("#debug-tab-tools").append(
-            "<div id='debugString" + Tool.Axe[key].idName + "'>" +
-                Tool.Axe[key].publicName + ": " +
-                "<button onclick='debugChangeInputValue(-10, \"debugInput" + Tool.Axe[key].idName + "\")'>--</button>" +
-                "<button onclick='debugChangeInputValue(-1, \"debugInput" + Tool.Axe[key].idName + "\")'>-</button>" +
-                "<input type='text' class='debugInput' id='debugInput" + Tool.Axe[key].idName + "' value='0' />" +
-                "<button onclick='debugChangeInputValue(1, \"debugInput" + Tool.Axe[key].idName + "\")'>+</button>" +
-                "<button onclick='debugChangeInputValue(10, \"debugInput" + Tool.Axe[key].idName + "\")'>++</button>" +
-                "<button onclick='Tool.Axe." + key + ".changeAmount(parseInt(gid(\"debugInput" + Tool.Axe[key].idName + "\").value))'>Apply</button>" +
-            "</div>"
-        );
+    for (var key in Tool){
+        for (var subkey in Tool[key]) {
+            $("#debug-tab-tools").append(
+                "<div id='debugString" + Tool[key][subkey].idName + "'>" +
+                    Tool[key][subkey].publicName + ": " +
+                    "<button onclick='debugChangeInputValue(-10, \"debugInput" + Tool[key][subkey].idName + "\")'>--</button>" +
+                    "<button onclick='debugChangeInputValue(-1, \"debugInput" + Tool[key][subkey].idName + "\")'>-</button>" +
+                    "<input type='text' class='debugInput' id='debugInput" + Tool[key][subkey].idName + "' value='0' />" +
+                    "<button onclick='debugChangeInputValue(1, \"debugInput" + Tool[key][subkey].idName + "\")'>+</button>" +
+                    "<button onclick='debugChangeInputValue(10, \"debugInput" + Tool[key][subkey].idName + "\")'>++</button>" +
+                    "<button onclick='Tool." + key + "." + subkey + ".changeAmount(parseInt(gid(\"debugInput" + Tool[key][subkey].idName + "\").value))'>Apply</button>" +
+                "</div>"
+            )
+        }
     }
 }
 
-function debugGenerateBuildingWork(){
-    for (var key in BuildingWork){
-        $("#debug-tab-buildings").append(
-        "<h3>" + BuildingWork[key] + "</h3>");
-        for (var subkey in BuildingWork[key]) {
+function debugGenerateBuildingPrimary(){
+    for (var key in BuildingPrimary){
+        for (var subkey in BuildingPrimary[key]) {
             $("#debug-tab-buildings").append(
-                "<div id='debugString" + BuildingWork[key][subkey].idName + "'>" +
-                    BuildingWork[key][subkey].publicName + ": " +
-                    "<button onclick='debugChangeInputValue(-10, \"debugInput" + BuildingWork[key][subkey].idName + "\")'>--</button>" +
-                    "<button onclick='debugChangeInputValue(-1, \"debugInput" + BuildingWork[key][subkey].idName + "\")'>-</button>" +
-                    "<input type='text' class='debugInput' id='debugInput" + BuildingWork[key][subkey].idName + "' value='0' />" +
-                    "<button onclick='debugChangeInputValue(1, \"debugInput" + BuildingWork[key][subkey].idName + "\")'>+</button>" +
-                    "<button onclick='debugChangeInputValue(10, \"debugInput" + BuildingWork[key][subkey].idName + "\")'>++</button>" +
-                    "<button onclick='BuildingWork." + key + "." + subkey + ".add(parseInt(gid(\"debugInput" + BuildingWork[key][subkey].idName + "\").value))'>Apply</button>" +
+                "<div id='debugString" + BuildingPrimary[key][subkey].idName + "'>" +
+                    BuildingPrimary[key][subkey].publicName + ": " +
+                    "<button onclick='debugChangeInputValue(-10, \"debugInput" + BuildingPrimary[key][subkey].idName + "\")'>--</button>" +
+                    "<button onclick='debugChangeInputValue(-1, \"debugInput" + BuildingPrimary[key][subkey].idName + "\")'>-</button>" +
+                    "<input type='text' class='debugInput' id='debugInput" + BuildingPrimary[key][subkey].idName + "' value='0' />" +
+                    "<button onclick='debugChangeInputValue(1, \"debugInput" + BuildingPrimary[key][subkey].idName + "\")'>+</button>" +
+                    "<button onclick='debugChangeInputValue(10, \"debugInput" + BuildingPrimary[key][subkey].idName + "\")'>++</button>" +
+                    "<button onclick='BuildingPrimary." + key + "." + subkey + ".changeAmount(parseInt(gid(\"debugInput" + BuildingPrimary[key][subkey].idName + "\").value))'>Apply</button>" +
                 "</div>"
             );
         }
@@ -876,7 +1077,7 @@ function debugGenerateBuildingHouse(){
                 "<input type='text' class='debugInput' id='debugInput" + BuildingHouse[key].idName + "' value='0' />" +
                 "<button onclick='debugChangeInputValue(1, \"debugInput" + BuildingHouse[key].idName + "\")'>+</button>" +
                 "<button onclick='debugChangeInputValue(10, \"debugInput" + BuildingHouse[key].idName + "\")'>++</button>" +
-                "<button onclick='BuildingHouse." + key + ".add(parseInt(gid(\"debugInput" + BuildingHouse[key].idName + "\").value))'>Apply</button>" +
+                "<button onclick='BuildingHouse." + key + ".changeAmount(parseInt(gid(\"debugInput" + BuildingHouse[key].idName + "\").value))'>Apply</button>" +
             "</div>"
         );
     }

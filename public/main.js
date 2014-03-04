@@ -340,21 +340,20 @@ buildingPrimary.prototype.applyCraft = fnApplyCraft;
 // Factories
 // --------------------------------
 
-function buildingFactory(strPublicName, strIdName, intWorkerCap, arrIncomeResource, arrMachineIncomeRef, arrIncomeRate, arrExpenseResource, arrMachineExpenseRef, arrExpenseRate, arrMachineType, arrCraftType, arrCraftAmount) {
+function buildingFactory(strPublicName, strIdName, intWorkerCap, arrIncomeResource, arrIncomeRate, arrExpenseResource, arrExpenseRate, strMachineType, arrMachineTypeAddon, arrCraftType, arrCraftAmount) {
     this.publicName = strPublicName;
     this.idName = strIdName;
 
     this.amount = 0;
 
     this.incomeResource = arrIncomeResource;
-    this.incomeMachineReference = arrMachineIncomeRef;
     this.incomeRate = arrIncomeRate;
 
     this.expenseResource = arrExpenseResource;
-    this.expenseMachineReference = arrMachineExpenseRef;
     this.expenseRate = arrExpenseRate;
 
-    this.machineType = arrMachineType;
+    this.machineType = strMachineType;
+    this.machineTypeAddon = arrMachineTypeAddon
     this.equippedMachines = {};
     this.equippedMachinesOrder = {};
     
@@ -417,17 +416,88 @@ buildingFactory.prototype.changeEquippedMachine = function (num, machineType, ma
     Machine[machineType][machineTier].changeEquipped(num);
 };
 
-buildingFactory.prototype.getIncomeByMachineType = function (machineType) {
-    var total = 0;
-    var remainingWorkers = this.worker.amount;
+buildingFactory.prototype.workCalc = function () {
+    var resourceTotal = 0;
+    var workerTotal = this.worker.amount;
+    var coreMachine = {
+        workerCap: [],
+        i: 0
+    };
+    var addonMachine = {};
 
-    if (machineType === "None") {
-        total = this.worker.amount * this.incomeRate;
-    } else {
-        // Sorting and calculation goes here
-        return;
+    // Build addonMachine sub objects
+    for (var i = 0; i < this.machineTypeAddon.length; i++) {
+        addonMachine[this.machineTypeAddon[i]] = { workerCap: [], i: 0 }
     }
-}
+    // Populate core machine cap
+    for (var i = 0; i < this.equippedMachinesOrder[this.machineType].length; i++) {
+        coreMachine.workerCap.push(this.equippedMachines[this.machineType][this.equippedMachinesOrder[this.machineType][i]] * this.worker.capBase);
+    }
+    // Populate addon machine caps
+    for (var key in addonMachine) {
+        for (var i = 0; i < this.equippedMachinesOrder[key].length; i++) {
+            addonMachine[key].workerCap.push(this.equippedMachines[key][this.equippedMachinesOrder[key][i]] * this.worker.capBase);
+        }
+    }
+
+    // Builds the array to calculate the smallest group to be multiplied
+    function calcMinMulti() {
+        var a = []
+        // Populate with definite values
+        a.push(coreMachine.workerCap[coreMachine.i]);
+        a.push(workerTotal);
+        // Check if the optional machines have any more space for work and add them to the array if they do
+        for (var key in addonMachine) {
+            if (!isNaN(addonMachine[key].workerCap[addonMachine[key].i])) {
+                a.push(addonMachine[key].workerCap[addonMachine[key].i]);
+            }
+        }
+        return a;
+    }
+    
+    // Loop calculating total for resourceTotal
+    while (coreMachine.i < coreMachine.workerCap.length) {
+        // Grabs smallest capacity to add multiple to
+        var num = Math.min.apply(this, calcMinMulti());
+
+        // Total the multiplier for the tech level
+        var multi = 0;
+        multi += Machine[this.machineType][this.equippedMachinesOrder[this.machineType][coreMachine.i]].multiplier;
+
+        for (var key in addonMachine) {
+            if (addonMachine[key].i < addonMachine[key].workerCap.length) {
+                multi += Machine[key][this.equippedMachinesOrder[key][addonMachine[key].i]].multiplier;
+            }            
+        }
+
+        // Adds the total of that tier to the resource total
+        resourceTotal += num * multi;
+
+        // Subtract num from workers, breaking if there's none left
+        workerTotal -= num;
+        if (workerTotal === 0) {
+            break;
+        }
+
+        // Subtract num from the core machine's worker cap, cycling to the next one if there's none left
+        coreMachine.workerCap[coreMachine.i] -= num;
+        if (coreMachine.workerCap[coreMachine.i] === 0) {
+            coreMachine.i++;
+        }
+
+        // Subtract num from each addon machines' worker cap, cycling to the next one if there's none left
+        for (var key in addonMachine){
+            if (addonMachine[key].i < addonMachine[key].workerCap.length){
+                addonMachine[key].workerCap[addonMachine[key].i] -= num;
+                if (addonMachine[key].workerCap[addonMachine[key].i] === 0) {
+                    addonMachine[key].i++;
+                }                
+            }
+        }
+    }
+
+    return resourceTotal;
+};
 
 buildingFactory.prototype.checkCraft = fnCheckCraft;
 
@@ -546,14 +616,14 @@ item.prototype.applyCraft = fnApplyCraft;
 // Machine
 // --------------------------------
 
-function machine(strPublicName, strIdName, intTierMultiplier, arrCraftType, arrCraftAmount){
+function machine(strPublicName, strIdName, intMultiplier, arrCraftType, arrCraftAmount){
     this.publicName = strPublicName;
     this.idName = strIdName;
 
     this.amount = 0;
     this.equipped = 0;
 
-    this.tierMultiplier = intTierMultiplier;
+    this.multiplier = intMultiplier;
     
     this.craftType = arrCraftType;
     this.crafTAmount = arrCraftAmount;
@@ -661,7 +731,7 @@ var BuildingPrimary = {
 
 var BuildingFactory = {
     Construction: {
-        Sawmill:        new buildingFactory ("Sawmill",         "ConstructionSawmill",  5,  ["Resource.Construction.Planks"],   [0],    [4],    ["Resource.RawMaterial.Logs"],  [0],    [1],    ["Saw"],
+        Sawmill:        new buildingFactory ("Sawmill",         "ConstructionSawmill",  5,  ["Resource.Construction.Planks"],   [4],    ["Resource.RawMaterial.Logs"],  [1],    "Saw",  ["Crane"],
                                             ["Resource.RawMaterial.Logs"],
                                             [100])
     },
@@ -865,14 +935,20 @@ var Item = {
 };
 
 var Machine = {
-    Saw: {                                 // Public Name           ID Name             Multiplies
-        Basic:              new machine     ("Sawmill Saw",         "SawBasic",         1,
-                                            ["Item.Component.GearboxWood"],
-                                            [1]),
+    Saw: {                                 // Public Name           ID Name             Multiplier
         Advanced:           new machine     ("Advanced Saw",        "SawAdvanced",      2,
-                                            ["Item.Component.GearboxWood"],
-                                            [4])
-    }};
+                                            ["Item.Gearing.GearboxWood"],
+                                            [4]),
+        Basic:              new machine     ("Sawmill Saw",         "SawBasic",         1,
+                                            ["Item.Gearing.GearboxWood"],
+                                            [1])
+    },
+    Crane: {
+        Basic:              new machine     ("Basic Crane",         "CraneBasic",       1,
+                                            ["Item.Gearing.GearboxWood",    "Item.Component.WoodenShaft"],
+                                            [1,                             4])
+    }
+};
 
 
 // ================================
@@ -900,19 +976,23 @@ buildingPrimary.prototype.listWorkerTools = function () {
 
 // Populate buildingFactory.worker.equippedMachine with each machineType to store totals of each equipped in that building type
 buildingFactory.prototype.listMachines = function () {
-    // Loop through the toolType array
-    for (var i = 0; i < this.machineType.length; i++) {
+    this.equippedMachines[this.machineType] = {};
+    for (var key in Machine[this.machineType]) {
+        if (Machine[this.machineType].hasOwnProperty(key)) {
+            this.equippedMachines[this.machineType][key] = 0;
+        }
+    }
+    // Loop through the machineTypeAddon array
+    for (var i = 0; i < this.machineTypeAddon.length; i++) {
         // Checks if the building actually needs a tool
-        if (this.machineType[i] !== "None"){
-            // Create the machine type key
-            this.equippedMachines[this.machineType[i]] = {};
-            // Loop through each tier of tool for that toolType
-            for (var key in Machine[this.machineType[i]]) {
-                // This line is needed to make sure that it doesn't perform the iteration over inherited properties
-                if (Machine[this.machineType[i]].hasOwnProperty(key)) {
-                    // Create the tool tier key
-                    this.equippedMachines[this.machineType[i]][key] = 0;
-                }
+        // Create the machine type key
+        this.equippedMachines[this.machineTypeAddon[i]] = {};
+        // Loop through each tier of tool for that toolType
+        for (var key in Machine[this.machineTypeAddon[i]]) {
+            // This line is needed to make sure that it doesn't perform the iteration over inherited properties
+            if (Machine[this.machineTypeAddon[i]].hasOwnProperty(key)) {
+                // Create the tool tier key
+                this.equippedMachines[this.machineTypeAddon[i]][key] = 0;
             }
         }
     }
@@ -920,13 +1000,12 @@ buildingFactory.prototype.listMachines = function () {
 
 // Sorts machines into order of the tier multiplier to calculate income
 buildingFactory.prototype.sortMachines = function () {
-    for (var i = 0; i < this.machineType.length; i++) {
-        if (this.machineType[i] !== "None") {
-            this.equippedMachinesOrder[this.machineType[i]] = Object.keys(Machine[this.machineType[i]]);
-            //this.equippedMachinesOrder[this.machineType[i]].sort(function(a, b){
-            //    return Machine[this.machineType[i]][a].tierMultiplier > Machine[this.machineType[i]][b].tierMultiplier ? -1 : Machine[this.machineType[i]][a].tierMultiplier == Machine[this.machineType[i]][b].tierMultiplier ? 0 : 1;
-            //})
-        }
+    this.equippedMachinesOrder[this.machineType] = Object.keys(Machine[this.machineType]);
+    for (var i = 0; i < this.machineTypeAddon.length; i++) {
+        this.equippedMachinesOrder[this.machineTypeAddon[i]] = Object.keys(Machine[this.machineTypeAddon[i]]);
+        //this.equippedMachinesOrder[this.machineType[i]].sort(function(a, b){
+        //    return Machine[this.machineType[i]][a].tierMultiplier > Machine[this.machineType[i]][b].tierMultiplier ? -1 : Machine[this.machineType[i]][a].tierMultiplier == Machine[this.machineType[i]][b].tierMultiplier ? 0 : 1;
+        //})
     }
 }
 
@@ -942,6 +1021,7 @@ function pageLoadDefinitions(){
     for (var key in BuildingFactory){
         for (var subkey in BuildingFactory[key]){
             BuildingFactory[key][subkey].listMachines();
+            BuildingFactory[key][subkey].sortMachines();
         }
     }
 }

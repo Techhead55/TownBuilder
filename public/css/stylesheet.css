@@ -58,6 +58,10 @@ button:active{
     background: #ddd;
 }
 
+.building {
+    border: 1px solid black;
+}
+
 /*Debug Frame*/
 
 #debug {
@@ -107,7 +111,7 @@ button:active{
     overflow: auto;
 }
 #debug-tabs ul{
-    width: 400px;
+    width: 540px;
 }
 #debug-tabs .content{
     height: 266px;

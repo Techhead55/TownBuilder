@@ -66,6 +66,11 @@ function dayIncome() {
             Resource.RawMaterial[key].changeAmount(Resource.RawMaterial[key].income);
         //}
     }
+    //for (var key in BuildingFactory){
+    //    for (var subkey in BuildingFactory[key]){
+    //        BuildingFactory[key][subkey].applyIncome();
+    //    }
+    //}
 }
 
 function dailyFunctions(){
@@ -381,15 +386,15 @@ buildingFactory.prototype.changeWorker = function (num) {
     } else if (num > 0) {                   // Calculates the smallest amount it can add without going over any of the caps
         num = Math.min(num, Population.cap - Population.assigned, this.amount * this.worker.capBase - this.worker.amount);
     } else if (num < 0) {                   // Calculates the smallest amount it can subtract without going below 0 on anything - TODO: include unequipping
-        num = Math.max(num, this.worker.amount * -1, this.worker.equippedTools.none * -1);
+        num = Math.max(num, this.worker.amount * -1);
     }
     if (num === 0) {                        // Stop function if nothing to do
         return;
     }
 
-    this.worker += num;
+    this.worker.amount += num;
     calculateWorkers();
-    this.render;
+    this.render();
 };
 
 buildingFactory.prototype.getEquippedMachineTotal = function (machineType) {
@@ -498,6 +503,39 @@ buildingFactory.prototype.workCalc = function () {
 
     return resourceTotal;
 };
+
+buildingFactory.prototype.checkIncome = function () {
+    // Get how much work the building is capable of
+    var work = this.workCalc();
+
+    // Cycle through each expense resource to check if there's enough and return false if not
+    for (var i = 0; i < this.expenseRate.length; i++) {
+        if (this.expenseRate[i] * work > objRef(window, this.expenseResource[i]).amount) {
+            return false;
+        }
+    }
+    for (var i = 0; i < this.incomeRate.length; i++) {
+        if (objRef(window, this.incomeResource[i]).amountCap - objRef(window, this.incomeResource[i]).amount === 0) {
+            return false;
+        }
+    }
+
+    // Else return true
+    return true;
+};
+
+buildingFactory.prototype.applyIncome = function () {
+    var work = this.workCalc();
+
+    if (this.checkIncome()) {
+        for (var i = 0; i < this.expenseRate.length; i++) {
+            objRef(window, this.expenseResource[i]).changeAmount((this.expenseRate[i] * work) * -1);
+        }
+        for (var i = 0; i < this.incomeRate.length; i++) {
+            objRef(window, this.incomeResource[i]).changeAmount((this.incomeRate[i] * work));
+        }
+    }
+}
 
 buildingFactory.prototype.checkCraft = fnCheckCraft;
 
@@ -1031,9 +1069,12 @@ function pageLoadDefinitions(){
 //   RENDERING
 // ================================
 
-//function pageLayout(){
-//    
-//}
+function pageLayout(){
+    pageBuildHeader();
+    pageBuildContent();
+    
+    debugHTMLLoad();
+}
 
 function init(){
     dayRender();
@@ -1056,6 +1097,10 @@ function init(){
         console.log(key);
         BuildingPrimary.Primary[key].render();
     }
+    for (var key in BuildingFactory.Construction){
+        console.log(key);
+        BuildingFactory.Construction[key].render();
+    }
     for (var key in Item.Component){
         console.log(key);
         Item.Component[key].render();
@@ -1065,12 +1110,68 @@ function init(){
 $(document).ready(function () {
     countdown("dayTimer", dailyFunctions, 15);
     pageLoadDefinitions();
+    pageLayout();
     init();
-    debugGenerateResources();
-    debugGenerateTools();
-    debugGenerateBuildingPrimary();
-    debugGenerateBuildingHouse();
 });
+
+function pageBuildHeader(){
+    $("body").append(
+        "<div id='dayTimer' style='display: inline'></div>" +
+        "<div id='dayCounter' style='display: inline'></div>" +
+        "<div id='Population' style='display: inline'></div>"
+    );
+}
+
+function pageBuildContent(){
+    $("body").append(
+        "<div>" +
+            "<h3>Resources</h3>" +
+            "<div id='Clay'></div>" +
+            "<div id='Logs'></div>" +
+            "<div id='Stone'></div>" +
+            "<div id='Skins'></div>" +
+            "<div id='Planks'></div>" +
+        "</div>" +
+
+        "<div>" +
+            "<h3>Tools</h3>" +
+            "<div id='AxeCopper'></div>" +
+            "<div id='AxeBronze'></div>" +
+            "<div id='AxeIron'></div>" +
+            "<div id='AxeSteel'></div>" +
+        "</div>" +
+
+        "<div>" +
+            "<h3>Housing</h3>" +
+            "<div id='TentSmall'></div>" +
+            "<div id='TentLarge'></div>" +
+            "<div id='HutSmall'></div>" +
+        "</div>" +
+
+        "<div>" +
+            "<h3>Production</h3>" +
+            "<div class='building'><div id='CampLogs' style='display: inline'></div><button onclick='BuildingPrimary.Primary.CampLogs.changeWorker(-1)'>-</button><button onclick='BuildingPrimary.Primary.CampLogs.changeWorker(1)'>+</button><button onclick='BuildingPrimary.Primary.CampLogs.applyCraft()'>Build</button></div>" +
+            "<div class='building'><div id='CampStone' style='display: inline'></div><button onclick='BuildingPrimary.Primary.CampStone.changeWorker(-1)'>-</button><button onclick='BuildingPrimary.Primary.CampStone.changeWorker(1)'>+</button><button onclick='BuildingPrimary.Primary.CampStone.applyCraft()'>Build</button></div>" +
+            "<div class='building'><div id='CampClay' style='display: inline'></div><button onclick='BuildingPrimary.Primary.CampClay.changeWorker(-1)'>-</button><button onclick='BuildingPrimary.Primary.CampClay.changeWorker(1)'>+</button><button onclick='BuildingPrimary.Primary.CampClay.applyCraft()'>Build</button></div>" +
+            "<div class='building'><div id='CampHunting' style='display: inline'></div><button onclick='BuildingPrimary.Primary.CampHunting.changeWorker(-1)'>-</button><button onclick='BuildingPrimary.Primary.CampHunting.changeWorker(1)'>+</button><button onclick='BuildingPrimary.Primary.CampHunting.applyCraft()'>Build</button></div>" +
+        "</div>" +
+
+        "<div>" +
+            "<h3>Factories</h3>" +
+            "<div class='building'><div id='ConstructionSawmill' style='display: inline'></div><button onclick='BuildingFactory.Construction.Sawmill.changeWorker(-1)'>-</button><button onclick='BuildingFactory.Construction.Sawmill.changeWorker(1)'>+</button><button onclick='BuildingFactory.Construction.Sawmill.applyCraft()'>Build</button></div>" +
+        "</div>" +
+
+        "<div>" +
+            "<h3>Items</h3>" +
+            "<div><div id='WoodenShaft' style='display: inline'></div><button onclick='Item.Component.WoodenShaft.applyCraft()'>Craft</button> (1 Log produces 8)</div>" +
+            "<div><div id='ToolHandle' style='display: inline'></div><button onclick='Item.Component.ToolHandle.applyCraft()'>Craft</button> (1 Wooden Shaft produces 2)</div>" +
+        "</div>"
+    );
+}
+
+//function pageBuildTabs(){
+//    
+//}
 
 // Debugging Menu
 
@@ -1085,6 +1186,44 @@ $(document).ready(function () {
 
     $("#debug-tabs").tabs();
 });
+
+function debugHTMLLoad() {
+    $("body").append(
+        "<div id='debug'>" +
+            "<div style='height: 21px'><div id='debug-button'>Debug</div></div>" +
+            "<div id='debug-div'>" +
+                "<div id='debug-tabs'>" +
+                    "<div class='scroller'>" +
+                        "<ul>" +
+                            "<li><a href='#debug-tab-resources'>Resources</a></li>" +
+                            "<li><a href='#debug-tab-tools'>Tools</a></li>" +
+                            "<li><a href='#debug-tab-primaries'>Primary Buildings</a></li>" +
+                            "<li><a href='#debug-tab-factories'>Factory Buildings</a></li>" +
+                            "<li><a href='#debug-tab-houses'>Housing</a></li>" +
+                        "</ul>" +
+                    "</div>" +
+                    "<div class='scroller content'>" +
+                        "<div id='debug-tab-resources'>" +
+                        "</div>" +
+                        "<div id='debug-tab-tools'>" +
+                        "</div>" +
+                        "<div id='debug-tab-primaries'>" +
+                        "</div>" +
+                        "<div id='debug-tab-factories'>" +
+                        "</div>" +
+                        "<div id='debug-tab-houses'>" +
+                        "</div>" +
+                    "</div>" +
+                "</div>" +
+            "</div>" +
+        "</div>"
+    );
+    debugGenerateResources();
+    debugGenerateTools();
+    debugGenerateBuildingPrimary();
+    debugGenerateBuildingFactory();
+    debugGenerateBuildingHouse();
+};
 
 function debugChangeInputValue(num, id){
     var v = parseInt(gid(id).value);
@@ -1132,7 +1271,7 @@ function debugGenerateTools(){
 function debugGenerateBuildingPrimary(){
     for (var key in BuildingPrimary){
         for (var subkey in BuildingPrimary[key]) {
-            $("#debug-tab-buildings").append(
+            $("#debug-tab-primaries").append(
                 "<div id='debugString" + BuildingPrimary[key][subkey].idName + "'>" +
                     BuildingPrimary[key][subkey].publicName + ": " +
                     "<button onclick='debugChangeInputValue(-10, \"debugInput" + BuildingPrimary[key][subkey].idName + "\")'>--</button>" +
@@ -1141,6 +1280,24 @@ function debugGenerateBuildingPrimary(){
                     "<button onclick='debugChangeInputValue(1, \"debugInput" + BuildingPrimary[key][subkey].idName + "\")'>+</button>" +
                     "<button onclick='debugChangeInputValue(10, \"debugInput" + BuildingPrimary[key][subkey].idName + "\")'>++</button>" +
                     "<button onclick='BuildingPrimary." + key + "." + subkey + ".changeAmount(parseInt(gid(\"debugInput" + BuildingPrimary[key][subkey].idName + "\").value))'>Apply</button>" +
+                "</div>"
+            );
+        }
+    }
+}
+
+function debugGenerateBuildingFactory(){
+    for (var key in BuildingFactory){
+        for (var subkey in BuildingFactory[key]) {
+            $("#debug-tab-factories").append(
+                "<div id='debugString" + BuildingFactory[key][subkey].idName + "'>" +
+                    BuildingFactory[key][subkey].publicName + ": " +
+                    "<button onclick='debugChangeInputValue(-10, \"debugInput" + BuildingFactory[key][subkey].idName + "\")'>--</button>" +
+                    "<button onclick='debugChangeInputValue(-1, \"debugInput" + BuildingFactory[key][subkey].idName + "\")'>-</button>" +
+                    "<input type='text' class='debugInput' id='debugInput" + BuildingFactory[key][subkey].idName + "' value='0' />" +
+                    "<button onclick='debugChangeInputValue(1, \"debugInput" + BuildingFactory[key][subkey].idName + "\")'>+</button>" +
+                    "<button onclick='debugChangeInputValue(10, \"debugInput" + BuildingFactory[key][subkey].idName + "\")'>++</button>" +
+                    "<button onclick='BuildingFactory." + key + "." + subkey + ".changeAmount(parseInt(gid(\"debugInput" + BuildingFactory[key][subkey].idName + "\").value))'>Apply</button>" +
                 "</div>"
             );
         }

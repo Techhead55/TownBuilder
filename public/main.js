@@ -664,7 +664,7 @@ function machine(strPublicName, strIdName, intMultiplier, arrCraftType, arrCraft
     this.multiplier = intMultiplier;
     
     this.craftType = arrCraftType;
-    this.crafTAmount = arrCraftAmount;
+    this.craftAmount = arrCraftAmount;
 }
 
 machine.prototype.render = function () {
@@ -693,9 +693,10 @@ machine.prototype.applyCraft = fnApplyCraft;
 var Resource = {
     RawMaterial: {                         // Public Name       ID Name         Cap
         Clay:           new resource        ("Clay",            "Clay",         200),
+        Hemp:           new resource        ("Hemp Fibers",     "Hemp",         200),
         Logs:           new resource        ("Logs",            "Logs",         200),
-        Stone:          new resource        ("Uncut Stone",     "Stone",        200),
-        Skins:          new resource        ("Animal Skins",    "Skins",        200)
+        Skins:          new resource        ("Animal Skins",    "Skins",        200),
+        Stone:          new resource        ("Uncut Stone",     "Stone",        200)
     },
     Construction: {                        // Public Name       ID Name         Cap
         Planks:         new resource        ("Planks",          "Planks",       200),
@@ -757,13 +758,32 @@ var BuildingPrimary = {
                                             [50])
     },
     Mine: {                                // Public Name       ID Name       Cap   Income Resource                         Income Tool     Tool Type
-        Coal:           new buildingPrimary ("Coal Mine",       "MineCoal",     5,  ["Resource.Fuel.Coal"],                 [0],            ["Pickaxe"]),
-        Copper:         new buildingPrimary ("Copper Mine",     "MineCopper",   5,  ["Resource.Ore.Copper"],                [0],            ["Pickaxe"]),
-        Galena:         new buildingPrimary ("Lead Mine",       "MineGalena",   5,  ["Resource.Ore.Galena"],                [0],            ["Pickaxe"]),
-        Gold:           new buildingPrimary ("Gold Mine",       "MineGold",     5,  ["Resource.Ore.Gold"],                  [0],            ["Pickaxe"]),
-        Iron:           new buildingPrimary ("Iron Mine",       "MineIron",     5,  ["Resource.Ore.Iron"],                  [0],            ["Pickaxe"]),
-        Silver:         new buildingPrimary ("Silver Mine",     "MineSilver",   5,  ["Resource.Ore.Silver"],                [0],            ["Pickaxe"]),
-        Tin:            new buildingPrimary ("Tin Mine",        "MineTine",     5,  ["Resource.Ore.Tin"],                   [0],            ["Pickaxe"])
+        Coal:           new buildingPrimary ("Coal Mine",       "MineCoal",     5,  ["Resource.Fuel.Coal"],                 [0],            ["Pickaxe"],
+                                            ["Resource.RawMaterial.Logs"],
+                                            [50]),
+        Copper:         new buildingPrimary ("Copper Mine",     "MineCopper",   5,  ["Resource.Ore.Copper"],                [0],            ["Pickaxe"],
+                                            ["Resource.RawMaterial.Logs"],
+                                            [50]),
+        Galena:         new buildingPrimary ("Lead Mine",       "MineGalena",   5,  ["Resource.Ore.Galena"],                [0],            ["Pickaxe"],
+                                            ["Resource.RawMaterial.Logs"],
+                                            [50]),
+        Gold:           new buildingPrimary ("Gold Mine",       "MineGold",     5,  ["Resource.Ore.Gold"],                  [0],            ["Pickaxe"],
+                                            ["Resource.RawMaterial.Logs"],
+                                            [50]),
+        Iron:           new buildingPrimary ("Iron Mine",       "MineIron",     5,  ["Resource.Ore.Iron"],                  [0],            ["Pickaxe"],
+                                            ["Resource.RawMaterial.Logs"],
+                                            [50]),
+        Silver:         new buildingPrimary ("Silver Mine",     "MineSilver",   5,  ["Resource.Ore.Silver"],                [0],            ["Pickaxe"],
+                                            ["Resource.RawMaterial.Logs"],
+                                            [50]),
+        Tin:            new buildingPrimary ("Tin Mine",        "MineTin",      5,  ["Resource.Ore.Tin"],                   [0],            ["Pickaxe"],
+                                            ["Resource.RawMaterial.Logs"],
+                                            [50])
+    },
+    Farm: {
+        Hemp:           new buildingPrimary ("Hemp Farm",       "FarmHemp",     5,  ["Resource.Primary.Hemp"],              [0],            ["Scythe"],
+                                            ["Resource.RawMaterial.Logs"],
+                                            [50])
     }
 };
 
@@ -842,7 +862,7 @@ var Tool = {
                                             [1,                         1])
     },
     Shovel: {                              // Public Name       ID Name             Income Rate
-        Copper:         new tool            ("Copper Shovel",   "ShovelCopper",     2
+        Copper:         new tool            ("Copper Shovel",   "ShovelCopper",     2,
                                             ["Resource.Ingot.Copper",   "Item.Component.ToolHandle"],
                                             [1,                         1]),
         Bronze:         new tool            ("Bronze Shovel",   "ShovelBronze",     4,
@@ -924,8 +944,12 @@ var Tool = {
         Spear:          new tool            ("Hunting Spear",   "HuntingSpear",     2,
                                             ["Item.Component.ToolHandle"],
                                             [1]),
-        Hunting:        new tool            ("Hunting Bow",     "HuntingBow",       4),
-        Reflex:         new tool            ("Reflex Bow",      "HuntingReflexBow", 8)
+        Hunting:        new tool            ("Hunting Bow",     "HuntingBow",       4,
+                                            ["Item.Component.ToolHandle",   "Item.Component.CordHemp"],
+                                            [1,                             2]),
+        Reflex:         new tool            ("Reflex Bow",      "HuntingReflexBow", 8,
+                                            ["Item.Component.ToolHandle",   "Item.Component.CordHemp"],
+                                            [4,                             4])
     },
     Knife: {                               // Public Name       ID Name             Income Rate
         Stone:          new tool            ("Stone Knife",     "KnifeStone",       1,
@@ -945,8 +969,28 @@ var Tool = {
                                             [1,                         1])
     },
     Fishing: {                             // Public Name       ID Name             Income Rate
-        Pole:           new tool            ("Fishing Pole",    "FishingPole",      4),
-        Net:            new tool            ("Fishing Net",     "FishingNet",       16)
+        Pole:           new tool            ("Fishing Pole",    "FishingPole",      4,
+                                            ["Item.Component.ToolHandle",   "Item.Component.CordHemp"],
+                                            [2,                             2]),
+        Net:            new tool            ("Fishing Net",     "FishingNet",       16,
+                                            ["Item.Component.CordHemp"],
+                                            [50])
+    }
+};
+
+var Machine = {
+    Saw: {                                 // Public Name           ID Name             Multiplier
+        Advanced:           new machine     ("Advanced Saw",        "SawAdvanced",      2,
+                                            ["Item.Engineering.GearboxWood"],
+                                            [4]),
+        Basic:              new machine     ("Sawmill Saw",         "SawBasic",         1,
+                                            ["Item.Engineering.GearboxWood"],
+                                            [1])
+    },
+    Crane: {
+        Basic:              new machine     ("Basic Crane",         "CraneBasic",       1,
+                                            ["Item.Engineering.GearboxWood",    "Item.Component.WoodenShaft"],
+                                            [1,                             4])
     }
 };
 
@@ -957,9 +1001,12 @@ var Item = {
                                             [1]),
         ToolHandle:         new item        ("Tool Handle",         "ToolHandle",       2,
                                             ["Item.Component.WoodenShaft"],
-                                            [1])
+                                            [1]),
+        CordHemp:               new item    ("Hemp Cord",           "CordHemp",         1,
+                                            ["Resource.RawMaterial.Hemp"],
+                                            [4])
     },
-    Gearing: {                             // Public Name           ID Name             Produces
+    Engineering: {                         // Public Name           ID Name             Produces
         GearWood:           new item        ("Wood Gear Cog",       "GearWood",         5,
                                             ["Resource.RawMaterial.Logs"],
                                             [1]),
@@ -967,26 +1014,12 @@ var Item = {
                                             ["Resource.RawMaterial.Logs"],
                                             [1]),
         GearboxWood:        new item        ("Wood Gearbox",        "GearboxWood",      1,
-                                            ["Item.Component.DriveshaftWood",   "Item.Component.GearWood"],
+                                            ["Item.Engineering.DriveshaftWood", "Item.Engineering.GearWood"],
                                             [2,                                 10])
     }
 };
 
-var Machine = {
-    Saw: {                                 // Public Name           ID Name             Multiplier
-        Advanced:           new machine     ("Advanced Saw",        "SawAdvanced",      2,
-                                            ["Item.Gearing.GearboxWood"],
-                                            [4]),
-        Basic:              new machine     ("Sawmill Saw",         "SawBasic",         1,
-                                            ["Item.Gearing.GearboxWood"],
-                                            [1])
-    },
-    Crane: {
-        Basic:              new machine     ("Basic Crane",         "CraneBasic",       1,
-                                            ["Item.Gearing.GearboxWood",    "Item.Component.WoodenShaft"],
-                                            [1,                             4])
-    }
-};
+
 
 
 // ================================
@@ -1071,7 +1104,7 @@ function pageLoadDefinitions(){
 
 function pageLayout(){
     pageBuildHeader();
-    pageBuildContent();
+    pageBuildTabs();
     
     debugHTMLLoad();
 }
@@ -1080,31 +1113,6 @@ function init(){
     dayRender();
 
     Population.updatePopulation();
-
-    for(var key in Resource.RawMaterial){
-        console.log(key);
-        Resource.RawMaterial[key].render();
-    }
-    for (var key in Tool.Axe){
-        console.log(key);
-        Tool.Axe[key].render();
-    }
-    for (var key in BuildingHouse){
-        console.log(key);
-        BuildingHouse[key].render();
-    }
-    for (var key in BuildingPrimary.Primary){
-        console.log(key);
-        BuildingPrimary.Primary[key].render();
-    }
-    for (var key in BuildingFactory.Construction){
-        console.log(key);
-        BuildingFactory.Construction[key].render();
-    }
-    for (var key in Item.Component){
-        console.log(key);
-        Item.Component[key].render();
-    }
 }
 
 $(document).ready(function () {
@@ -1116,62 +1124,302 @@ $(document).ready(function () {
 
 function pageBuildHeader(){
     $("body").append(
-        "<div id='dayTimer' style='display: inline'></div>" +
-        "<div id='dayCounter' style='display: inline'></div>" +
+        "<div id='dayTimer' style='display: inline'></div> " +
+        "<div id='dayCounter' style='display: inline'></div> " +
         "<div id='Population' style='display: inline'></div>"
     );
 }
 
-function pageBuildContent(){
+function pageBuildTabs(){
     $("body").append(
-        "<div>" +
-            "<h3>Resources</h3>" +
-            "<div id='Clay'></div>" +
-            "<div id='Logs'></div>" +
-            "<div id='Stone'></div>" +
-            "<div id='Skins'></div>" +
-            "<div id='Planks'></div>" +
-        "</div>" +
-
-        "<div>" +
-            "<h3>Tools</h3>" +
-            "<div id='AxeCopper'></div>" +
-            "<div id='AxeBronze'></div>" +
-            "<div id='AxeIron'></div>" +
-            "<div id='AxeSteel'></div>" +
-        "</div>" +
-
-        "<div>" +
-            "<h3>Housing</h3>" +
-            "<div id='TentSmall'></div>" +
-            "<div id='TentLarge'></div>" +
-            "<div id='HutSmall'></div>" +
-        "</div>" +
-
-        "<div>" +
-            "<h3>Production</h3>" +
-            "<div class='building'><div id='CampLogs' style='display: inline'></div><button onclick='BuildingPrimary.Primary.CampLogs.changeWorker(-1)'>-</button><button onclick='BuildingPrimary.Primary.CampLogs.changeWorker(1)'>+</button><button onclick='BuildingPrimary.Primary.CampLogs.applyCraft()'>Build</button></div>" +
-            "<div class='building'><div id='CampStone' style='display: inline'></div><button onclick='BuildingPrimary.Primary.CampStone.changeWorker(-1)'>-</button><button onclick='BuildingPrimary.Primary.CampStone.changeWorker(1)'>+</button><button onclick='BuildingPrimary.Primary.CampStone.applyCraft()'>Build</button></div>" +
-            "<div class='building'><div id='CampClay' style='display: inline'></div><button onclick='BuildingPrimary.Primary.CampClay.changeWorker(-1)'>-</button><button onclick='BuildingPrimary.Primary.CampClay.changeWorker(1)'>+</button><button onclick='BuildingPrimary.Primary.CampClay.applyCraft()'>Build</button></div>" +
-            "<div class='building'><div id='CampHunting' style='display: inline'></div><button onclick='BuildingPrimary.Primary.CampHunting.changeWorker(-1)'>-</button><button onclick='BuildingPrimary.Primary.CampHunting.changeWorker(1)'>+</button><button onclick='BuildingPrimary.Primary.CampHunting.applyCraft()'>Build</button></div>" +
-        "</div>" +
-
-        "<div>" +
-            "<h3>Factories</h3>" +
-            "<div class='building'><div id='ConstructionSawmill' style='display: inline'></div><button onclick='BuildingFactory.Construction.Sawmill.changeWorker(-1)'>-</button><button onclick='BuildingFactory.Construction.Sawmill.changeWorker(1)'>+</button><button onclick='BuildingFactory.Construction.Sawmill.applyCraft()'>Build</button></div>" +
-        "</div>" +
-
-        "<div>" +
-            "<h3>Items</h3>" +
-            "<div><div id='WoodenShaft' style='display: inline'></div><button onclick='Item.Component.WoodenShaft.applyCraft()'>Craft</button> (1 Log produces 8)</div>" +
-            "<div><div id='ToolHandle' style='display: inline'></div><button onclick='Item.Component.ToolHandle.applyCraft()'>Craft</button> (1 Wooden Shaft produces 2)</div>" +
+        "<div id='game'>" +
+            "<div id='game-tabs'>" +
+                "<div class='scroller'>" +
+                    "<ul>" +
+                        "<li><a href='#game-tab-resource'>Resources</a></li>" +
+                        "<li><a href='#game-tab-primary'>Primary Production</a></li>" +
+                        "<li><a href='#game-tab-factory'>Factories</a></li>" +
+                        "<li><a href='#game-tab-house'>Houses</a></li>" +
+                        "<li><a href='#game-tab-tool'>Tools</a></li>" +
+                        "<li><a href='#game-tab-machine'>Machines</a></li>" +
+                        "<li><a href='#game-tab-item'>Items</a></li>" +
+                    "</ul>" +
+                "</div>" +
+                "<div class='scroller'>" +
+                    "<div id='game-tab-resource'>" +
+                    "</div>" +
+                    "<div id='game-tab-primary'>" +
+                    "</div>" +
+                    "<div id='game-tab-factory'>" +
+                    "</div>" +
+                    "<div id='game-tab-house'>" +
+                    "</div>" +
+                    "<div id='game-tab-tool'>" +
+                    "</div>" +
+                    "<div id='game-tab-machine'>" +
+                    "</div>" +
+                    "<div id='game-tab-item'>" +
+                    "</div>" +
+                "</div>" +
+            "</div>" +
         "</div>"
     );
+    $("#game-tabs").tabs();
+
+    gameGenerateResource();
+    gameGeneratePrimary();
+    gameGenerateFactory();
+    gameGenerateHouse();
+    gameGenerateTool();
+    gameGenerateMachine();
+    gameGenerateItem();
 }
 
-//function pageBuildTabs(){
-//    
-//}
+function gameGenerateResource() {
+    $("#game-tab-resource").append(
+        "<div id='resource-RawMaterial'>" +
+            "<h3>Raw Materials</h3>" +
+        "</div>" +
+        "<div id='resource-Construction'>" +
+            "<h3>Construction Materials</h3>" +
+        "</div>" +
+        "<div id='resource-Fuel'>" +
+            "<h3>Fuel</h3>" +
+        "</div>" +
+        "<div id='resource-Ore'>" +
+            "<h3>Ore</h3>" +
+        "</div>" +
+        "<div id='resource-Ingot'>" +
+            "<h3>Metal Ingots</h3>" +
+        "</div>" +
+        "<div id='resource-FoodRaw'>" +
+            "<h3>Raw Food</h3>" +
+        "</div>" +
+        "<div id='resource-FoodIngredient'>" +
+            "<h3>Ingredients</h3>" +
+        "</div>" +
+        "<div id='resource-FoodCooked'>" +
+            "<h3>Cooked Food</h3>" +
+        "</div>"
+    );
+    
+    for (var key in Resource){
+        for (var subkey in Resource[key]){
+            $("#resource-" + key).append(
+                "<div>" +
+                    "<div id='" + Resource[key][subkey].idName + "'></div>" +
+                "</div>"
+            );
+            Resource[key][subkey].render();
+        }
+    }
+}
+
+function gameGeneratePrimary() {
+    $("#game-tab-primary").append(
+        "<div id='primary-Primary'>" +
+            "<h3>Primary Resources</h3>" +
+        "</div>" +
+        "<div id='primary-Mine'>" +
+            "<h3>Mines</h3>" +
+        "</div>" +
+        "<div id='primary-Farm'>" +
+            "<h3>Farms</h3>" +
+        "</div>"
+    );
+
+    for (var key in BuildingPrimary) {
+        for (var subkey in BuildingPrimary[key]) {
+            $("#primary-" + key).append(
+                "<div class='border'>" +
+                    "<button onclick='BuildingPrimary." + key + "." + subkey + ".applyCraft()'>Build</button>" +
+                    "<div id='" + BuildingPrimary[key][subkey].idName + "' style='display: inline'></div>" +
+                    "<button onclick='BuildingPrimary." + key + "." + subkey + ".changeWorker(-1)'>-</button>" +
+                    "<button onclick='BuildingPrimary." + key + "." + subkey + ".changeWorker(1)'>+</button>" +
+                    "<div id='" + BuildingPrimary[key][subkey].idName + "Cost'>Cost:<br /></div>" +
+                "</div>"
+            );
+            for (var i = 0; i < BuildingPrimary[key][subkey].craftType.length; i++) {
+                $("#" + BuildingPrimary[key][subkey].idName + "Cost").append(
+                    objRef(window, BuildingPrimary[key][subkey].craftType[i]).publicName + ": " + BuildingPrimary[key][subkey].craftAmount[i] + " | "
+                );
+            }
+            BuildingPrimary[key][subkey].render();
+        }
+    }
+}
+
+function gameGenerateFactory() {
+    $("#game-tab-factory").append(
+        "<div id='factory-Construction'>" +
+            "<h3>Construction</h3>" +
+        "</div>" +
+        "<div id='factory-Smelting'>" +
+            "<h3>Smelters</h3>" +
+        "</div>"
+    );
+
+    for (var key in BuildingFactory) {
+        for (var subkey in BuildingFactory[key]) {
+            $("#factory-" + key).append(
+                "<div class='border'>" +
+                    "<button onclick='BuildingFactory." + key + "." + subkey + ".applyCraft()'>Build</button>" +
+                    "<div id='" + BuildingFactory[key][subkey].idName + "' style='display: inline'></div>" +
+                    "<button onclick='BuildingFactory." + key + "." + subkey + ".changeWorker(-1)'>-</button>" +
+                    "<button onclick='BuildingFactory." + key + "." + subkey + ".changeWorker(1)'>+</button>" +
+                    "<div id='" + BuildingFactory[key][subkey].idName + "Cost'>Cost:<br /></div>" +
+                "</div>"
+            );
+            for (var i = 0; i < BuildingFactory[key][subkey].craftType.length; i++) {
+                $("#" + BuildingFactory[key][subkey].idName + "Cost").append(
+                    objRef(window, BuildingFactory[key][subkey].craftType[i]).publicName + ": " + BuildingFactory[key][subkey].craftAmount[i] + " | "
+                );
+            }
+            BuildingFactory[key][subkey].render();
+        }
+    }
+}
+
+function gameGenerateHouse() {
+    $("#game-tab-house").append(
+        "<div id='house-All'>" +
+            "<h3>All Housing</h3>" +
+        "</div>"
+    );
+
+    for (var key in BuildingHouse) {
+        $("#house-All").append(
+            "<div class='border'>" +
+                "<button onclick='BuildingHouse." + key + ".applyCraft()'>Build</button>" +
+                "<div id='" + BuildingHouse[key].idName + "' style='display: inline'></div>" +
+                "<div id='" + BuildingHouse[key].idName + "Cost'>Cost:<br /></div>" +
+            "</div>"
+        );
+        for (var i = 0; i < BuildingHouse[key].craftType.length; i++) {
+            $("#" + BuildingHouse[key].idName + "Cost").append(
+                objRef(window, BuildingHouse[key].craftType[i]).publicName + ": " + BuildingHouse[key].craftAmount[i] + " | "
+            );
+        }
+        BuildingHouse[key].render();
+    }
+}
+
+function gameGenerateTool() {
+    $("#game-tab-tool").append(
+        "<div id='tool-Axe'>" +
+            "<h3>Axes</h3>" +
+        "</div>" +
+        "<div id='tool-Pickaxe'>" +
+            "<h3>Pickaxes</h3>" +
+        "</div>" +
+        "<div id='tool-Saw'>" +
+            "<h3>Saws</h3>" +
+        "</div>" +
+        "<div id='tool-Hoe'>" +
+            "<h3>Hoes</h3>" +
+        "</div>" +
+        "<div id='tool-Shovel'>" +
+            "<h3>Shovels</h3>" +
+        "</div>" +
+        "<div id='tool-Sickle'>" +
+            "<h3>Sickles</h3>" +
+        "</div>" +
+        "<div id='tool-Scythe'>" +
+            "<h3>Scythes</h3>" +
+        "</div>" +
+        "<div id='tool-Hammer'>" +
+            "<h3>Hammers</h3>" +
+        "</div>" +
+        "<div id='tool-Spear'>" +
+            "<h3>Spears</h3>" +
+        "</div>" +
+        "<div id='tool-Hunting'>" +
+            "<h3>Hunting Equipment</h3>" +
+        "</div>" +
+        "<div id='tool-Knife'>" +
+            "<h3>Knives</h3>" +
+        "</div>" +
+        "<div id='tool-Fishing'>" +
+            "<h3>Fishing Equipment</h3>" +
+        "</div>"
+    );
+
+    for (var key in Tool){
+        for (var subkey in Tool[key]){
+            $("#tool-" + key).append(
+                "<div class='border'>" +
+                    "<button onclick='Tool." + key + "." + subkey + ".applyCraft()'>Craft</button>" +
+                    "<div id='" + Tool[key][subkey].idName + "' style='display: inline'></div>" +
+                    "<div id='" + Tool[key][subkey].idName + "Cost'>Cost:<br /></div>" +
+                "</div>"
+            );
+            for (var i = 0; i < Tool[key][subkey].craftType.length; i++) {
+                $("#" + Tool[key][subkey].idName + "Cost").append(
+                    objRef(window, Tool[key][subkey].craftType[i]).publicName + ": " + Tool[key][subkey].craftAmount[i] + " | "
+                );
+            }
+            Tool[key][subkey].render();
+        }
+    }
+}
+
+function gameGenerateMachine() {
+    $("#game-tab-machine").append(
+        "<div id='machine-Saw'>" +
+            "<h3>Circular Saw</h3>" +
+        "</div>" +
+        "<div id='machine-Crane'>" +
+            "<h3>Crane</h3>" +
+        "</div>"
+    );
+
+    for (var key in Machine) {
+        for (var subkey in Machine[key]) {
+            $("#machine-" + key).append(
+                "<div class='border'>" +
+                    "<button onclick='Machine." + key + "." + subkey + ".applyCraft()'>Craft</button>" +
+                    "<div id='" + Machine[key][subkey].idName + "' style='display: inline'></div>" +
+                    "<div id='" + Machine[key][subkey].idName + "Cost'>Cost:<br /></div>" +
+                "</div>"
+            );
+            for (var i = 0; i < Machine[key][subkey].craftType.length; i++) {
+                $("#" + Machine[key][subkey].idName + "Cost").append(
+                    objRef(window, Machine[key][subkey].craftType[i]).publicName + ": " + Machine[key][subkey].craftAmount[i] + " | "
+                );
+            }
+            Machine[key][subkey].render();
+        }
+    }
+}
+
+function gameGenerateItem() {
+    $("#game-tab-item").append(
+        "<div id='item-Component'>" +
+            "<h3>Components</h3>" +
+        "</div>" +
+        "<div id='item-Engineering'>" +
+            "<h3>Engineering</h3>" +
+        "</div>"
+    );
+
+    for (var key in Item) {
+        for (var subkey in Item[key]) {
+            $("#item-" + key).append(
+                "<div class='border'>" +
+                    "<button onclick='Item." + key + "." + subkey + ".applyCraft()'>Craft</button>" +
+                    "<div id='" + Item[key][subkey].idName + "' style='display: inline'></div>" +
+                    "<div id='" + Item[key][subkey].idName + "Cost'>Cost:<br /></div>" +
+                "</div>"
+            );
+            for (var i = 0; i < Item[key][subkey].craftType.length; i++) {
+                $("#" + Item[key][subkey].idName + "Cost").append(
+                    objRef(window, Item[key][subkey].craftType[i]).publicName + ": " + Item[key][subkey].craftAmount[i] + " | "
+                );
+            }
+            Item[key][subkey].render();
+        }
+    }
+}
 
 // Debugging Menu
 

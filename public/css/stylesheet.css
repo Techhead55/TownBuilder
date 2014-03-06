@@ -58,8 +58,42 @@ button:active{
     background: #ddd;
 }
 
-.building {
+.border {
     border: 1px solid black;
+}
+
+/*Game Frame*/
+
+#game-tabs { 
+    background: #fff; 
+    border: none; 
+} 
+#game-tabs .scroller {
+    overflow: auto;
+}
+#game-tabs .ui-widget-header { 
+    background: transparent; 
+    border: none; 
+    border-bottom: 1px solid #c0c0c0; 
+    -moz-border-radius: 0px; 
+    -webkit-border-radius: 0px; 
+    border-radius: 0px; 
+} 
+#game-tabs .ui-tabs-nav .ui-state-default { 
+    background: transparent; 
+    border: none; 
+} 
+#game-tabs .ui-tabs-nav .ui-state-active { 
+    background: transparent url(images/uiTabsArrow.png) no-repeat bottom center; 
+    border: none; 
+} 
+#game-tabs .ui-tabs-nav .ui-state-default a { 
+    color: #959595; 
+    font-weight: bold;
+} 
+#game-tabs .ui-tabs-nav .ui-state-active a { 
+    color: #111;
+    font-weight: bold; 
 }
 
 /*Debug Frame*/

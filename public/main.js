@@ -179,8 +179,8 @@ function resource(strPublicName, strIdName, intAmountCap) {
 }
 
 // Render the object
-resource.prototype.render = function () {
-    gid(this.idName).innerHTML = this.publicName + ": " + this.amount;
+resource.prototype.renderAmount = function () {
+    $("#" + this.idName).html(this.publicName + ": " + this.amount);
 };
 
 // Change the amount
@@ -196,7 +196,7 @@ resource.prototype.changeAmount = function (num) {
         }
     }
     // Push the new value to the screen
-    this.render();
+    this.renderAmount();
 };
 
 
@@ -233,14 +233,24 @@ function buildingPrimary(strPublicName, strIdName, intWorkerCap, arrIncomeResour
 }
 
 // Update the HTML on the page
-buildingPrimary.prototype.render = function () {
-    gid(this.idName).innerHTML = this.publicName + "s: " + this.amount + " - Workers: " + this.worker.amount + "/" + (this.amount * this.worker.capBase);
+buildingPrimary.prototype.renderAmount = function () {
+    $("#" + this.idName).html(this.publicName + "s: " + this.amount + " - Workers: " + this.worker.amount + "/" + (this.amount * this.worker.capBase));
+};
+
+buildingPrimary.prototype.renderTool = function () {
+    for (var i = 0; i < this.toolType.length; i++) {
+        for (var workerTools in this.worker.equippedTools[this.toolType[i]]) {
+            $("#" + this.idName + "Tool" + Tool[this.toolType[i]][workerTools].idName).html(
+                Tool[this.toolType[i]][workerTools].publicName + " - " + this.worker.equippedTools[this.toolType[i]][workerTools]
+            );
+        }
+    }
 };
 
 // Add more of this building type
 buildingPrimary.prototype.changeAmount = function (num) {
     this.amount += num;
-    this.render();
+    this.renderAmount();
 };
 
 // Change worker for the building type - TODO: Have it automatically equip the best tool available
@@ -267,7 +277,7 @@ buildingPrimary.prototype.changeWorker = function (num) {
     for (var i = 0; i < this.toolType.length; i++) {
         this.applyIncomeByToolType(this.toolType[i], oldIncome[i]);
     }
-    this.render();                          // Renders updated amounts to the screen
+    this.renderAmount();                    // Renders updated amounts to the screen
 };
 
 // Gets the total of every toolTier from the toolType
@@ -307,6 +317,7 @@ buildingPrimary.prototype.changeWorkerEquippedTool = function (num, toolType, to
     Tool[toolType][toolTier].changeEquipped(num);                           // Change the number of total equipped tools of that type game wide
     this.worker.equippedTools.none = this.getWorkerEquippedToolNone();      // Update the number of unequipped workers
     this.applyIncomeByToolType(toolType, oldIncome);                        // Applies new income value to the resources
+    this.renderTool();                                                      // Updates the screen with new tool count
 };
 
 // Get income value for tool type
@@ -371,13 +382,13 @@ function buildingFactory(strPublicName, strIdName, intWorkerCap, arrIncomeResour
     this.craftAmount = arrCraftAmount;
 }
 
-buildingFactory.prototype.render = function (num) {
-    gid(this.idName).innerHTML = this.publicName + "s: " + this.amount + " - Workers: " + this.worker.amount + "/" + (this.amount * this.worker.capBase);
+buildingFactory.prototype.renderAmount = function (num) {
+    $("#" + this.idName).html(this.publicName + "s: " + this.amount + " - Workers: " + this.worker.amount + "/" + (this.amount * this.worker.capBase));
 };
 
 buildingFactory.prototype.changeAmount = function (num) {
     this.amount += num;
-    this.render();
+    this.renderAmount();
 };
 
 buildingFactory.prototype.changeWorker = function (num) {
@@ -394,7 +405,7 @@ buildingFactory.prototype.changeWorker = function (num) {
 
     this.worker.amount += num;
     calculateWorkers();
-    this.render();
+    this.renderAmount();
 };
 
 buildingFactory.prototype.getEquippedMachineTotal = function (machineType) {
@@ -559,15 +570,15 @@ function buildingHouse(strPublicName, strIdName, intBasePop, arrCraftType, arrCr
 }
 
 // Update the HTML on the page
-buildingHouse.prototype.render = function () {
-    gid(this.idName).innerHTML = this.publicName + "s: " + this.amount + " - Population: " + (this.amount * this.basePop);
+buildingHouse.prototype.renderAmount = function () {
+    $("#" + this.idName).html(this.publicName + "s: " + this.amount + " - Population: " + (this.amount * this.basePop));
 };
 
 // Add more of this building type
 buildingHouse.prototype.changeAmount = function (num) {
     this.amount += num;
     calculateHousing();
-    this.render();
+    this.renderAmount();
 };
 
 buildingHouse.prototype.checkCraft = fnCheckCraft;
@@ -593,8 +604,8 @@ function tool(strPublicName, strIdName, intIncomeRate, arrCraftType, arrCraftAmo
 }
 
 // Update the HTML on the page
-tool.prototype.render = function () {
-    gid(this.idName).innerHTML = this.publicName + ": " + this.equipped + "/" + this.amount;
+tool.prototype.renderAmount = function () {
+    $("#" + this.idName).html(this.publicName + ": " + this.equipped + "/" + this.amount);
 };
 
 // Change the amount
@@ -607,47 +618,18 @@ tool.prototype.changeAmount = function (num) {
             this.amount += num;
         }
     }
-    this.render();
+    this.renderAmount();
 };
 
 // Changes equipped total
 tool.prototype.changeEquipped = function (num) {
     this.equipped += num; // Temporary
-    this.render();
+    this.renderAmount();
 };
 
 tool.prototype.checkCraft = fnCheckCraft;
 
 tool.prototype.applyCraft = fnApplyCraft;
-
-
-// --------------------------------
-// Items
-// --------------------------------
-
-function item(strPublicName, strIdName, intProducedAmount, arrCraftType, arrCraftAmount){
-    this.publicName = strPublicName;
-    this.idName = strIdName;
-
-    this.amount = 0;
-
-    this.producedAmount = intProducedAmount;
-    this.craftType = arrCraftType;
-    this.craftAmount = arrCraftAmount;
-}
-
-item.prototype.render = function (){
-    gid(this.idName).innerHTML = this.publicName + ": " + this.amount;
-}
-
-item.prototype.changeAmount = function (num) {
-    this.amount += num;
-    this.render();
-};
-
-item.prototype.checkCraft = fnCheckCraft;
-
-item.prototype.applyCraft = fnApplyCraft;
 
 
 // --------------------------------
@@ -667,23 +649,52 @@ function machine(strPublicName, strIdName, intMultiplier, arrCraftType, arrCraft
     this.craftAmount = arrCraftAmount;
 }
 
-machine.prototype.render = function () {
-    gid(this.idName).innerHTML = this.publicName + ": " + this.equipped + "/" + this.amount;
+machine.prototype.renderAmount = function () {
+    $("#" + this.idName).html(this.publicName + ": " + this.equipped + "/" + this.amount);
 };
 
 machine.prototype.changeAmount = function (num) {
     this.amount += num;
-    this.render();
+    this.renderAmount();
 };
 
 machine.prototype.changeEquipped = function (num) {
     this.equipped += num;
-    this.render();
+    this.renderAmount();
 };
 
 machine.prototype.checkCraft = fnCheckCraft;
 
 machine.prototype.applyCraft = fnApplyCraft;
+
+
+// --------------------------------
+// Items
+// --------------------------------
+
+function item(strPublicName, strIdName, intProducedAmount, arrCraftType, arrCraftAmount){
+    this.publicName = strPublicName;
+    this.idName = strIdName;
+
+    this.amount = 0;
+
+    this.producedAmount = intProducedAmount;
+    this.craftType = arrCraftType;
+    this.craftAmount = arrCraftAmount;
+}
+
+item.prototype.renderAmount = function (){
+    $("#" + this.idName).html(this.publicName + ": " + this.amount);
+}
+
+item.prototype.changeAmount = function (num) {
+    this.amount += num;
+    this.renderAmount();
+};
+
+item.prototype.checkCraft = fnCheckCraft;
+
+item.prototype.applyCraft = fnApplyCraft;
 
 
 // ================================
@@ -1210,7 +1221,7 @@ function gameGenerateResource() {
                     "<div id='" + Resource[key][subkey].idName + "'></div>" +
                 "</div>"
             );
-            Resource[key][subkey].render();
+            Resource[key][subkey].renderAmount();
         }
     }
 }
@@ -1236,15 +1247,34 @@ function gameGeneratePrimary() {
                     "<div id='" + BuildingPrimary[key][subkey].idName + "' style='display: inline'></div>" +
                     "<button onclick='BuildingPrimary." + key + "." + subkey + ".changeWorker(-1)'>-</button>" +
                     "<button onclick='BuildingPrimary." + key + "." + subkey + ".changeWorker(1)'>+</button>" +
-                    "<div id='" + BuildingPrimary[key][subkey].idName + "Cost'>Cost:<br /></div>" +
+                    "<div id='" + BuildingPrimary[key][subkey].idName + "Cost'><b>Cost:</b><br />| </div>" +
+                    "<div id='" + BuildingPrimary[key][subkey].idName + "Tool'><b>Tools:</b>" +
                 "</div>"
             );
             for (var i = 0; i < BuildingPrimary[key][subkey].craftType.length; i++) {
                 $("#" + BuildingPrimary[key][subkey].idName + "Cost").append(
                     objRef(window, BuildingPrimary[key][subkey].craftType[i]).publicName + ": " + BuildingPrimary[key][subkey].craftAmount[i] + " | "
                 );
+
             }
-            BuildingPrimary[key][subkey].render();
+            for (var i = 0; i < BuildingPrimary[key][subkey].toolType.length; i++) {
+                $("#" + BuildingPrimary[key][subkey].idName + "Tool").append(
+                    "<div id='" + BuildingPrimary[key][subkey].idName + "Tool" + BuildingPrimary[key][subkey].toolType[i] + "'></div>"
+                );
+                var workerTools = Object.keys(BuildingPrimary[key][subkey].worker.equippedTools[BuildingPrimary[key][subkey].toolType[i]])
+                for (var j = 0; j < workerTools.length; j++) {
+                    $("#" + BuildingPrimary[key][subkey].idName + "Tool" + BuildingPrimary[key][subkey].toolType[i]).append(
+                        "<div>" +
+                            "<div id='" + BuildingPrimary[key][subkey].idName + "Tool" + Tool[BuildingPrimary[key][subkey].toolType[i]][workerTools[j]].idName + "' style='display: inline;'></div>" +
+                            "<button onclick='BuildingPrimary." + key + "." + subkey + "." + "changeWorkerEquippedTool(-1, \"" + BuildingPrimary[key][subkey].toolType[i] + "\", " + "\"" + workerTools[j] + "\")'>Unequip</button>" +
+                            "<button onclick='BuildingPrimary." + key + "." + subkey + "." + "changeWorkerEquippedTool(1, \"" + BuildingPrimary[key][subkey].toolType[i] + "\", " + "\"" + workerTools[j] + "\")'>Equip</button>" +
+                        "</div>"
+                    );
+                }
+            }
+
+            BuildingPrimary[key][subkey].renderAmount();
+            BuildingPrimary[key][subkey].renderTool();
         }
     }
 }
@@ -1267,7 +1297,7 @@ function gameGenerateFactory() {
                     "<div id='" + BuildingFactory[key][subkey].idName + "' style='display: inline'></div>" +
                     "<button onclick='BuildingFactory." + key + "." + subkey + ".changeWorker(-1)'>-</button>" +
                     "<button onclick='BuildingFactory." + key + "." + subkey + ".changeWorker(1)'>+</button>" +
-                    "<div id='" + BuildingFactory[key][subkey].idName + "Cost'>Cost:<br /></div>" +
+                    "<div id='" + BuildingFactory[key][subkey].idName + "Cost'>Cost:<br />| </div>" +
                 "</div>"
             );
             for (var i = 0; i < BuildingFactory[key][subkey].craftType.length; i++) {
@@ -1275,7 +1305,7 @@ function gameGenerateFactory() {
                     objRef(window, BuildingFactory[key][subkey].craftType[i]).publicName + ": " + BuildingFactory[key][subkey].craftAmount[i] + " | "
                 );
             }
-            BuildingFactory[key][subkey].render();
+            BuildingFactory[key][subkey].renderAmount();
         }
     }
 }
@@ -1292,7 +1322,7 @@ function gameGenerateHouse() {
             "<div class='border'>" +
                 "<button onclick='BuildingHouse." + key + ".applyCraft()'>Build</button>" +
                 "<div id='" + BuildingHouse[key].idName + "' style='display: inline'></div>" +
-                "<div id='" + BuildingHouse[key].idName + "Cost'>Cost:<br /></div>" +
+                "<div id='" + BuildingHouse[key].idName + "Cost'>Cost:<br />| </div>" +
             "</div>"
         );
         for (var i = 0; i < BuildingHouse[key].craftType.length; i++) {
@@ -1300,7 +1330,7 @@ function gameGenerateHouse() {
                 objRef(window, BuildingHouse[key].craftType[i]).publicName + ": " + BuildingHouse[key].craftAmount[i] + " | "
             );
         }
-        BuildingHouse[key].render();
+        BuildingHouse[key].renderAmount();
     }
 }
 
@@ -1350,7 +1380,7 @@ function gameGenerateTool() {
                 "<div class='border'>" +
                     "<button onclick='Tool." + key + "." + subkey + ".applyCraft()'>Craft</button>" +
                     "<div id='" + Tool[key][subkey].idName + "' style='display: inline'></div>" +
-                    "<div id='" + Tool[key][subkey].idName + "Cost'>Cost:<br /></div>" +
+                    "<div id='" + Tool[key][subkey].idName + "Cost'>Cost:<br />| </div>" +
                 "</div>"
             );
             for (var i = 0; i < Tool[key][subkey].craftType.length; i++) {
@@ -1358,7 +1388,7 @@ function gameGenerateTool() {
                     objRef(window, Tool[key][subkey].craftType[i]).publicName + ": " + Tool[key][subkey].craftAmount[i] + " | "
                 );
             }
-            Tool[key][subkey].render();
+            Tool[key][subkey].renderAmount();
         }
     }
 }
@@ -1379,7 +1409,7 @@ function gameGenerateMachine() {
                 "<div class='border'>" +
                     "<button onclick='Machine." + key + "." + subkey + ".applyCraft()'>Craft</button>" +
                     "<div id='" + Machine[key][subkey].idName + "' style='display: inline'></div>" +
-                    "<div id='" + Machine[key][subkey].idName + "Cost'>Cost:<br /></div>" +
+                    "<div id='" + Machine[key][subkey].idName + "Cost'>Cost:<br />| </div>" +
                 "</div>"
             );
             for (var i = 0; i < Machine[key][subkey].craftType.length; i++) {
@@ -1387,7 +1417,7 @@ function gameGenerateMachine() {
                     objRef(window, Machine[key][subkey].craftType[i]).publicName + ": " + Machine[key][subkey].craftAmount[i] + " | "
                 );
             }
-            Machine[key][subkey].render();
+            Machine[key][subkey].renderAmount();
         }
     }
 }
@@ -1408,7 +1438,7 @@ function gameGenerateItem() {
                 "<div class='border'>" +
                     "<button onclick='Item." + key + "." + subkey + ".applyCraft()'>Craft</button>" +
                     "<div id='" + Item[key][subkey].idName + "' style='display: inline'></div>" +
-                    "<div id='" + Item[key][subkey].idName + "Cost'>Cost:<br /></div>" +
+                    "<div id='" + Item[key][subkey].idName + "Cost'>Cost:<br />| </div>" +
                 "</div>"
             );
             for (var i = 0; i < Item[key][subkey].craftType.length; i++) {
@@ -1416,7 +1446,7 @@ function gameGenerateItem() {
                     objRef(window, Item[key][subkey].craftType[i]).publicName + ": " + Item[key][subkey].craftAmount[i] + " | "
                 );
             }
-            Item[key][subkey].render();
+            Item[key][subkey].renderAmount();
         }
     }
 }

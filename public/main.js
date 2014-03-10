@@ -74,7 +74,7 @@ function dayIncome() {
 }
 
 function dailyFunctions(){
-    countdown("dayTimer", dailyFunctions, 15);
+    countdown("dayTimer", dailyFunctions, 10);
     dayIncome();
     dayCount++;
     dayRender();
@@ -180,7 +180,7 @@ function resource(strPublicName, strIdName, intAmountCap) {
 
 // Render the object
 resource.prototype.renderAmount = function () {
-    $("#" + this.idName).html(this.publicName + ": " + this.amount);
+    $("#" + this.idName).html(this.publicName + ": " + this.amount + "/" + this.amountCap);
 };
 
 // Change the amount
@@ -303,7 +303,7 @@ buildingPrimary.prototype.changeWorkerEquippedTool = function (num, toolType, to
     if (isNaN(num) || num === 0) {          // Check if actually a number
         throw ("Stop trying to divide by 0");
     } else if (num > 0) {                   // Calculates the smallest amount it can add without going over any of the caps
-        num = Math.min(num, this.worker.amount - this.getWorkerEquippedToolTotal(toolType), this.worker.equippedTools.none, Tool[toolType][toolTier].amount - Tool[toolType][toolTier].equipped);
+        num = Math.min(num, this.worker.amount - this.getWorkerEquippedToolTotal(toolType), Tool[toolType][toolTier].amount - Tool[toolType][toolTier].equipped);
     } else if (num < 0) {                   // Calculates the smallest amount it can subtract without going below 0 on anything
         num = Math.max(num, this.worker.equippedTools[toolType][toolTier] * -1, Tool[toolType][toolTier].equipped * -1);
     }
@@ -392,13 +392,16 @@ buildingFactory.prototype.renderMachine = function () {
             Machine[this.machineType][workerMachines].publicName + " - " + this.equippedMachines[this.machineType][workerMachines]
         );
     }
-    for (var i = 0; i < this.machineTypeAddon.length; i++) {
-        for (var workerMachines in this.equippedMachines[this.machineTypeAddon[i]]) {
-            $("#" + this.idName + "Machine" + Machine[this.machineTypeAddon[i]][workerMachines].idName).html(
-                Machine[this.machineTypeAddon[i]][workerMachines].publicName + " - " + this.equippedMachines[this.machineTypeAddon[i]][workerMachines]
-            );
+    if (this.machineTypeAddon !== null) {
+        for (var i = 0; i < this.machineTypeAddon.length; i++) {
+            for (var workerMachines in this.equippedMachines[this.machineTypeAddon[i]]) {
+                $("#" + this.idName + "Machine" + Machine[this.machineTypeAddon[i]][workerMachines].idName).html(
+                    Machine[this.machineTypeAddon[i]][workerMachines].publicName + " - " + this.equippedMachines[this.machineTypeAddon[i]][workerMachines]
+                );
+            }
         }
     }
+
 }
 
 buildingFactory.prototype.changeAmount = function (num) {
@@ -458,8 +461,10 @@ buildingFactory.prototype.workCalc = function () {
     var addonMachine = {};
 
     // Build addonMachine sub objects
-    for (var i = 0; i < this.machineTypeAddon.length; i++) {
-        addonMachine[this.machineTypeAddon[i]] = { workerCap: [], i: 0 }
+    if (this.machineTypeAddon !== null) {
+        for (var i = 0; i < this.machineTypeAddon.length; i++) {
+            addonMachine[this.machineTypeAddon[i]] = { workerCap: [], i: 0 }
+        }
     }
     // Populate core machine cap
     for (var i = 0; i < this.equippedMachinesOrder[this.machineType].length; i++) {
@@ -486,7 +491,7 @@ buildingFactory.prototype.workCalc = function () {
         }
         return a;
     }
-    
+
     // Loop calculating total for resourceTotal
     while (coreMachine.i < coreMachine.workerCap.length) {
         // Grabs smallest capacity to add multiple to
@@ -499,7 +504,7 @@ buildingFactory.prototype.workCalc = function () {
         for (var key in addonMachine) {
             if (addonMachine[key].i < addonMachine[key].workerCap.length) {
                 multi += Machine[key][this.equippedMachinesOrder[key][addonMachine[key].i]].multiplier;
-            }            
+            }
         }
 
         // Adds the total of that tier to the resource total
@@ -518,12 +523,12 @@ buildingFactory.prototype.workCalc = function () {
         }
 
         // Subtract num from each addon machines' worker cap, cycling to the next one if there's none left
-        for (var key in addonMachine){
-            if (addonMachine[key].i < addonMachine[key].workerCap.length){
+        for (var key in addonMachine) {
+            if (addonMachine[key].i < addonMachine[key].workerCap.length) {
                 addonMachine[key].workerCap[addonMachine[key].i] -= num;
                 if (addonMachine[key].workerCap[addonMachine[key].i] === 0) {
                     addonMachine[key].i++;
-                }                
+                }
             }
         }
     }
@@ -719,16 +724,16 @@ item.prototype.applyCraft = fnApplyCraft;
 
 var Resource = {
     RawMaterial: {                         // Public Name       ID Name         Cap
-        Clay:           new resource        ("Clay",            "Clay",         200),
+        Clay:           new resource        ("Clay",            "Clay",         500),
         Hemp:           new resource        ("Hemp Fibers",     "Hemp",         200),
-        Logs:           new resource        ("Logs",            "Logs",         200),
+        Logs:           new resource        ("Logs",            "Logs",         500),
         Skins:          new resource        ("Animal Skins",    "Skins",        200),
-        Stone:          new resource        ("Uncut Stone",     "Stone",        200)
+        Stone:          new resource        ("Uncut Stone",     "Stone",        500)
     },
     Construction: {                        // Public Name       ID Name         Cap
-        Planks:         new resource        ("Planks",          "Planks",       200),
-        StoneBricks:    new resource        ("Stone Bricks",    "StoneBricks",  200),
-        ClayBricks:     new resource        ("Clay Bricks",     "ClayBricks",   200)
+        Planks:         new resource        ("Planks",          "Planks",       500),
+        StoneBricks:    new resource        ("Stone Bricks",    "StoneBricks",  500)
+        //ClayBricks:     new resource        ("Clay Bricks",     "ClayBricks",   200)
     },
     Fuel: {                                // Public Name       ID Name         Cap
         Firewood:       new resource        ("Firewood",        "Firewood",     200),
@@ -738,26 +743,26 @@ var Resource = {
         Peat:           new resource        ("Peat",            "Peat",         200)
     },
     Ore: {                                 // Public Name       ID Name         Cap
-        Cinnabar:       new resource        ("Cinnabar Ore",    "OreCinnabar",  200),
+        //Cinnabar:       new resource        ("Cinnabar Ore",    "OreCinnabar",  200),
         Copper:         new resource        ("Copper Ore",      "OreCopper",    200),
-        Galena:         new resource        ("Galena Ore",      "OreGalena",    200),
+        //Galena:         new resource        ("Galena Ore",      "OreGalena",    200),
         Gold:           new resource        ("Gold Ore",        "OreGold",      200),
         Iron:           new resource        ("Iron Ore",        "OreIron",      200),
         Silver:         new resource        ("Silver Ore",      "OreSilver",    200),
         Tin:            new resource        ("Tin Ore",         "OreTin",       200)
     },
     Ingot: {                               // Public Name       ID Name         Cap
-        Bronze:         new resource        ("Bronze Ingot",    "IngotBronze",  200),
-        Copper:         new resource        ("Copper Ingot",    "IngotCopper",  200),
-        Gold:           new resource        ("Gold Ingot",      "IngotGold",    200),
-        Iron:           new resource        ("Iron Ingot",      "IngotIron",    200),
-        Lead:           new resource        ("Lead Ingot",      "IngotLead",    200),
-        Silver:         new resource        ("Silver Ingot",    "IngotSilver",  200),
-        Steel:          new resource        ("Steel Ingot",     "IngotSteel",   200),
-        Tin:            new resource        ("Tin Ingot",       "IngotTin",     200)
+        Bronze:         new resource        ("Bronze Ingot",    "IngotBronze",  100),
+        Copper:         new resource        ("Copper Ingot",    "IngotCopper",  100),
+        Gold:           new resource        ("Gold Ingot",      "IngotGold",    100),
+        Iron:           new resource        ("Iron Ingot",      "IngotIron",    100),
+        //Lead:           new resource        ("Lead Ingot",      "IngotLead",    200),
+        Silver:         new resource        ("Silver Ingot",    "IngotSilver",  100),
+        Steel:          new resource        ("Steel Ingot",     "IngotSteel",   100),
+        Tin:            new resource        ("Tin Ingot",       "IngotTin",     100)
     },
     FoodRaw: {                             // Public Name       ID Name         Cap
-        GrainBarley:    new resource        ("Barley Grain",    "RawBarley",    200),
+        //GrainBarley:    new resource        ("Barley Grain",    "RawBarley",    200),
         GrainWheat:     new resource        ("Wheat Grain",     "RawWheat",     200),
         Meat:           new resource        ("Meat",            "RawMeat",      200)
     },
@@ -771,39 +776,39 @@ var Resource = {
 
 var BuildingPrimary = {
     Primary: {                             // Public Name       ID Name       Cap   Income Resource                                             Income Tool     Tool Type
-        CampClay:       new buildingPrimary ("Clay Pit",        "CampClay",     5,  ["Resource.RawMaterial.Clay"],                              [0],            ["Shovel"],
+        CampClay:       new buildingPrimary ("Clay Pit",        "CampClay",     2,  ["Resource.RawMaterial.Clay"],                              [0],            ["Shovel"],
                                             ["Resource.RawMaterial.Logs"],
                                             [50]),
-        CampLogs:       new buildingPrimary ("Lumber Camp",     "CampLogs",     5,  ["Resource.RawMaterial.Logs"],                              [0],            ["Axe"],
+        CampLogs:       new buildingPrimary ("Lumber Camp",     "CampLogs",     2,  ["Resource.RawMaterial.Logs", "Resource.Fuel.Firewood"],    [0, 0],         ["Axe"],
                                             ["Resource.RawMaterial.Logs"],
                                             [50]),
         CampStone:      new buildingPrimary ("Stone Quarry",    "CampStone",    5,  ["Resource.RawMaterial.Stone"],                             [0],            ["Pickaxe"],
                                             ["Resource.RawMaterial.Logs"],
                                             [50]),
-        CampHunting:    new buildingPrimary ("Hunting Camp",    "CampHunting",  5,  ["Resource.RawMaterial.Skins", "Resource.FoodRaw.Meat"],    [0, 1],         ["Knife", "Hunting"],
+        CampHunting:    new buildingPrimary ("Hunting Camp",    "CampHunting",  2,  ["Resource.RawMaterial.Skins", "Resource.FoodRaw.Meat"],    [0, 1],         ["Knife", "Hunting"],
                                             ["Resource.RawMaterial.Logs"],
                                             [50])
     },
     Mine: {                                // Public Name       ID Name       Cap   Income Resource                         Income Tool     Tool Type
-        Coal:           new buildingPrimary ("Coal Mine",       "MineCoal",     5,  ["Resource.Fuel.Coal"],                 [0],            ["Pickaxe"],
+        Coal:           new buildingPrimary ("Coal Mine",       "MineCoal",     10, ["Resource.Fuel.Coal"],                 [0],            ["Pickaxe"],
                                             ["Resource.RawMaterial.Logs"],
                                             [50]),
-        Copper:         new buildingPrimary ("Copper Mine",     "MineCopper",   5,  ["Resource.Ore.Copper"],                [0],            ["Pickaxe"],
+        Copper:         new buildingPrimary ("Copper Mine",     "MineCopper",   10, ["Resource.Ore.Copper"],                [0],            ["Pickaxe"],
                                             ["Resource.RawMaterial.Logs"],
                                             [50]),
-        Galena:         new buildingPrimary ("Lead Mine",       "MineGalena",   5,  ["Resource.Ore.Galena"],                [0],            ["Pickaxe"],
-                                            ["Resource.RawMaterial.Logs"],
-                                            [50]),
+        //Galena:         new buildingPrimary ("Lead Mine",       "MineGalena",   10, ["Resource.Ore.Galena"],                [0],            ["Pickaxe"],
+        //                                    ["Resource.RawMaterial.Logs"],
+        //                                    [50]),
         Gold:           new buildingPrimary ("Gold Mine",       "MineGold",     5,  ["Resource.Ore.Gold"],                  [0],            ["Pickaxe"],
                                             ["Resource.RawMaterial.Logs"],
                                             [50]),
-        Iron:           new buildingPrimary ("Iron Mine",       "MineIron",     5,  ["Resource.Ore.Iron"],                  [0],            ["Pickaxe"],
+        Iron:           new buildingPrimary ("Iron Mine",       "MineIron",     10, ["Resource.Ore.Iron"],                  [0],            ["Pickaxe"],
                                             ["Resource.RawMaterial.Logs"],
                                             [50]),
         Silver:         new buildingPrimary ("Silver Mine",     "MineSilver",   5,  ["Resource.Ore.Silver"],                [0],            ["Pickaxe"],
                                             ["Resource.RawMaterial.Logs"],
                                             [50]),
-        Tin:            new buildingPrimary ("Tin Mine",        "MineTin",      5,  ["Resource.Ore.Tin"],                   [0],            ["Pickaxe"],
+        Tin:            new buildingPrimary ("Tin Mine",        "MineTin",      10, ["Resource.Ore.Tin"],                   [0],            ["Pickaxe"],
                                             ["Resource.RawMaterial.Logs"],
                                             [50])
     },
@@ -816,12 +821,38 @@ var BuildingPrimary = {
 
 var BuildingFactory = {
     Construction: {
-        Sawmill:        new buildingFactory ("Sawmill",         "ConstructionSawmill",  5,  ["Resource.Construction.Planks"],   [4],    ["Resource.RawMaterial.Logs"],  [1],    "Saw",  ["Crane"],
+        Sawmill:        new buildingFactory ("Sawmill",         "ConstructionSawmill",  5,  ["Resource.Construction.Planks"],       [4],    ["Resource.RawMaterial.Logs"],  [1],    "Saw",      ["Crane"],
+                                            ["Resource.RawMaterial.Logs"],
+                                            [100]),
+        Stonemason:     new buildingFactory ("Stonemason",      "ConstructionMason",    5,  ["Resource.Construction.StoneBricks"],  [2],    ["Resource.RawMaterial.Stone"], [2],    "Saw",      ["Crane"],
+                                            ["Resource.RawMaterial.Logs"],
+                                            [100]),
+        Charcoal:       new buildingFactory ("Charcoal Hut",    "CharcoalHut",          5,  ["Resource.Fuel.Charcoal"],             [5],    ["Resource.RawMaterial.Logs"],  [20],   "Charcoal", null,
+                                            ["Resource.RawMaterial.Logs"],
+                                            [20])
+    },
+    Smelter: {
+        Bronze:         new buildingFactory ("Bronze Smelter",  "SmelterBronze",        5,  ["Resource.Ingot.Bronze"],          [2],    ["Resource.Fuel.Charcoal", "Resource.Ore.Copper", "Resource.Ore.Tin"],  [5, 9, 1],  "Furnace",  ["Crane", "Crucible"],
+                                            ["Resource.RawMaterial.Logs"],
+                                            [100]),
+        Copper:         new buildingFactory ("Copper Smelter",  "SmelterCopper",        5,  ["Resource.Ingot.Copper"],          [2],    ["Resource.Fuel.Firewood", "Resource.Ore.Copper"],                      [10, 10],   "Furnace",  ["Crane", "Crucible"],
+                                            ["Resource.RawMaterial.Logs"],
+                                            [30]),
+        Gold:           new buildingFactory ("Gold Smelter",    "SmelterGold",          5,  ["Resource.Ingot.Gold"],            [2],    ["Resource.Fuel.Charcoal", "Resource.Ore.Gold"],                        [5, 10],    "Furnace",  ["Crane", "Crucible"],
+                                            ["Resource.Construction.Planks"],
+                                            [100]),
+        Iron:           new buildingFactory ("Iron Smelter",    "SmelterIron",          5,  ["Resource.Ingot.Iron"],            [2],    ["Resource.Fuel.Coal", "Resource.Ore.Iron"],                            [10, 10],   "Furnace",  ["Crane", "Crucible"],
+                                            ["Resource.Construction.StoneBricks",   "Resource.RawMaterial.Logs"],
+                                            [250,                                   100]),
+        Silver:         new buildingFactory ("Silver Smelter",  "SmelterSilver",        5,  ["Resource.Ingot.Silver"],          [2],    ["Resource.Fuel.Charcoal", "Resource.Ore.Silver"],                      [5, 10],    "Furnace",  ["Crane", "Crucible"],
+                                            ["Resource.RawMaterial.Logs"],
+                                            [100]),
+        Steel:          new buildingFactory ("Steel Smelter",  "SmelterSteel",          5,  ["Resource.Ingot.Steel"],           [2],    ["Resource.Fuel.Coal", "Resource.Ore.Iron"],                            [20, 10],   "Furnace",  ["Crane", "Crucible"],
+                                            ["Resource.Construction.StoneBricks",   "Resource.RawMaterial.Logs"],
+                                            [400,                                   200]),
+        Tin:            new buildingFactory ("Tin Smelter",  "SmelterTin",              5,  ["Resource.Ingot.Tin"],             [2],    ["Resource.Fuel.Charcoal", "Resource.Ore.Tin"],                         [5, 10],    "Furnace",  ["Crane", "Crucible"],
                                             ["Resource.RawMaterial.Logs"],
                                             [100])
-    },
-    Smelting: {
-        
     }
 }
 
@@ -839,13 +870,13 @@ var BuildingHouse = {                      // Public Name       ID Name         
 
 var Tool = {
     Axe: {                                 // Public Name       ID Name             Income Rate
-        Copper:         new tool            ("Copper Axe",      "AxeCopper",        2,
+        Copper:         new tool            ("Copper Axe",      "AxeCopper",        4,
                                             ["Resource.Ingot.Copper",   "Item.Component.ToolHandle"],
                                             [1,                         1]),
-        Bronze:         new tool            ("Bronze Axe",      "AxeBronze",        4,
+        Bronze:         new tool            ("Bronze Axe",      "AxeBronze",        8,
                                             ["Resource.Ingot.Bronze",   "Item.Component.ToolHandle"],
                                             [1,                         1]),
-        Iron:           new tool            ("Iron Axe",        "AxeIron",          8,
+        Iron:           new tool            ("Iron Axe",        "AxeIron",          12,
                                             ["Resource.Ingot.Iron",     "Item.Component.ToolHandle"],
                                             [1,                         1]),
         Steel:          new tool            ("Steel Axe",       "AxeSteel",         16,
@@ -853,35 +884,27 @@ var Tool = {
                                             [1,                         1])
     },
     Pickaxe: {                             // Public Name       ID Name             Income Rate
-        Copper:         new tool            ("Copper Pickaxe",  "PickaxeCopper",    2,
+        Copper:         new tool            ("Copper Pickaxe",  "PickaxeCopper",    4,
                                             ["Resource.Ingot.Copper",   "Item.Component.ToolHandle"],
                                             [1,                         1]),
-        Bronze:         new tool            ("Bronze Pickaxe",  "PickaxeBronze",    4,
+        Bronze:         new tool            ("Bronze Pickaxe",  "PickaxeBronze",    8,
                                             ["Resource.Ingot.Bronze",   "Item.Component.ToolHandle"],
                                             [1,                         1]),
-        Iron:           new tool            ("Iron Pickaxe",    "PickaxeIron",      8,
+        Iron:           new tool            ("Iron Pickaxe",    "PickaxeIron",      12,
                                             ["Resource.Ingot.Iron",     "Item.Component.ToolHandle"],
                                             [1,                         1]),
         Steel:          new tool            ("Steel Pickaxe",   "PickaxeSteel",     16,
                                             ["Resource.Ingot.Steel",    "Item.Component.ToolHandle"],
                                             [1,                         1])
     },
-    Saw: {                                 // Public Name       ID Name             Income Rate
-        Iron:           new tool            ("Iron Saw",        "SawIron",          8,
-                                            ["Resource.Ingot.Iron",     "Item.Component.ToolHandle"],
-                                            [2,                         1]),
-        Steel:          new tool            ("Steel Saw",       "SawSteel",         16,
-                                            ["Resource.Ingot.Steel",    "Item.Component.ToolHandle"],
-                                            [2,                         1])
-    },
     Hoe: {                                 // Public Name       ID Name             Income Rate
-        Copper:         new tool            ("Copper Hoe",      "HoeCopper",        2,
+        Copper:         new tool            ("Copper Hoe",      "HoeCopper",        4,
                                             ["Resource.Ingot.Copper",   "Item.Component.ToolHandle"],
                                             [1,                         1]),
-        Bronze:         new tool            ("Bronze Hoe",      "HoeBronze",        4,
+        Bronze:         new tool            ("Bronze Hoe",      "HoeBronze",        8,
                                             ["Resource.Ingot.Bronze",   "Item.Component.ToolHandle"],
                                             [1,                         1]),
-        Iron:           new tool            ("Iron Hoe",        "HoeIron",          8,
+        Iron:           new tool            ("Iron Hoe",        "HoeIron",          12,
                                             ["Resource.Ingot.Iron",     "Item.Component.ToolHandle"],
                                             [1,                         1]),
         Steel:          new tool            ("Steel Hoe",       "HoeSteel",         16,
@@ -889,13 +912,13 @@ var Tool = {
                                             [1,                         1])
     },
     Shovel: {                              // Public Name       ID Name             Income Rate
-        Copper:         new tool            ("Copper Shovel",   "ShovelCopper",     2,
+        Copper:         new tool            ("Copper Shovel",   "ShovelCopper",     4,
                                             ["Resource.Ingot.Copper",   "Item.Component.ToolHandle"],
                                             [1,                         1]),
-        Bronze:         new tool            ("Bronze Shovel",   "ShovelBronze",     4,
+        Bronze:         new tool            ("Bronze Shovel",   "ShovelBronze",     8,
                                             ["Resource.Ingot.Bronze",   "Item.Component.ToolHandle"],
                                             [1,                         1]),
-        Iron:           new tool            ("Iron Shovel",     "ShovelIron",       8,
+        Iron:           new tool            ("Iron Shovel",     "ShovelIron",       12,
                                             ["Resource.Ingot.Iron",     "Item.Component.ToolHandle"],
                                             [1,                         1]),
         Steel:          new tool            ("Steel Shovel",    "ShovelSteel",      16,
@@ -903,13 +926,13 @@ var Tool = {
                                             [1,                         1])
     },
     Sickle: {                              // Public Name       ID Name             Income Rate
-        Copper:         new tool            ("Copper Sickle",   "SickleCopper",     2,
+        Copper:         new tool            ("Copper Sickle",   "SickleCopper",     4,
                                             ["Resource.Ingot.Copper",   "Item.Component.ToolHandle"],
                                             [1,                         1]),
-        Bronze:         new tool            ("Bronze Sickle",   "SickleBronze",     4,
+        Bronze:         new tool            ("Bronze Sickle",   "SickleBronze",     8,
                                             ["Resource.Ingot.Bronze",   "Item.Component.ToolHandle"],
                                             [1,                         1]),
-        Iron:           new tool            ("Iron Sickle",     "SickleIron",       8,
+        Iron:           new tool            ("Iron Sickle",     "SickleIron",       12,
                                             ["Resource.Ingot.Iron",     "Item.Component.ToolHandle"],
                                             [1,                         1]),
         Steel:          new tool            ("Steel Sickle",    "SickleSteel",      16,
@@ -920,13 +943,13 @@ var Tool = {
                                             [1,                         1])
     },
     Scythe: {                              // Public Name       ID Name             Income Rate
-        Copper:         new tool            ("Copper Scythe",   "ScytheCopper",     2,
+        Copper:         new tool            ("Copper Scythe",   "ScytheCopper",     4,
                                             ["Resource.Ingot.Copper",   "Item.Component.ToolHandle"],
                                             [2,                         1]),
-        Bronze:         new tool            ("Bronze Scythe",   "ScytheBronze",     4,
+        Bronze:         new tool            ("Bronze Scythe",   "ScytheBronze",     8,
                                             ["Resource.Ingot.Bronze",   "Item.Component.ToolHandle"],
                                             [2,                         1]),
-        Iron:           new tool            ("Iron Scythe",     "ScytheIron",       8,
+        Iron:           new tool            ("Iron Scythe",     "ScytheIron",       12,
                                             ["Resource.Ingot.Iron",     "Item.Component.ToolHandle"],
                                             [2,                         1]),
         Steel:          new tool            ("Steel Scythe",    "ScytheSteel",      16,
@@ -934,61 +957,38 @@ var Tool = {
                                             [2,                         1])
     },
     Hammer: {                              // Public Name       ID Name             Income Rate
-        Stone:          new tool            ("Stone Hammer",    "HammerStone",      1,
-                                            ["Resource.RawMaterial.Stone",  "Item.Component.ToolHandle"],
-                                            [2,                             1]),
-        Copper:         new tool            ("Copper Hammer",   "HammerCopper",     2,
+        Copper:         new tool            ("Copper Hammer",   "HammerCopper",     4,
                                             ["Resource.Ingot.Copper",   "Item.Component.ToolHandle"],
                                             [2,                         1]),
-        Bronze:         new tool            ("Bronze Hammer",   "HammerBronze",     4,
+        Bronze:         new tool            ("Bronze Hammer",   "HammerBronze",     8,
                                             ["Resource.Ingot.Bronze",   "Item.Component.ToolHandle"],
                                             [2,                         1]),
-        Iron:           new tool            ("Iron Hammer",     "HammerIron",       8,
+        Iron:           new tool            ("Iron Hammer",     "HammerIron",       12,
                                             ["Resource.Ingot.Iron",     "Item.Component.ToolHandle"],
                                             [2,                         1]),
         Steel:          new tool            ("Steel Hammer",    "HammerSteel",      16,
                                             ["Resource.Ingot.Steel",    "Item.Component.ToolHandle"],
                                             [2,                         1])
     },
-    Spear: {                               // Public Name       ID Name             Income Rate
-        Wood:           new tool            ("Spear",           "SpearWood",        1,
-                                            ["Item.Component.ToolHandle"],
-                                            [1]),
-        Copper:         new tool            ("Copper Spear",    "SpearCopper",      2,
-                                            ["Resource.Ingot.Copper",   "Item.Component.ToolHandle"],
-                                            [1,                         1]),
-        Bronze:         new tool            ("Bronze Spear",    "SpearBronze",      4,
-                                            ["Resource.Ingot.Bronze",   "Item.Component.ToolHandle"],
-                                            [1,                         1]),
-        Iron:           new tool            ("Iron Spear",      "SpearIron",        8,
-                                            ["Resource.Ingot.Iron",     "Item.Component.ToolHandle"],
-                                            [1,                         1]),
-        Steel:          new tool            ("Steel Spear",     "SpearSteel",       16,
-                                            ["Resource.Ingot.Steel",    "Item.Component.ToolHandle"],
-                                            [1,                         1])
-    },
     Hunting: {                             // Public Name       ID Name             Income Rate
-        Spear:          new tool            ("Hunting Spear",   "HuntingSpear",     2,
+        Spear:          new tool            ("Hunting Spear",   "HuntingSpear",     4,
                                             ["Item.Component.ToolHandle"],
                                             [1]),
-        Hunting:        new tool            ("Hunting Bow",     "HuntingBow",       4,
+        Hunting:        new tool            ("Hunting Bow",     "HuntingBow",       10,
                                             ["Item.Component.ToolHandle",   "Item.Component.CordHemp"],
                                             [1,                             2]),
-        Reflex:         new tool            ("Reflex Bow",      "HuntingReflexBow", 8,
+        Reflex:         new tool            ("Reflex Bow",      "HuntingReflexBow", 14,
                                             ["Item.Component.ToolHandle",   "Item.Component.CordHemp"],
                                             [4,                             4])
     },
     Knife: {                               // Public Name       ID Name             Income Rate
-        Stone:          new tool            ("Stone Knife",     "KnifeStone",       1,
-                                            ["Resource.RawMaterial.Stone",  "Item.Component.ToolHandle"],
-                                            [1,                             1]),
-        Copper:         new tool            ("Copper Knife",    "KnifeCopper",      2,
+        Copper:         new tool            ("Copper Knife",    "KnifeCopper",      4,
                                             ["Resource.Ingot.Copper",   "Item.Component.ToolHandle"],
                                             [1,                         1]),
-        Bronze:         new tool            ("Bronze Knife",    "KnifeBronze",      4,
+        Bronze:         new tool            ("Bronze Knife",    "KnifeBronze",      8,
                                             ["Resource.Ingot.Bronze",   "Item.Component.ToolHandle"],
                                             [1,                         1]),
-        Iron:           new tool            ("Iron Knife",      "KnifeIron",        8,
+        Iron:           new tool            ("Iron Knife",      "KnifeIron",        12,
                                             ["Resource.Ingot.Iron",     "Item.Component.ToolHandle"],
                                             [1,                         1]),
         Steel:          new tool            ("Steel Knife",     "KnifeSteel",       16,
@@ -1006,6 +1006,27 @@ var Tool = {
 };
 
 var Machine = {
+    Charcoal: {
+        Pit:                new machine     ("Charcoal Pit",            "CharcoalPit",      1,
+                                            ["Resource.RawMaterial.Logs"],
+                                            [10])
+    },
+    Chisel: {
+        Basic:              new machine     ("Mason's Chisels",         "ChiselBasic",      1,
+                                            ["Resource.Ingot.Bronze"],
+                                            [5])
+    },
+    Furnace: {
+        Blast:              new machine     ("Blast Furnace",           "FurnaceBlast",     3,
+                                            ["Resource.Construction.StoneBricks"],
+                                            [200]),
+        Large:              new machine     ("Large Furnace",           "FurnaceLarge",     2,
+                                            ["Resource.Construction.StoneBricks"],
+                                            [50]),
+        Basic:              new machine     ("Basic Furnace",           "FurnaceBasic",     1,
+                                            ["Resource.RawMaterial.Logs"],
+                                            [20])
+    },
     Saw: {                                 // Public Name               ID Name             Multiplier
         Advanced:           new machine     ("Advanced Sawmill Saw",    "SawAdvanced",      2,
                                             ["Item.Engineering.GearboxWood"],
@@ -1018,6 +1039,14 @@ var Machine = {
         Basic:              new machine     ("Basic Crane",             "CraneBasic",       1,
                                             ["Item.Engineering.GearboxWood",    "Item.Component.WoodenShaft"],
                                             [1,                                 4])
+    },
+    Crucible: {
+        Large:              new machine     ("Large Cruicible",         "CrucibleLarge",    2,
+                                            ["Resource.RawMaterial.Clay"],
+                                            [50]),
+        Small:              new machine     ("Small Cruicible",         "CrucibleSmall",    1,
+                                            ["Resource.RawMaterial.Clay"],
+                                            [20])
     }
 };
 
@@ -1045,8 +1074,6 @@ var Item = {
                                             [2,                                 10])
     }
 };
-
-
 
 
 // ================================
@@ -1081,29 +1108,33 @@ buildingFactory.prototype.listMachines = function () {
         }
     }
     // Loop through the machineTypeAddon array
-    for (var i = 0; i < this.machineTypeAddon.length; i++) {
-        // Checks if the building actually needs a tool
-        // Create the machine type key
-        this.equippedMachines[this.machineTypeAddon[i]] = {};
-        // Loop through each tier of tool for that toolType
-        for (var key in Machine[this.machineTypeAddon[i]]) {
-            // This line is needed to make sure that it doesn't perform the iteration over inherited properties
-            if (Machine[this.machineTypeAddon[i]].hasOwnProperty(key)) {
-                // Create the tool tier key
-                this.equippedMachines[this.machineTypeAddon[i]][key] = 0;
+    if (this.machineTypeAddon !== null) {
+        for (var i = 0; i < this.machineTypeAddon.length; i++) {
+            // Checks if the building actually needs a tool
+            // Create the machine type key
+            this.equippedMachines[this.machineTypeAddon[i]] = {};
+            // Loop through each tier of tool for that toolType
+            for (var key in Machine[this.machineTypeAddon[i]]) {
+                // This line is needed to make sure that it doesn't perform the iteration over inherited properties
+                if (Machine[this.machineTypeAddon[i]].hasOwnProperty(key)) {
+                    // Create the tool tier key
+                    this.equippedMachines[this.machineTypeAddon[i]][key] = 0;
+                }
             }
-        }
+        }   
     }
 };
 
 // Sorts machines into order of the tier multiplier to calculate income
 buildingFactory.prototype.sortMachines = function () {
     this.equippedMachinesOrder[this.machineType] = Object.keys(Machine[this.machineType]);
-    for (var i = 0; i < this.machineTypeAddon.length; i++) {
-        this.equippedMachinesOrder[this.machineTypeAddon[i]] = Object.keys(Machine[this.machineTypeAddon[i]]);
-        //this.equippedMachinesOrder[this.machineType[i]].sort(function(a, b){
-        //    return Machine[this.machineType[i]][a].tierMultiplier > Machine[this.machineType[i]][b].tierMultiplier ? -1 : Machine[this.machineType[i]][a].tierMultiplier == Machine[this.machineType[i]][b].tierMultiplier ? 0 : 1;
-        //})
+    if (this.machineTypeAddon !== null) {
+        for (var i = 0; i < this.machineTypeAddon.length; i++) {
+            this.equippedMachinesOrder[this.machineTypeAddon[i]] = Object.keys(Machine[this.machineTypeAddon[i]]);
+            //this.equippedMachinesOrder[this.machineType[i]].sort(function(a, b){
+            //    return Machine[this.machineType[i]][a].tierMultiplier > Machine[this.machineType[i]][b].tierMultiplier ? -1 : Machine[this.machineType[i]][a].tierMultiplier == Machine[this.machineType[i]][b].tierMultiplier ? 0 : 1;
+            //})
+        }
     }
 }
 
@@ -1129,25 +1160,46 @@ function pageLoadDefinitions(){
 //   RENDERING
 // ================================
 
+$(document).ready(function () {
+    init();
+});
+
+function newGame() {
+    // Give starting kit
+    BuildingHouse.TentSmall.changeAmount(3);
+    BuildingPrimary.Primary.CampLogs.changeAmount(1);
+    BuildingPrimary.Primary.CampHunting.changeAmount(1);
+    BuildingPrimary.Mine.Copper.changeAmount(1);
+    Tool.Axe.Copper.changeAmount(1);
+    Tool.Hunting.Spear.changeAmount(1);
+    Tool.Knife.Copper.changeAmount(1);
+    Tool.Pickaxe.Copper.changeAmount(1);
+
+    // Apply starting kid
+    BuildingPrimary.Primary.CampLogs.changeWorker(1);
+    BuildingPrimary.Primary.CampLogs.changeWorkerEquippedTool(1, "Axe", "Copper");
+    BuildingPrimary.Primary.CampHunting.changeWorker(1);
+    BuildingPrimary.Primary.CampHunting.changeWorkerEquippedTool(1, "Hunting", "Spear");
+    BuildingPrimary.Primary.CampHunting.changeWorkerEquippedTool(1, "Knife", "Copper");
+    BuildingPrimary.Mine.Copper.changeWorker(1);
+    BuildingPrimary.Mine.Copper.changeWorkerEquippedTool(1, "Pickaxe", "Copper");
+}
+
 function pageLayout(){
     pageBuildHeader();
     pageBuildTabs();
+    dayRender();
+    Population.updatePopulation();
     
     debugHTMLLoad();
 }
 
 function init(){
-    dayRender();
-
-    Population.updatePopulation();
-}
-
-$(document).ready(function () {
-    countdown("dayTimer", dailyFunctions, 15);
     pageLoadDefinitions();
     pageLayout();
-    init();
-});
+    countdown("dayTimer", dailyFunctions, 10);
+    newGame();
+}
 
 function pageBuildHeader(){
     $("body").append(
@@ -1314,7 +1366,7 @@ function gameGenerateFactory() {
         "<div id='factory-Construction'>" +
             "<h3>Construction</h3>" +
         "</div>" +
-        "<div id='factory-Smelting'>" +
+        "<div id='factory-Smelter'>" +
             "<h3>Smelters</h3>" +
         "</div>"
     );
@@ -1354,7 +1406,7 @@ function gameGenerateFactory() {
                 )
             }
 
-                $("#" + BuildingFactory[key][subkey].idName + "Machine").append(
+            $("#" + BuildingFactory[key][subkey].idName + "Machine").append(
                 "<div class='border' id='" + BuildingFactory[key][subkey].idName + "Machine" + BuildingFactory[key][subkey].machineType + "'></div>"
             );
             var workerMachines = Object.keys(BuildingFactory[key][subkey].equippedMachines[BuildingFactory[key][subkey].machineType])
@@ -1368,20 +1420,22 @@ function gameGenerateFactory() {
                     "</div>"
                 );
             }
-            for (var i = 0; i < BuildingFactory[key][subkey].machineTypeAddon.length; i++) {
-                $("#" + BuildingFactory[key][subkey].idName + "Machine").append(
-                    "<div class='border' id='" + BuildingFactory[key][subkey].idName + "Machine" + BuildingFactory[key][subkey].machineTypeAddon[i] + "'></div>"
-                );
-                var workerMachines = Object.keys(BuildingFactory[key][subkey].equippedMachines[BuildingFactory[key][subkey].machineTypeAddon[i]])
-                for (var j = 0; j < workerMachines.length; j++) {
-                    $("#" + BuildingFactory[key][subkey].idName + "Machine" + BuildingFactory[key][subkey].machineTypeAddon[i]).append(
-                        "<div>" +
-                            "<div id='" + BuildingFactory[key][subkey].idName + "Machine" + Machine[BuildingFactory[key][subkey].machineTypeAddon[i]][workerMachines[j]].idName + "' style='display: inline;'></div>" +
-                            "<button onclick='BuildingFactory." + key + "." + subkey + "." + "changeEquippedMachine(-1, \"" + BuildingFactory[key][subkey].machineTypeAddon[i] + "\", " + "\"" + workerMachines[j] + "\")'>Unequip</button>" +
-                            "<button onclick='BuildingFactory." + key + "." + subkey + "." + "changeEquippedMachine(1, \"" + BuildingFactory[key][subkey].machineTypeAddon[i] + "\", " + "\"" + workerMachines[j] + "\")'>Equip</button>" +
-                            "Work Added to Multiplier: " + Machine[BuildingFactory[key][subkey].machineTypeAddon[i]][workerMachines[j]].multiplier +
-                        "</div>"
+            if (BuildingFactory[key][subkey].machineTypeAddon !== null) {
+                for (var i = 0; i < BuildingFactory[key][subkey].machineTypeAddon.length; i++) {
+                    $("#" + BuildingFactory[key][subkey].idName + "Machine").append(
+                        "<div class='border' id='" + BuildingFactory[key][subkey].idName + "Machine" + BuildingFactory[key][subkey].machineTypeAddon[i] + "'></div>"
                     );
+                    var workerMachines = Object.keys(BuildingFactory[key][subkey].equippedMachines[BuildingFactory[key][subkey].machineTypeAddon[i]])
+                    for (var j = 0; j < workerMachines.length; j++) {
+                        $("#" + BuildingFactory[key][subkey].idName + "Machine" + BuildingFactory[key][subkey].machineTypeAddon[i]).append(
+                            "<div>" +
+                                "<div id='" + BuildingFactory[key][subkey].idName + "Machine" + Machine[BuildingFactory[key][subkey].machineTypeAddon[i]][workerMachines[j]].idName + "' style='display: inline;'></div>" +
+                                "<button onclick='BuildingFactory." + key + "." + subkey + "." + "changeEquippedMachine(-1, \"" + BuildingFactory[key][subkey].machineTypeAddon[i] + "\", " + "\"" + workerMachines[j] + "\")'>Unequip</button>" +
+                                "<button onclick='BuildingFactory." + key + "." + subkey + "." + "changeEquippedMachine(1, \"" + BuildingFactory[key][subkey].machineTypeAddon[i] + "\", " + "\"" + workerMachines[j] + "\")'>Equip</button>" +
+                                "Work Added to Multiplier: " + Machine[BuildingFactory[key][subkey].machineTypeAddon[i]][workerMachines[j]].multiplier +
+                            "</div>"
+                        );
+                    }
                 }
             }
 
@@ -1423,9 +1477,6 @@ function gameGenerateTool() {
         "<div id='tool-Pickaxe'>" +
             "<h3>Pickaxes</h3>" +
         "</div>" +
-        "<div id='tool-Saw'>" +
-            "<h3>Saws</h3>" +
-        "</div>" +
         "<div id='tool-Hoe'>" +
             "<h3>Hoes</h3>" +
         "</div>" +
@@ -1440,9 +1491,6 @@ function gameGenerateTool() {
         "</div>" +
         "<div id='tool-Hammer'>" +
             "<h3>Hammers</h3>" +
-        "</div>" +
-        "<div id='tool-Spear'>" +
-            "<h3>Spears</h3>" +
         "</div>" +
         "<div id='tool-Hunting'>" +
             "<h3>Hunting Equipment</h3>" +
@@ -1476,11 +1524,20 @@ function gameGenerateTool() {
 
 function gameGenerateMachine() {
     $("#game-tab-machine").append(
+        "<div id='machine-Charcoal'>" +
+            "<h3>Charcoal</h3>" +
+        "</div>" +
+        "<div id='machine-Furnace'>" +
+            "<h3>Furnaces</h3>" +
+        "</div>" +
         "<div id='machine-Saw'>" +
-            "<h3>Circular Saw</h3>" +
+            "<h3>Saws</h3>" +
         "</div>" +
         "<div id='machine-Crane'>" +
-            "<h3>Crane</h3>" +
+            "<h3>Cranes</h3>" +
+        "</div>" +
+        "<div id='machine-Crucible'>" +
+            "<h3>Crucibles</h3>" +
         "</div>"
     );
 

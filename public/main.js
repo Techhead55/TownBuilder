@@ -61,16 +61,16 @@ function dayRender(){
 }
 
 function dayIncome() {
-    for (var key in Resource.RawMaterial) {
-        //for (var subkey in Resource[key]){
-            Resource.RawMaterial[key].changeAmount(Resource.RawMaterial[key].income);
-        //}
+    for (var key in Resource) {
+        for (var subkey in Resource[key]){
+            Resource[key][subkey].changeAmount(Resource[key][subkey].income);
+        }
     }
-    //for (var key in BuildingFactory){
-    //    for (var subkey in BuildingFactory[key]){
-    //        BuildingFactory[key][subkey].applyIncome();
-    //    }
-    //}
+    for (var key in BuildingFactory){
+        for (var subkey in BuildingFactory[key]){
+            BuildingFactory[key][subkey].applyIncome();
+        }
+    }
 }
 
 function dailyFunctions(){
@@ -382,9 +382,24 @@ function buildingFactory(strPublicName, strIdName, intWorkerCap, arrIncomeResour
     this.craftAmount = arrCraftAmount;
 }
 
-buildingFactory.prototype.renderAmount = function (num) {
+buildingFactory.prototype.renderAmount = function () {
     $("#" + this.idName).html(this.publicName + "s: " + this.amount + " - Workers: " + this.worker.amount + "/" + (this.amount * this.worker.capBase));
 };
+
+buildingFactory.prototype.renderMachine = function () {
+    for (var workerMachines in this.equippedMachines[this.machineType]) {
+        $("#" + this.idName + "Machine" + Machine[this.machineType][workerMachines].idName).html(
+            Machine[this.machineType][workerMachines].publicName + " - " + this.equippedMachines[this.machineType][workerMachines]
+        );
+    }
+    for (var i = 0; i < this.machineTypeAddon.length; i++) {
+        for (var workerMachines in this.equippedMachines[this.machineTypeAddon[i]]) {
+            $("#" + this.idName + "Machine" + Machine[this.machineTypeAddon[i]][workerMachines].idName).html(
+                Machine[this.machineTypeAddon[i]][workerMachines].publicName + " - " + this.equippedMachines[this.machineTypeAddon[i]][workerMachines]
+            );
+        }
+    }
+}
 
 buildingFactory.prototype.changeAmount = function (num) {
     this.amount += num;
@@ -430,6 +445,7 @@ buildingFactory.prototype.changeEquippedMachine = function (num, machineType, ma
 
     this.equippedMachines[machineType][machineTier] += num;
     Machine[machineType][machineTier].changeEquipped(num);
+    this.renderMachine();
 };
 
 buildingFactory.prototype.workCalc = function () {
@@ -792,7 +808,7 @@ var BuildingPrimary = {
                                             [50])
     },
     Farm: {
-        Hemp:           new buildingPrimary ("Hemp Farm",       "FarmHemp",     5,  ["Resource.Primary.Hemp"],              [0],            ["Scythe"],
+        Hemp:           new buildingPrimary ("Hemp Farm",       "FarmHemp",     5,  ["Resource.RawMaterial.Hemp"],          [0],            ["Scythe"],
                                             ["Resource.RawMaterial.Logs"],
                                             [50])
     }
@@ -990,18 +1006,18 @@ var Tool = {
 };
 
 var Machine = {
-    Saw: {                                 // Public Name           ID Name             Multiplier
-        Advanced:           new machine     ("Advanced Saw",        "SawAdvanced",      2,
+    Saw: {                                 // Public Name               ID Name             Multiplier
+        Advanced:           new machine     ("Advanced Sawmill Saw",    "SawAdvanced",      2,
                                             ["Item.Engineering.GearboxWood"],
                                             [4]),
-        Basic:              new machine     ("Sawmill Saw",         "SawBasic",         1,
+        Basic:              new machine     ("Basic Sawmill Saw",       "SawBasic",         1,
                                             ["Item.Engineering.GearboxWood"],
                                             [1])
     },
     Crane: {
-        Basic:              new machine     ("Basic Crane",         "CraneBasic",       1,
+        Basic:              new machine     ("Basic Crane",             "CraneBasic",       1,
                                             ["Item.Engineering.GearboxWood",    "Item.Component.WoodenShaft"],
-                                            [1,                             4])
+                                            [1,                                 4])
     }
 };
 
@@ -1247,7 +1263,7 @@ function gameGeneratePrimary() {
                     "<div id='" + BuildingPrimary[key][subkey].idName + "' style='display: inline'></div>" +
                     "<button onclick='BuildingPrimary." + key + "." + subkey + ".changeWorker(-1)'>-</button>" +
                     "<button onclick='BuildingPrimary." + key + "." + subkey + ".changeWorker(1)'>+</button>" +
-                    "<div id='" + BuildingPrimary[key][subkey].idName + "Cost'><b>Cost:</b><br />| </div>" +
+                    "<div id='" + BuildingPrimary[key][subkey].idName + "Cost'><b>Cost</b> | </div>" +
                     "<div id='" + BuildingPrimary[key][subkey].idName + "Tool'><b>Tools:</b>" +
                 "</div>"
             );
@@ -1259,15 +1275,29 @@ function gameGeneratePrimary() {
             }
             for (var i = 0; i < BuildingPrimary[key][subkey].toolType.length; i++) {
                 $("#" + BuildingPrimary[key][subkey].idName + "Tool").append(
-                    "<div id='" + BuildingPrimary[key][subkey].idName + "Tool" + BuildingPrimary[key][subkey].toolType[i] + "'></div>"
+                    "<div class='border' id='" + BuildingPrimary[key][subkey].idName + "Tool" + BuildingPrimary[key][subkey].toolType[i] + "'></div>"
                 );
                 var workerTools = Object.keys(BuildingPrimary[key][subkey].worker.equippedTools[BuildingPrimary[key][subkey].toolType[i]])
                 for (var j = 0; j < workerTools.length; j++) {
+                    function buildingIncome() {
+                        var resourceNames = ""
+                        for (var k = 0; k < BuildingPrimary[key][subkey].incomeResource.length; k++) {
+                            if (i === BuildingPrimary[key][subkey].toolIncomeRef[k]) {
+                                if (resourceNames != "") {
+                                    resourceNames += ", ";
+                                }
+                                resourceNames += objRef(window, BuildingPrimary[key][subkey].incomeResource[k]).publicName;
+                            }
+                        }
+                        return resourceNames;
+                    }
+
                     $("#" + BuildingPrimary[key][subkey].idName + "Tool" + BuildingPrimary[key][subkey].toolType[i]).append(
                         "<div>" +
                             "<div id='" + BuildingPrimary[key][subkey].idName + "Tool" + Tool[BuildingPrimary[key][subkey].toolType[i]][workerTools[j]].idName + "' style='display: inline;'></div>" +
                             "<button onclick='BuildingPrimary." + key + "." + subkey + "." + "changeWorkerEquippedTool(-1, \"" + BuildingPrimary[key][subkey].toolType[i] + "\", " + "\"" + workerTools[j] + "\")'>Unequip</button>" +
                             "<button onclick='BuildingPrimary." + key + "." + subkey + "." + "changeWorkerEquippedTool(1, \"" + BuildingPrimary[key][subkey].toolType[i] + "\", " + "\"" + workerTools[j] + "\")'>Equip</button>" +
+                            "Income: +" + Tool[BuildingPrimary[key][subkey].toolType[i]][workerTools[j]].incomeRate + " " + buildingIncome() + " each" +
                         "</div>"
                     );
                 }
@@ -1297,14 +1327,65 @@ function gameGenerateFactory() {
                     "<div id='" + BuildingFactory[key][subkey].idName + "' style='display: inline'></div>" +
                     "<button onclick='BuildingFactory." + key + "." + subkey + ".changeWorker(-1)'>-</button>" +
                     "<button onclick='BuildingFactory." + key + "." + subkey + ".changeWorker(1)'>+</button>" +
-                    "<div id='" + BuildingFactory[key][subkey].idName + "Cost'>Cost:<br />| </div>" +
+                    "<div id='" + BuildingFactory[key][subkey].idName + "Cost'><b>Cost</b> | </div>" +
+                    "<div id='" + BuildingFactory[key][subkey].idName + "Production'><b>Work Rate:</b>" +
+                        "<div id='" + BuildingFactory[key][subkey].idName + "ProductionIncome'>Income: | </div>" +
+                        "<div id='" + BuildingFactory[key][subkey].idName + "ProductionExpense'>Expense: | </div>" +
+                    "</div>" +
+                    "<div id='" + BuildingFactory[key][subkey].idName + "Machine'><b>Machines:</b>" +
                 "</div>"
             );
+
             for (var i = 0; i < BuildingFactory[key][subkey].craftType.length; i++) {
                 $("#" + BuildingFactory[key][subkey].idName + "Cost").append(
                     objRef(window, BuildingFactory[key][subkey].craftType[i]).publicName + ": " + BuildingFactory[key][subkey].craftAmount[i] + " | "
                 );
             }
+
+            for (var i = 0; i < BuildingFactory[key][subkey].incomeResource.length; i++) {
+                $("#" + BuildingFactory[key][subkey].idName + "ProductionIncome").append(
+                    objRef(window, BuildingFactory[key][subkey].incomeResource[i]).publicName + ": " + BuildingFactory[key][subkey].incomeRate[i] + " | "                    
+                )
+            }
+
+            for (var i = 0; i < BuildingFactory[key][subkey].expenseResource.length; i++) {
+                $("#" + BuildingFactory[key][subkey].idName + "ProductionExpense").append(
+                    objRef(window, BuildingFactory[key][subkey].expenseResource[i]).publicName + ": " + BuildingFactory[key][subkey].expenseRate[i] + " | "                    
+                )
+            }
+
+                $("#" + BuildingFactory[key][subkey].idName + "Machine").append(
+                "<div class='border' id='" + BuildingFactory[key][subkey].idName + "Machine" + BuildingFactory[key][subkey].machineType + "'></div>"
+            );
+            var workerMachines = Object.keys(BuildingFactory[key][subkey].equippedMachines[BuildingFactory[key][subkey].machineType])
+            for (var j = 0; j < workerMachines.length; j++) {
+                $("#" + BuildingFactory[key][subkey].idName + "Machine" + BuildingFactory[key][subkey].machineType).append(
+                    "<div>" +
+                        "<div id='" + BuildingFactory[key][subkey].idName + "Machine" + Machine[BuildingFactory[key][subkey].machineType][workerMachines[j]].idName + "' style='display: inline;'></div>" +
+                        "<button onclick='BuildingFactory." + key + "." + subkey + "." + "changeEquippedMachine(-1, \"" + BuildingFactory[key][subkey].machineType + "\", " + "\"" + workerMachines[j] + "\")'>Unequip</button>" +
+                        "<button onclick='BuildingFactory." + key + "." + subkey + "." + "changeEquippedMachine(1, \"" + BuildingFactory[key][subkey].machineType + "\", " + "\"" + workerMachines[j] + "\")'>Equip</button>" +
+                        "Work Multiplier: " + Machine[BuildingFactory[key][subkey].machineType][workerMachines[j]].multiplier +
+                    "</div>"
+                );
+            }
+            for (var i = 0; i < BuildingFactory[key][subkey].machineTypeAddon.length; i++) {
+                $("#" + BuildingFactory[key][subkey].idName + "Machine").append(
+                    "<div class='border' id='" + BuildingFactory[key][subkey].idName + "Machine" + BuildingFactory[key][subkey].machineTypeAddon[i] + "'></div>"
+                );
+                var workerMachines = Object.keys(BuildingFactory[key][subkey].equippedMachines[BuildingFactory[key][subkey].machineTypeAddon[i]])
+                for (var j = 0; j < workerMachines.length; j++) {
+                    $("#" + BuildingFactory[key][subkey].idName + "Machine" + BuildingFactory[key][subkey].machineTypeAddon[i]).append(
+                        "<div>" +
+                            "<div id='" + BuildingFactory[key][subkey].idName + "Machine" + Machine[BuildingFactory[key][subkey].machineTypeAddon[i]][workerMachines[j]].idName + "' style='display: inline;'></div>" +
+                            "<button onclick='BuildingFactory." + key + "." + subkey + "." + "changeEquippedMachine(-1, \"" + BuildingFactory[key][subkey].machineTypeAddon[i] + "\", " + "\"" + workerMachines[j] + "\")'>Unequip</button>" +
+                            "<button onclick='BuildingFactory." + key + "." + subkey + "." + "changeEquippedMachine(1, \"" + BuildingFactory[key][subkey].machineTypeAddon[i] + "\", " + "\"" + workerMachines[j] + "\")'>Equip</button>" +
+                            "Work Added to Multiplier: " + Machine[BuildingFactory[key][subkey].machineTypeAddon[i]][workerMachines[j]].multiplier +
+                        "</div>"
+                    );
+                }
+            }
+
+            BuildingFactory[key][subkey].renderMachine();
             BuildingFactory[key][subkey].renderAmount();
         }
     }
@@ -1322,7 +1403,7 @@ function gameGenerateHouse() {
             "<div class='border'>" +
                 "<button onclick='BuildingHouse." + key + ".applyCraft()'>Build</button>" +
                 "<div id='" + BuildingHouse[key].idName + "' style='display: inline'></div>" +
-                "<div id='" + BuildingHouse[key].idName + "Cost'>Cost:<br />| </div>" +
+                "<div id='" + BuildingHouse[key].idName + "Cost'><b>Cost</b> | </div>" +
             "</div>"
         );
         for (var i = 0; i < BuildingHouse[key].craftType.length; i++) {
@@ -1380,7 +1461,7 @@ function gameGenerateTool() {
                 "<div class='border'>" +
                     "<button onclick='Tool." + key + "." + subkey + ".applyCraft()'>Craft</button>" +
                     "<div id='" + Tool[key][subkey].idName + "' style='display: inline'></div>" +
-                    "<div id='" + Tool[key][subkey].idName + "Cost'>Cost:<br />| </div>" +
+                    "<div id='" + Tool[key][subkey].idName + "Cost'><b>Cost</b> | </div>" +
                 "</div>"
             );
             for (var i = 0; i < Tool[key][subkey].craftType.length; i++) {
@@ -1409,7 +1490,7 @@ function gameGenerateMachine() {
                 "<div class='border'>" +
                     "<button onclick='Machine." + key + "." + subkey + ".applyCraft()'>Craft</button>" +
                     "<div id='" + Machine[key][subkey].idName + "' style='display: inline'></div>" +
-                    "<div id='" + Machine[key][subkey].idName + "Cost'>Cost:<br />| </div>" +
+                    "<div id='" + Machine[key][subkey].idName + "Cost'><b>Cost</b> | </div>" +
                 "</div>"
             );
             for (var i = 0; i < Machine[key][subkey].craftType.length; i++) {
@@ -1438,7 +1519,7 @@ function gameGenerateItem() {
                 "<div class='border'>" +
                     "<button onclick='Item." + key + "." + subkey + ".applyCraft()'>Craft</button>" +
                     "<div id='" + Item[key][subkey].idName + "' style='display: inline'></div>" +
-                    "<div id='" + Item[key][subkey].idName + "Cost'>Cost:<br />| </div>" +
+                    "<div id='" + Item[key][subkey].idName + "Cost'><b>Cost</b> | </div>" +
                 "</div>"
             );
             for (var i = 0; i < Item[key][subkey].craftType.length; i++) {

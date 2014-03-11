@@ -103,7 +103,7 @@ var Population = {
     labourer:           function () { return Population.cap - Population.assigned; },
     cap:                0,
 
-    updatePopulation:   function () { gid("Population").innerHTML = "Used Popluation: " + Population.assigned + "/" + Population.cap; }
+    updatePopulation:   function () { gid("Population").innerHTML = "Used Population: " + Population.assigned + "/" + Population.cap; }
 };
 
 function calculateHousing(){

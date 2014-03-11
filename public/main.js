@@ -1548,6 +1548,9 @@ function gameGenerateMachine() {
         "<div id='machine-Charcoal'>" +
             "<h3>Charcoal</h3>" +
         "</div>" +
+        "<div id='machine-Chisel'>" +
+            "<h3>Chisels</h3>" +
+        "</div>" +
         "<div id='machine-Furnace'>" +
             "<h3>Furnaces</h3>" +
         "</div>" +

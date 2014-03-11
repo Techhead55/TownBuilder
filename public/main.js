@@ -27,8 +27,24 @@ Array.prototype.min = function() {
 // Options
 
 var options = {
+    versionNumber: "a0.1",
     debugMenu: true
 };
+
+var cityName = {
+    name: "Cityville",
+
+    changeName: function () {
+        var newName = prompt("Enter a new name:", cityName.name);
+        cityName.name = newName;
+        cityName.render();
+    },
+    render: function () {
+        $("#city-name").html(
+            "<h3 style='display: inline'>" + cityName.name + "</h3>"
+        );
+    }
+}
 
 // Countdown Timer
 function countdown(elementID, fn, seconds){
@@ -824,7 +840,7 @@ var BuildingFactory = {
         Sawmill:        new buildingFactory ("Sawmill",         "ConstructionSawmill",  5,  ["Resource.Construction.Planks"],       [4],    ["Resource.RawMaterial.Logs"],  [1],    "Saw",      ["Crane"],
                                             ["Resource.RawMaterial.Logs"],
                                             [100]),
-        Stonemason:     new buildingFactory ("Stonemason",      "ConstructionMason",    5,  ["Resource.Construction.StoneBricks"],  [2],    ["Resource.RawMaterial.Stone"], [2],    "Saw",      ["Crane"],
+        Stonemason:     new buildingFactory ("Stonemason",      "ConstructionMason",    5,  ["Resource.Construction.StoneBricks"],  [2],    ["Resource.RawMaterial.Stone"], [2],    "Chisel",   ["Crane"],
                                             ["Resource.RawMaterial.Logs"],
                                             [100]),
         Charcoal:       new buildingFactory ("Charcoal Hut",    "CharcoalHut",          5,  ["Resource.Fuel.Charcoal"],             [5],    ["Resource.RawMaterial.Logs"],  [20],   "Charcoal", null,
@@ -1029,11 +1045,11 @@ var Machine = {
     },
     Saw: {                                 // Public Name               ID Name             Multiplier
         Advanced:           new machine     ("Advanced Sawmill Saw",    "SawAdvanced",      2,
-                                            ["Item.Engineering.GearboxWood"],
-                                            [4]),
+                                            ["Item.Engineering.GearboxWood",    "Resource.Ingot.Steel"],
+                                            [4,                                 10]),
         Basic:              new machine     ("Basic Sawmill Saw",       "SawBasic",         1,
-                                            ["Item.Engineering.GearboxWood"],
-                                            [1])
+                                            ["Item.Engineering.GearboxWood",    "Resource.Ingot.Iron"],
+                                            [1,                                 10])
     },
     Crane: {
         Basic:              new machine     ("Basic Crane",             "CraneBasic",       1,
@@ -1188,6 +1204,9 @@ function newGame() {
 function pageLayout(){
     pageBuildHeader();
     pageBuildTabs();
+
+    // Header
+    cityName.render();
     dayRender();
     Population.updatePopulation();
     
@@ -1202,43 +1221,45 @@ function init(){
 }
 
 function pageBuildHeader(){
-    $("body").append(
-        "<div id='dayTimer' style='display: inline'></div> " +
-        "<div id='dayCounter' style='display: inline'></div> " +
-        "<div id='Population' style='display: inline'></div>"
+    $("#game").append(
+        "<div id='game-header'>" +
+            "<div id='city-name' style='display: inline'></div>" +
+            "<button onclick='cityName.changeName()'>Change</button>" +
+            "<div id='dayTimer' style='display: inline'></div> " +
+            "<div id='dayCounter' style='display: inline'></div> " +
+            "<div id='Population' style='display: inline'></div>" +
+        "</div>"
     );
 }
 
 function pageBuildTabs(){
-    $("body").append(
-        "<div id='game'>" +
-            "<div id='game-tabs'>" +
-                "<div class='scroller'>" +
-                    "<ul>" +
-                        "<li><a href='#game-tab-resource'>Resources</a></li>" +
-                        "<li><a href='#game-tab-primary'>Primary Production</a></li>" +
-                        "<li><a href='#game-tab-factory'>Factories</a></li>" +
-                        "<li><a href='#game-tab-house'>Houses</a></li>" +
-                        "<li><a href='#game-tab-tool'>Tools</a></li>" +
-                        "<li><a href='#game-tab-machine'>Machines</a></li>" +
-                        "<li><a href='#game-tab-item'>Items</a></li>" +
-                    "</ul>" +
+    $("#game").append(
+        "<div id='game-tabs'>" +
+            "<div class='scroller'>" +
+                "<ul>" +
+                    "<li><a href='#game-tab-resource'>Resources</a></li>" +
+                    "<li><a href='#game-tab-primary'>Primary Production</a></li>" +
+                    "<li><a href='#game-tab-factory'>Factories</a></li>" +
+                    "<li><a href='#game-tab-house'>Houses</a></li>" +
+                    "<li><a href='#game-tab-tool'>Tools</a></li>" +
+                    "<li><a href='#game-tab-machine'>Machines</a></li>" +
+                    "<li><a href='#game-tab-item'>Items</a></li>" +
+                "</ul>" +
+            "</div>" +
+            "<div class='scroller'>" +
+                "<div id='game-tab-resource'>" +
                 "</div>" +
-                "<div class='scroller'>" +
-                    "<div id='game-tab-resource'>" +
-                    "</div>" +
-                    "<div id='game-tab-primary'>" +
-                    "</div>" +
-                    "<div id='game-tab-factory'>" +
-                    "</div>" +
-                    "<div id='game-tab-house'>" +
-                    "</div>" +
-                    "<div id='game-tab-tool'>" +
-                    "</div>" +
-                    "<div id='game-tab-machine'>" +
-                    "</div>" +
-                    "<div id='game-tab-item'>" +
-                    "</div>" +
+                "<div id='game-tab-primary'>" +
+                "</div>" +
+                "<div id='game-tab-factory'>" +
+                "</div>" +
+                "<div id='game-tab-house'>" +
+                "</div>" +
+                "<div id='game-tab-tool'>" +
+                "</div>" +
+                "<div id='game-tab-machine'>" +
+                "</div>" +
+                "<div id='game-tab-item'>" +
                 "</div>" +
             "</div>" +
         "</div>"

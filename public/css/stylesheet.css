@@ -68,6 +68,12 @@ button:active{
     margin-bottom: 1px;
 }
 
+/*jQuery-ui fixes*/
+
+.ui-widget {
+	font-size: 12px;
+}
+
 /*Game Frame*/
 
 #game-tabs { 

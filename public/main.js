@@ -36,8 +36,10 @@ var cityName = {
 
     changeName: function () {
         var newName = prompt("Enter a new name:", cityName.name);
-        cityName.name = newName;
-        cityName.render();
+        if (newName !== null) {
+            cityName.name = newName;
+            cityName.render();
+        }
     },
     render: function () {
         $("#city-name").html(
@@ -104,7 +106,7 @@ var Population = {
     labourer:           function () { return Population.cap - Population.assigned; },
     cap:                0,
 
-    updatePopulation:   function () { gid("Population").innerHTML = "Used Population: " + Population.assigned + "/" + Population.cap; }
+    updatePopulation:   function () { gid("Population").innerHTML = "Employed Population: " + Population.assigned + "/" + Population.cap; }
 };
 
 function calculateHousing(){

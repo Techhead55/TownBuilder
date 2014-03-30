@@ -106,7 +106,7 @@ var Population = {
     labourer:           function () { return Population.cap - Population.assigned; },
     cap:                0,
 
-    updatePopulation:   function () { gid("Population").innerHTML = "Employed Population: " + Population.assigned + "/" + Population.cap; }
+    updatePopulation:   function () { gid("Population").innerHTML = "Employed Workers: " + Population.assigned + "/" + Population.cap; }
 };
 
 function calculateHousing(){
@@ -1625,19 +1625,46 @@ function gameGenerateItem() {
 function gameGenerateTest() {
     $("#game-tab-test").append(
         "<ul id='game-tab-list' class='game-layer-1'>" +
-            "<li id='primary-Primary'>" +
-                "<h3>Primary Resources</h3>" +
-                "<div class='test'></div>" +
+            "<li>" +
+                "<h3 class='toggleContainer'>Primary Resources</h3>" +
+                "<ul id='test-Primary' class='game-layer-2'>" +
+                    "<li></li>" +
+                    "<li></li>" +
+                    "<li></li>" +
+                    "<li></li>" +
+                    "<li></li>" +
+                "</ul>" +
             "</li>" +
-            "<li id='primary-Mine'>" +
-                "<h3>Mines</h3>" +
+            "<li>" +
+                "<h3 class='toggleContainer'>Mines</h3>" +
+                "<ul id='test-Mine' class='game-layer-2'>" +
+                    "<li></li>" +
+                    "<li></li>" +
+                    "<li></li>" +
+                    "<li></li>" +
+                    "<li></li>" +
+                "</ul>" +
             "</li>" +
-            "<li id='primary-Farm'>" +
-                "<h3>Farms</h3>" +
+            "<li>" +
+                "<h3 class='toggleContainer'>Farms</h3>" +
+                "<ul id='test-Farm' class='game-layer-2'>" +
+                    "<li></li>" +
+                    "<li></li>" +
+                    "<li></li>" +
+                    "<li></li>" +
+                    "<li></li>" +
+                "</ul>" +
             "</li>" +
         "</ul>"
     );
     $("#game-tab-list").sortable();
+    $("#test-Primary").sortable();
+    $("#test-Mine").sortable();
+    $("#test-Farm").sortable();
+
+    $(document.body).on("click", ".toggleContainer", function () {
+        $(this).next().slideToggle();
+    });
 }
 
 // Debugging Menu

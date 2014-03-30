@@ -114,12 +114,25 @@ button:active{
     list-style-type: none;
     margin: 0;
     padding: 0;
+    float: left; 
 }
 
-.test {
-    height: 50px;
-    width: 50px;
-    background-color: #ff0000;
+.game-layer-2 {
+    list-style-type: none; 
+    margin: 0; 
+    padding: 0; 
+    overflow: hidden;
+}
+
+.game-layer-2 li { 
+    margin: 3px 3px 3px 0;
+    padding: 1px; 
+    float: left; 
+    width: 75px; 
+    height: 75px; 
+    border: 2px solid #111;
+    border-radius: 5px;
+    background-color: #fff;
 }
 
 /*Debug Frame*/

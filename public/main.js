@@ -198,7 +198,7 @@ function resource(strPublicName, strIdName, intAmountCap) {
 
 // Render the object
 resource.prototype.renderAmount = function () {
-    $("#" + this.idName).html(this.publicName + ": " + this.amount + "/" + this.amountCap);
+    $("#" + this.idName + "Old").html(this.publicName + ": " + this.amount + "/" + this.amountCap);
 };
 
 // Change the amount
@@ -252,7 +252,7 @@ function buildingPrimary(strPublicName, strIdName, intWorkerCap, arrIncomeResour
 
 // Update the HTML on the page
 buildingPrimary.prototype.renderAmount = function () {
-    $("#" + this.idName).html(this.publicName + "s: " + this.amount + " - Workers: " + this.worker.amount + "/" + (this.amount * this.worker.capBase));
+    $("#" + this.idName + "Old").html(this.publicName + "s: " + this.amount + " - Workers: " + this.worker.amount + "/" + (this.amount * this.worker.capBase));
 };
 
 buildingPrimary.prototype.renderTool = function () {
@@ -401,7 +401,7 @@ function buildingFactory(strPublicName, strIdName, intWorkerCap, arrIncomeResour
 }
 
 buildingFactory.prototype.renderAmount = function () {
-    $("#" + this.idName).html(this.publicName + "s: " + this.amount + " - Workers: " + this.worker.amount + "/" + (this.amount * this.worker.capBase));
+    $("#" + this.idName + "Old").html(this.publicName + "s: " + this.amount + " - Workers: " + this.worker.amount + "/" + (this.amount * this.worker.capBase));
 };
 
 buildingFactory.prototype.renderMachine = function () {
@@ -610,7 +610,7 @@ function buildingHouse(strPublicName, strIdName, intBasePop, arrCraftType, arrCr
 
 // Update the HTML on the page
 buildingHouse.prototype.renderAmount = function () {
-    $("#" + this.idName).html(this.publicName + "s: " + this.amount + " - Population: " + (this.amount * this.basePop));
+    $("#" + this.idName + "Old").html(this.publicName + "s: " + this.amount + " - Population: " + (this.amount * this.basePop));
 };
 
 // Add more of this building type
@@ -644,7 +644,7 @@ function tool(strPublicName, strIdName, intIncomeRate, arrCraftType, arrCraftAmo
 
 // Update the HTML on the page
 tool.prototype.renderAmount = function () {
-    $("#" + this.idName).html(this.publicName + ": " + this.equipped + "/" + this.amount);
+    $("#" + this.idName + "Old").html(this.publicName + ": " + this.equipped + "/" + this.amount);
 };
 
 // Change the amount
@@ -689,7 +689,7 @@ function machine(strPublicName, strIdName, intMultiplier, arrCraftType, arrCraft
 }
 
 machine.prototype.renderAmount = function () {
-    $("#" + this.idName).html(this.publicName + ": " + this.equipped + "/" + this.amount);
+    $("#" + this.idName + "Old").html(this.publicName + ": " + this.equipped + "/" + this.amount);
 };
 
 machine.prototype.changeAmount = function (num) {
@@ -723,7 +723,7 @@ function item(strPublicName, strIdName, intProducedAmount, arrCraftType, arrCraf
 }
 
 item.prototype.renderAmount = function (){
-    $("#" + this.idName).html(this.publicName + ": " + this.amount);
+    $("#" + this.idName + "Old").html(this.publicName + ": " + this.amount);
 }
 
 item.prototype.changeAmount = function (num) {
@@ -1247,6 +1247,7 @@ function pageBuildTabs(){
                     "<li><a href='#game-tab-tool'>Tools</a></li>" +
                     "<li><a href='#game-tab-machine'>Machines</a></li>" +
                     "<li><a href='#game-tab-item'>Items</a></li>" +
+                    "<li><a href='#game-tab-test'>Test</a></li>" +
                 "</ul>" +
             "</div>" +
             "<div class='scroller'>" +
@@ -1264,6 +1265,8 @@ function pageBuildTabs(){
                 "</div>" +
                 "<div id='game-tab-item'>" +
                 "</div>" +
+                "<div id='game-tab-test'>" +
+                "</div>" +
             "</div>" +
         "</div>"
     );
@@ -1276,6 +1279,7 @@ function pageBuildTabs(){
     gameGenerateTool();
     gameGenerateMachine();
     gameGenerateItem();
+    gameGenerateTest();
 }
 
 function gameGenerateResource() {
@@ -1310,7 +1314,7 @@ function gameGenerateResource() {
         for (var subkey in Resource[key]){
             $("#resource-" + key).append(
                 "<div>" +
-                    "<div id='" + Resource[key][subkey].idName + "'></div>" +
+                    "<div id='" + Resource[key][subkey].idName + "Old'></div>" +
                 "</div>"
             );
             Resource[key][subkey].renderAmount();
@@ -1336,7 +1340,7 @@ function gameGeneratePrimary() {
             $("#primary-" + key).append(
                 "<div class='border'>" +
                     "<button onclick='BuildingPrimary." + key + "." + subkey + ".applyCraft()'>Build</button>" +
-                    "<div id='" + BuildingPrimary[key][subkey].idName + "' style='display: inline'></div>" +
+                    "<div id='" + BuildingPrimary[key][subkey].idName + "Old' style='display: inline'></div>" +
                     "<button onclick='BuildingPrimary." + key + "." + subkey + ".changeWorker(-1)'>-</button>" +
                     "<button onclick='BuildingPrimary." + key + "." + subkey + ".changeWorker(1)'>+</button>" +
                     "<div id='" + BuildingPrimary[key][subkey].idName + "Cost'><b>Cost</b> | </div>" +
@@ -1400,7 +1404,7 @@ function gameGenerateFactory() {
             $("#factory-" + key).append(
                 "<div class='border'>" +
                     "<button onclick='BuildingFactory." + key + "." + subkey + ".applyCraft()'>Build</button>" +
-                    "<div id='" + BuildingFactory[key][subkey].idName + "' style='display: inline'></div>" +
+                    "<div id='" + BuildingFactory[key][subkey].idName + "Old' style='display: inline'></div>" +
                     "<button onclick='BuildingFactory." + key + "." + subkey + ".changeWorker(-1)'>-</button>" +
                     "<button onclick='BuildingFactory." + key + "." + subkey + ".changeWorker(1)'>+</button>" +
                     "<div id='" + BuildingFactory[key][subkey].idName + "Cost'><b>Cost</b> | </div>" +
@@ -1480,7 +1484,7 @@ function gameGenerateHouse() {
         $("#house-All").append(
             "<div class='border'>" +
                 "<button onclick='BuildingHouse." + key + ".applyCraft()'>Build</button>" +
-                "<div id='" + BuildingHouse[key].idName + "' style='display: inline'></div>" +
+                "<div id='" + BuildingHouse[key].idName + "Old' style='display: inline'></div>" +
                 "<div id='" + BuildingHouse[key].idName + "Cost'><b>Cost</b> | </div>" +
             "</div>"
         );
@@ -1532,7 +1536,7 @@ function gameGenerateTool() {
             $("#tool-" + key).append(
                 "<div class='border'>" +
                     "<button onclick='Tool." + key + "." + subkey + ".applyCraft()'>Craft</button>" +
-                    "<div id='" + Tool[key][subkey].idName + "' style='display: inline'></div>" +
+                    "<div id='" + Tool[key][subkey].idName + "Old' style='display: inline'></div>" +
                     "<div id='" + Tool[key][subkey].idName + "Cost'><b>Cost</b> | </div>" +
                 "</div>"
             );
@@ -1573,7 +1577,7 @@ function gameGenerateMachine() {
             $("#machine-" + key).append(
                 "<div class='border'>" +
                     "<button onclick='Machine." + key + "." + subkey + ".applyCraft()'>Craft</button>" +
-                    "<div id='" + Machine[key][subkey].idName + "' style='display: inline'></div>" +
+                    "<div id='" + Machine[key][subkey].idName + "Old' style='display: inline'></div>" +
                     "<div id='" + Machine[key][subkey].idName + "Cost'><b>Cost</b> | </div>" +
                 "</div>"
             );
@@ -1602,7 +1606,7 @@ function gameGenerateItem() {
             $("#item-" + key).append(
                 "<div class='border'>" +
                     "<button onclick='Item." + key + "." + subkey + ".applyCraft()'>Craft</button>" +
-                    "<div id='" + Item[key][subkey].idName + "' style='display: inline'></div>" +
+                    "<div id='" + Item[key][subkey].idName + "Old' style='display: inline'></div>" +
                     "<div id='" + Item[key][subkey].idName + "Cost'><b>Cost</b> | </div>" +
                 "</div>"
             );
@@ -1614,6 +1618,24 @@ function gameGenerateItem() {
             Item[key][subkey].renderAmount();
         }
     }
+}
+
+function gameGenerateTest() {
+    $("#game-tab-test").append(
+        "<ul id='game-tab-list' class='game-layer-1'>" +
+            "<li id='primary-Primary'>" +
+                "<h3>Primary Resources</h3>" +
+                "<div class='test'></div>" +
+            "</li>" +
+            "<li id='primary-Mine'>" +
+                "<h3>Mines</h3>" +
+            "</li>" +
+            "<li id='primary-Farm'>" +
+                "<h3>Farms</h3>" +
+            "</li>" +
+        "</ul>"
+    );
+    $("#game-tab-list").sortable();
 }
 
 // Debugging Menu

@@ -108,6 +108,20 @@ button:active{
     font-weight: bold; 
 }
 
+/*Game Frame Sortable List*/
+
+.game-layer-1 {
+    list-style-type: none;
+    margin: 0;
+    padding: 0;
+}
+
+.test {
+    height: 50px;
+    width: 50px;
+    background-color: #ff0000;
+}
+
 /*Debug Frame*/
 
 #debug {

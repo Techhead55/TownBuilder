@@ -1,6 +1,12 @@
 body {
 }
 
+.hide {
+    position: absolute !important;
+    top: -9999px !important;
+    left: -9999px !important;
+}
+
 ::-webkit-scrollbar {
     width: 8px;
     height: 8px;
@@ -130,9 +136,34 @@ button:active{
     float: left; 
     width: 75px; 
     height: 75px; 
-    border: 2px solid #111;
+    border: 2px solid #000;
     border-radius: 5px;
     background-color: #fff;
+}
+
+.game-layer-2 li:hover {
+    background-color: #eee;
+}
+
+.game-layer-2 li:active {
+    background-color: #fff;
+}
+
+/*Popup*/
+
+.shadow {
+    box-shadow: 3px 3px 5px #888;
+}
+
+#popup {
+    border: 2px solid #000;
+    border-radius: 5px;
+    background-color: #fff;
+    position: absolute;
+    height: 200px;
+    width: 200px;
+    top: 0px;
+    left: 0px;
 }
 
 /*Debug Frame*/

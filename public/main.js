@@ -68,6 +68,26 @@ function countdown(elementID, fn, seconds){
     }, 1000);
 }
 
+// Popup
+
+var popup = {
+    visible: false,
+    toggle: function () {
+        if (this.visible) {
+            $("#popup").slideUp("fast", function(){
+                $("#popup").addClass('hide')
+                    .slideDown(0);
+            });
+        } else {
+            $("#popup").slideUp(0, function(){
+                $("#popup").removeClass('hide')
+                    .slideDown("fast");
+            });
+        }
+        this.visible = !this.visible
+    }
+}
+
 // Day Controller
 
 var dayCount = 0;
@@ -750,7 +770,6 @@ var Resource = {
         Skins:          new resource        ("Animal Skins",    "Skins",        200),
         Stone:          new resource        ("Uncut Stone",     "Stone",        500)
     },
-
     Construction: {                        // Public Name       ID Name         Cap
         Planks:         new resource        ("Planks",          "Planks",       500),
         StoneBricks:    new resource        ("Stone Bricks",    "StoneBricks",  500)
@@ -1270,7 +1289,8 @@ function pageBuildTabs(){
                 "<div id='game-tab-test'>" +
                 "</div>" +
             "</div>" +
-        "</div>"
+        "</div>" +
+        "<div id='popup' class='shadow hide'></div>"
     );
     $("#game-tabs").tabs();
 
@@ -1628,43 +1648,61 @@ function gameGenerateTest() {
             "<li>" +
                 "<h3 class='toggleContainer'>Primary Resources</h3>" +
                 "<ul id='test-Primary' class='game-layer-2'>" +
-                    "<li></li>" +
-                    "<li></li>" +
-                    "<li></li>" +
-                    "<li></li>" +
-                    "<li></li>" +
+                    "<li class='popupButton'></li>" +
+                    "<li class='popupButton'></li>" +
+                    "<li class='popupButton'></li>" +
+                    "<li class='popupButton'></li>" +
                 "</ul>" +
             "</li>" +
             "<li>" +
                 "<h3 class='toggleContainer'>Mines</h3>" +
                 "<ul id='test-Mine' class='game-layer-2'>" +
-                    "<li></li>" +
-                    "<li></li>" +
-                    "<li></li>" +
-                    "<li></li>" +
-                    "<li></li>" +
+                    "<li class='popupButton'></li>" +
+                    "<li class='popupButton'></li>" +
+                    "<li class='popupButton'></li>" +
+                    "<li class='popupButton'></li>" +
+                    "<li class='popupButton'></li>" +
+                    "<li class='popupButton'></li>" +
                 "</ul>" +
             "</li>" +
             "<li>" +
                 "<h3 class='toggleContainer'>Farms</h3>" +
                 "<ul id='test-Farm' class='game-layer-2'>" +
-                    "<li></li>" +
-                    "<li></li>" +
-                    "<li></li>" +
-                    "<li></li>" +
-                    "<li></li>" +
+                    "<li class='popupButton'></li>" +
                 "</ul>" +
             "</li>" +
         "</ul>"
     );
-    $("#game-tab-list").sortable();
-    $("#test-Primary").sortable();
-    $("#test-Mine").sortable();
-    $("#test-Farm").sortable();
+    $("#game-tab-list").sortable({
+        placeholder: "ui-state-highlight",
+        start: function (e, ui) {
+            ui.placeholder.height(ui.item.height());
+            ui.placeholder.width(ui.item.width());
+        }
+    });
+    $("#test-Primary").sortable({
+        placeholder: "ui-state-highlight"
+    });
+    $("#test-Mine").sortable({
+        placeholder: "ui-state-highlight"
+    });
+    $("#test-Farm").sortable({
+        placeholder: "ui-state-highlight"
+    });
 
     $(document.body).on("click", ".toggleContainer", function () {
         $(this).next().slideToggle();
     });
+
+    $(document.body).on("click", ".popupButton", function () {
+        $("#popup").position({
+            my: "left top",
+            at: "left bottom",
+            of: this,
+            collision: "flipfit"
+        });
+        popup.toggle();
+    })
 }
 
 // Debugging Menu

@@ -72,34 +72,23 @@ function countdown(elementID, fn, seconds){
 
 var popup = {
     hide: function () {
-        if (!$("#popup").hasClass("hide")) {
-            $("#popup").slideUp("fast", function(){
-                $("#popup").addClass('hide')
-                    .slideDown(0);
-            });
-        }
+        $("#popup").slideUp("fast", function () {
+            $("#popup").addClass('hide')
+                .slideDown(0);
+        });
     },
     show: function () {
-        if ($("#popup").hasClass("hide")) {
-            $("#popup").slideUp(0, function(){
-                $("#popup").removeClass('hide')
-                    .slideDown("fast");
-            });
-        }
+        $("#popup").slideUp(0, function () {
+            $("#popup").removeClass('hide')
+                .slideDown("fast");
+        });
     },
     toggle: function () {
         if (!$("#popup").hasClass("hide")) {
-            $("#popup").slideUp("fast", function(){
-                $("#popup").addClass('hide')
-                    .slideDown(0);
-            });
+            this.hide();
         } else {
-            $("#popup").slideUp(0, function(){
-                $("#popup").removeClass('hide')
-                    .slideDown("fast");
-            });
+            this.show();
         }
-        this.visible = !this.visible
     }
 }
 

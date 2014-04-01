@@ -71,9 +71,24 @@ function countdown(elementID, fn, seconds){
 // Popup
 
 var popup = {
-    visible: false,
+    hide: function () {
+        if (!$("#popup").hasClass("hide")) {
+            $("#popup").slideUp("fast", function(){
+                $("#popup").addClass('hide')
+                    .slideDown(0);
+            });
+        }
+    },
+    show: function () {
+        if ($("#popup").hasClass("hide")) {
+            $("#popup").slideUp(0, function(){
+                $("#popup").removeClass('hide')
+                    .slideDown("fast");
+            });
+        }
+    },
     toggle: function () {
-        if (this.visible) {
+        if (!$("#popup").hasClass("hide")) {
             $("#popup").slideUp("fast", function(){
                 $("#popup").addClass('hide')
                     .slideDown(0);
@@ -1695,13 +1710,23 @@ function gameGenerateTest() {
     });
 
     $(document.body).on("click", ".popupButton", function () {
-        $("#popup").position({
-            my: "left top",
-            at: "left bottom",
-            of: this,
-            collision: "flipfit"
-        });
-        popup.toggle();
+        if ($("#popup").hasClass("hide")) {
+            $("#popup").position({
+                my: "left top",
+                at: "left bottom",
+                of: this,
+                collision: "flipfit"
+            });
+            popup.show();
+        }
+    })
+
+    $(document).mouseup(function (e) {
+        if (!$("#popup").hasClass("hide")) {
+            if (!$("#popup").is(e.target) && $("#popup").has(e.target).length === 0) {
+                popup.hide();
+            }
+        }
     })
 }
 

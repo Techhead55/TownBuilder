@@ -221,9 +221,12 @@ function resource(strPublicName, strIdName, intAmountCap) {
     this.amountCap = intAmountCap;
 }
 
+resource.prototype.renderAmount = function () {
+    $("." + this.idName + "Amount").html(this.amount);
+};
 
 // Render the object
-resource.prototype.renderAmount = function () {
+resource.prototype.renderAmountOld = function () {
     $("#" + this.idName + "Old").html(this.publicName + ": " + this.amount + "/" + this.amountCap);
 };
 
@@ -241,6 +244,7 @@ resource.prototype.changeAmount = function (num) {
     }
     // Push the new value to the screen
     this.renderAmount();
+    this.renderAmountOld();
 };
 
 
@@ -259,6 +263,7 @@ function buildingPrimary(strPublicName, strIdName, intWorkerCap, arrIncomeResour
     // Building income - Array of each for the income calculation loop to easily call it
     this.incomeResource = arrIncomeResource;
     this.toolIncomeRef = arrToolIncomeRef;
+    this.incomeRate = [];
     
     // Building tool requirements - What tool the building's worker needs to generate income
     this.toolType = arrToolType;
@@ -276,12 +281,221 @@ function buildingPrimary(strPublicName, strIdName, intWorkerCap, arrIncomeResour
     this.craftAmount = arrCraftAmount;
 }
 
-// Update the HTML on the page
 buildingPrimary.prototype.renderAmount = function () {
-    $("#" + this.idName + "Old").html(this.publicName + "s: " + this.amount + " - Workers: " + this.worker.amount + "/" + (this.amount * this.worker.capBase));
+    $("." + this.idName + "Amount").html(this.amount);
+};
+
+buildingPrimary.prototype.renderWorker = function () {
+    $("." + this.idName + "Worker").html(this.worker.amount);
+};
+
+buildingPrimary.prototype.renderWorkerCap = function () {
+    $("." + this.idName + "WorkerCap").html(this.amount * this.worker.capBase);
+};
+
+buildingPrimary.prototype.renderIncome = function () {
+    for (var i = 0; i < this.incomeRate.length; i++) {
+        $(".primaryIncome" + objRef(window, this.incomeResource[i]).idName).html(this.incomeRate[i]);
+    }
 };
 
 buildingPrimary.prototype.renderTool = function () {
+    for (var i = 0; i < this.toolType.length; i++) {
+        for (var workerTools in this.worker.equippedTools[this.toolType[i]]) {
+            $("." + this.idName + "Tool" + Tool[this.toolType[i]][workerTools].idName).html(
+                this.worker.equippedTools[this.toolType[i]][workerTools]
+            );
+        }
+    }
+};
+
+buildingPrimary.prototype.renderPopup = function () {
+    $("#popup").html(
+        "<div class='left padding-div'><div class='content'>" +
+            "<table id='popupLeftTable" + this.idName + "'>" +
+                "<tr>" +
+                    "<td>" +
+                        this.publicName +
+                    "</td>" +
+                    "<td class='right'>" +
+                        "<span class='" + this.idName + "Amount" + "'></span>" +
+                    "</td>" +
+                    "<td colspan='2'>" +
+                        "<button id='build" + this.idName + "' class='build tooltip'>Build</button>" +
+                    "</td>" +
+                "</tr>" +
+                "<tr>" +
+                    "<td>" +
+                        "Workers" +
+                    "</td>" +
+                    "<td class='right'>" +
+                        "<span class='" + this.idName + "Worker'></span>/<span class='" + this.idName + "WorkerCap'></span>" +
+                    "</td>" +
+                    "<td>" +
+                        "<button id='unemploy" + this.idName + "' class='workerSub'>-</button>" +
+                    "</td>" +
+                    "<td class='right'>" +
+                        "<button id='employ" + this.idName + "' class='workerAdd'>+</button>" +
+                    "</td>" +
+                "</tr>" +
+                "<tr>" +
+                    "<td>" +
+                        "<strong>Income</strong>" +
+                    "</td>" +
+                "</tr>" +
+            "</table>" +
+        "</div></div>" +
+        "<div class='right padding-div'><div id='popupRight" + this.idName + "' class='content'>" +
+            "<table id='popupRightTable" + this.idName + "'>" +
+            "</table>" +
+        "</div></div>"
+    );
+
+    $("#build" + this.idName).data({
+        tooltipContent: function () {
+            var content = "<table class='vseperator'>" +
+                "<tr>" +
+                    "<th>" +
+                        "Required Material" +
+                    "</th>" +
+                    "<th class='right'>" +
+                        "Need" +
+                    "</th>" +
+                    "<th class='right'>" +
+                        "Have" +
+                    "</th>" +
+                "</tr>";
+
+            for (var i = 0; i < popupObjPath.craftType.length; i++) {
+                content +=
+                    "<tr>" +
+                        "<td>" +
+                            objRef(window, popupObjPath.craftType[i]).publicName +
+                        "</td>" +
+                        "<td class='right'>" +
+                            popupObjPath.craftAmount[i] +
+                        "</td>" +
+                        "<td class='right'>" +
+                            "<span class='" + objRef(window, popupObjPath.craftType[i]).idName + "Amount'>" + objRef(window, popupObjPath.craftType[i]).amount + "</span>" +
+                        "</td>" +
+                    "</tr>";
+            }
+
+            content += "</table>";
+            return content;
+        }
+    });
+
+    for (var i = 0; i < this.incomeRate.length; i++) {
+        $("#popupLeftTable" + this.idName).append(
+            "<tr>" +
+                "<td>" +
+                    objRef(window, this.incomeResource[i]).publicName +
+                "</td>" +
+                "<td></td>" +
+                "<td></td>" +
+                "<td class='right'>" +
+                    "<span class='primaryIncome" + objRef(window, this.incomeResource[i]).idName + "'></span>" +
+                "</td>" +
+            "</tr>"
+        );
+    }
+
+    for (var i = 0; i < this.toolType.length; i++) {
+        if (i !== 0) {
+            $("#popupRight" + this.idName).append(
+                "<hr>"
+            );
+        }
+
+        $("#popupRight" + this.idName).append(
+            "<table id='popupRightTable" + this.idName + i + "'>" +
+            "</table>"
+        );
+
+        var workerTools = Object.keys(this.worker.equippedTools[this.toolType[i]])
+        for (var j = 0; j < workerTools.length; j++) {
+            $("#popupRightTable" + this.idName + i).append(
+                "<tr>" +
+                    "<td>" +
+                        Tool[this.toolType[i]][workerTools[j]].publicName +
+                    "</td>" +
+                    "<td class='right'>" +
+                        "<span class='" + this.idName + "Tool" + Tool[this.toolType[i]][workerTools[j]].idName + "'></span>" +
+                    "</td>" +
+                    "<td>" +
+                        "<button id='unequip" + this.idName + "Tool" + Tool[this.toolType[i]][workerTools[j]].idName + "' class='unequip tooltip'>-</button>" +
+                    "</td>" +
+                    "<td>" +
+                        "<button id='equip" + this.idName + "Tool" + Tool[this.toolType[i]][workerTools[j]].idName + "' class='equip tooltip'>+</button>" +
+                    "</td>" +
+                "</tr>"
+            );
+
+            $("#unequip" + this.idName + "Tool" + Tool[this.toolType[i]][workerTools[j]].idName).data({
+                toolType: "" + this.toolType[i],
+                toolTier: "" + workerTools[j],
+                tooltipContent: function () {
+                    var toolPosition = popupObjPath.toolType.indexOf($("#" + thisID).data("toolType"));
+                    var content = "<table>";
+
+                    for (var k = 0; k < popupObjPath.incomeResource.length; k++) {
+                        if (toolPosition === popupObjPath.toolIncomeRef[k]) {
+                            content += "<tr>" +
+                                "<td>" +
+                                    objRef(window, popupObjPath.incomeResource[k]).publicName +
+                                "</td>" +
+                                "<td class='left-padding right'>" +
+                                    "-" + Tool[$("#" + thisID).data("toolType")][$("#" + thisID).data("toolTier")].incomeRate +
+                                "</td>" +
+                            "</tr>";
+                        }
+                    }
+
+                    content += "</table>";
+                    return content;
+                }
+            });
+            $("#equip" + this.idName + "Tool" + Tool[this.toolType[i]][workerTools[j]].idName).data({
+                toolType: "" + this.toolType[i],
+                toolTier: "" + workerTools[j],
+                tooltipContent: function () {
+                    var toolPosition = popupObjPath.toolType.indexOf($("#" + thisID).data("toolType"));
+                    var content = "<table>";
+
+                    for (var k = 0; k < popupObjPath.incomeResource.length; k++) {
+                        if (toolPosition === popupObjPath.toolIncomeRef[k]) {
+                            content += "<tr>" +
+                                "<td>" +
+                                    objRef(window, popupObjPath.incomeResource[k]).publicName +
+                                "</td>" +
+                                "<td class='left-padding right'>" +
+                                    "+" + Tool[$("#" + thisID).data("toolType")][$("#" + thisID).data("toolTier")].incomeRate +
+                                "</td>" +
+                            "</tr>";
+                        }
+                    }
+
+                    content += "</table>";
+                    return content;
+                }
+            });
+        }
+    }
+
+    this.renderAmount();
+    this.renderWorker();
+    this.renderWorkerCap();
+    this.renderIncome();
+    this.renderTool();
+};
+
+// Update the HTML on the page
+buildingPrimary.prototype.renderAmountOld = function () {
+    $("#" + this.idName + "Old").html(this.publicName + "s: " + this.amount + " - Workers: " + this.worker.amount + "/" + (this.amount * this.worker.capBase));
+};
+
+buildingPrimary.prototype.renderToolOld = function () {
     for (var i = 0; i < this.toolType.length; i++) {
         for (var workerTools in this.worker.equippedTools[this.toolType[i]]) {
             $("#" + this.idName + "Tool" + Tool[this.toolType[i]][workerTools].idName).html(
@@ -295,6 +509,8 @@ buildingPrimary.prototype.renderTool = function () {
 buildingPrimary.prototype.changeAmount = function (num) {
     this.amount += num;
     this.renderAmount();
+    this.renderWorkerCap();
+    this.renderAmountOld();
 };
 
 // Change worker for the building type - TODO: Have it automatically equip the best tool available
@@ -321,7 +537,8 @@ buildingPrimary.prototype.changeWorker = function (num) {
     for (var i = 0; i < this.toolType.length; i++) {
         this.applyIncomeByToolType(this.toolType[i], oldIncome[i]);
     }
-    this.renderAmount();                    // Renders updated amounts to the screen
+    this.renderWorker();                    // Renders updated amounts to the screen
+    this.renderAmountOld();                    // Renders updated amounts to the screen
 };
 
 // Gets the total of every toolTier from the toolType
@@ -362,6 +579,7 @@ buildingPrimary.prototype.changeWorkerEquippedTool = function (num, toolType, to
     this.worker.equippedTools.none = this.getWorkerEquippedToolNone();      // Update the number of unequipped workers
     this.applyIncomeByToolType(toolType, oldIncome);                        // Applies new income value to the resources
     this.renderTool();                                                      // Updates the screen with new tool count
+    this.renderToolOld();                                                      // Updates the screen with new tool count
 };
 
 // Get income value for tool type
@@ -385,6 +603,9 @@ buildingPrimary.prototype.applyIncomeByToolType = function (toolType, oldIncome)
     // Loop through each resource for the building, checking if the tool matches the resource
     for (var i = 0; i < this.incomeResource.length; i++) {
         if (toolPosition === this.toolIncomeRef[i]) {
+            // Update income rate of each for this building for player information
+            this.incomeRate[i] = this.getIncomeByToolType(toolType);
+            this.renderIncome();
             // Subtract the old value and add the new one to update the income. This means multiple buildings can provide the same resource
             objRef(window, this.incomeResource[i]).income -= oldIncome;
             objRef(window, this.incomeResource[i]).income += this.getIncomeByToolType(toolType);
@@ -1124,6 +1345,13 @@ var Item = {
 //   OBJECT REFERENCE FUNCTIONS
 // ================================
 
+// Populate buildingPrimary.incomeRate array with number of resources
+buildingPrimary.prototype.blankIncome = function () {
+    for (var i = 0; i < this.incomeResource.length; i++) {
+        this.incomeRate.push(0);
+    }
+};
+
 // Populate buildingPrimary.worker.equippedTool with each toolType to store totals of each equipped in that building type
 buildingPrimary.prototype.listWorkerTools = function () {
     // Loop through the toolType array
@@ -1188,6 +1416,7 @@ function pageLoadDefinitions(){
     for (var key in BuildingPrimary){
         for (var subkey in BuildingPrimary[key]){
             BuildingPrimary[key][subkey].listWorkerTools();
+            BuildingPrimary[key][subkey].blankIncome();
         }
     }
     // Populate equippedMachine for each factory type
@@ -1340,10 +1569,10 @@ function gameGenerateResource() {
         for (var subkey in Resource[key]){
             $("#resource-" + key).append(
                 "<div>" +
-                    "<div id='" + Resource[key][subkey].idName + "Old'></div>" +
+                    "<div id='" + Resource[key][subkey].idName + "Old'>" +  + "</div>" +
                 "</div>"
             );
-            Resource[key][subkey].renderAmount();
+            Resource[key][subkey].renderAmountOld();
         }
     }
 }
@@ -1409,8 +1638,8 @@ function gameGeneratePrimary() {
                 }
             }
 
-            BuildingPrimary[key][subkey].renderAmount();
-            BuildingPrimary[key][subkey].renderTool();
+            BuildingPrimary[key][subkey].renderAmountOld();
+            BuildingPrimary[key][subkey].renderToolOld();
         }
     }
 }
@@ -1651,32 +1880,31 @@ function gameGenerateTest() {
         "<ul id='game-tab-list' class='game-layer-1'>" +
             "<li>" +
                 "<h3 class='toggleContainer'>Primary Resources</h3>" +
-                "<ul id='test-Primary' class='game-layer-2'>" +
-                    "<li class='popupButton'></li>" +
-                    "<li class='popupButton'></li>" +
-                    "<li class='popupButton'></li>" +
-                    "<li class='popupButton'></li>" +
-                "</ul>" +
+                "<ul id='test-Primary' class='game-layer-2'></ul>" +
             "</li>" +
             "<li>" +
                 "<h3 class='toggleContainer'>Mines</h3>" +
-                "<ul id='test-Mine' class='game-layer-2'>" +
-                    "<li class='popupButton'></li>" +
-                    "<li class='popupButton'></li>" +
-                    "<li class='popupButton'></li>" +
-                    "<li class='popupButton'></li>" +
-                    "<li class='popupButton'></li>" +
-                    "<li class='popupButton'></li>" +
-                "</ul>" +
+                "<ul id='test-Mine' class='game-layer-2'></ul>" +
             "</li>" +
             "<li>" +
                 "<h3 class='toggleContainer'>Farms</h3>" +
-                "<ul id='test-Farm' class='game-layer-2'>" +
-                    "<li class='popupButton'></li>" +
-                "</ul>" +
+                "<ul id='test-Farm' class='game-layer-2'></ul>" +
             "</li>" +
         "</ul>"
     );
+
+    for (var key in BuildingPrimary) {
+        for (var subkey in BuildingPrimary[key]) {
+            $("#test-" + key).append(
+                "<li id='popupButton" + BuildingPrimary[key][subkey].idName + "' class='popupButton'>" + BuildingPrimary[key][subkey].publicName + "</li>"
+            );
+            $("#popupButton" + BuildingPrimary[key][subkey].idName).data({
+                objClass: "BuildingPrimary",
+                objReference: key + "." + subkey
+            })
+        }
+    }
+
     $("#game-tab-list").sortable({
         placeholder: "ui-state-highlight",
         start: function (e, ui) {
@@ -1699,6 +1927,10 @@ function gameGenerateTest() {
     });
 
     $(document.body).on("click", ".popupButton", function () {
+        $popupObjClass = $(this).data("objClass");
+        $popupObjReference = $(this).data("objReference");
+        popupObjPath = objRef(window, $popupObjClass + "." + $popupObjReference);
+
         if ($("#popup").hasClass("hide")) {
             $("#popup").position({
                 my: "left top",
@@ -1706,9 +1938,13 @@ function gameGenerateTest() {
                 of: this,
                 collision: "flipfit"
             });
+            $("#popup").html(
+                "<div id='popup" + popupObjPath.idName + "'></div>"
+            );
+            popupObjPath.renderPopup();
             popup.show();
         }
-    })
+    });
 
     $(document).mouseup(function (e) {
         if (!$("#popup").hasClass("hide")) {
@@ -1716,7 +1952,35 @@ function gameGenerateTest() {
                 popup.hide();
             }
         }
-    })
+    });
+
+    $(document).on("click", ".build", function () {
+        popupObjPath.applyCraft();
+    });
+
+    $(document).tooltip({
+        items: ".tooltip",
+        content: function () {
+            thisID = $(this).attr("id");
+            return $(this).data("tooltipContent");
+        }
+    });
+
+    $(document).on("click", ".workerAdd", function () {
+        popupObjPath.changeWorker(1);
+    });
+
+    $(document).on("click", ".workerSub", function () {
+        popupObjPath.changeWorker(-1);
+    });
+
+    $(document).on("click", ".equip", function () {
+        popupObjPath.changeWorkerEquippedTool(1, $(this).data("toolType"), $(this).data("toolTier"));
+    });
+
+    $(document).on("click", ".unequip", function () {
+        popupObjPath.changeWorkerEquippedTool(-1, $(this).data("toolType"), $(this).data("toolTier"));
+    });
 }
 
 // Debugging Menu

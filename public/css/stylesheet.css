@@ -7,6 +7,15 @@ body {
     left: -9999px !important;
 }
 
+hr {
+    border: 0;
+    height: 1px;
+    background-image: -webkit-linear-gradient(left, rgba(0,0,0,0), rgba(0,0,0,0.75), rgba(0,0,0,0)); 
+    background-image:    -moz-linear-gradient(left, rgba(0,0,0,0), rgba(0,0,0,0.75), rgba(0,0,0,0)); 
+    background-image:     -ms-linear-gradient(left, rgba(0,0,0,0), rgba(0,0,0,0.75), rgba(0,0,0,0)); 
+    background-image:      -o-linear-gradient(left, rgba(0,0,0,0), rgba(0,0,0,0.75), rgba(0,0,0,0)); 
+}
+
 ::-webkit-scrollbar {
     width: 8px;
     height: 8px;
@@ -149,6 +158,29 @@ button:active{
     background-color: #fff;
 }
 
+/*Table*/
+
+table {
+    border-collapse: collapse;
+}
+
+th.right, td.right {
+    text-align: right;
+}
+
+th.left-padding, td.left-padding {
+    padding-left: 10px;
+}
+
+.vseperator th:not(:last-child), .vseperator td:not(:last-child) {
+    border-right: 1px solid #888;
+    padding-right: 3px;
+}
+
+.vseperator th:not(:first-child), .vseperator td:not(:first-child) {
+    padding-left: 3px;
+}
+
 /*Popup*/
 
 .shadow {
@@ -161,9 +193,43 @@ button:active{
     background-color: #fff;
     position: absolute;
     height: 200px;
-    width: 200px;
+    width: 500px;
     top: 0px;
     left: 0px;
+}
+
+#popup .left {
+    height: 100%;
+    width: 50%;
+    float: left;
+    overflow: auto;
+}
+
+#popup div.right {
+    height: 100%;
+    width: 50%;
+    float: right;
+    overflow: auto;
+}
+
+#popup .padding-div {
+    -webkit-box-sizing: border-box;
+    -moz-box-sizing: border-box;
+    box-sizing: border-box;
+    padding: 5px;
+}
+
+#popup .content {
+    height: 100%;
+    overflow: auto;
+}
+
+#popup table {
+    border: 0px;
+}
+
+#popup tr td:first-child {
+    width: 100%;
 }
 
 /*Debug Frame*/

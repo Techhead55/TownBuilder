@@ -966,11 +966,11 @@ buildingFactory.prototype.renderPopup = function () {
         })
         $("#unequip" + this.idName + "Machine" + Machine[this.machineType][key].idName).data({
             machineType: "" + this.machineType,
-            machineTier: "" + key,
+            machineTier: "" + key
         });
         $("#equip" + this.idName + "Machine" + Machine[this.machineType][key].idName).data({
             machineType: "" + this.machineType,
-            machineTier: "" + key,
+            machineTier: "" + key
         });
     }
 
@@ -1045,44 +1045,10 @@ buildingFactory.prototype.renderPopup = function () {
                 $("#unequip" + this.idName + "Machine" + Machine[this.machineTypeAddon[i]][key].idName).data({
                     machineType: "" + this.machineTypeAddon[i],
                     machineTier: "" + key,
-                    tooltipContent: function () {
-                        var content = "<table>";
-
-                        for (var k = 0; k < popupObjPath.incomeResource.length; k++) {
-                            content += "<tr>" +
-                                "<td>" +
-                                    "Modify work rate" +
-                                "</td>" +
-                                "<td class='left-padding right'>" +
-                                    "-" + Machine[$("#" + thisID).data("machineType")][$("#" + thisID).data("machineTier")].multiplier +
-                                "</td>" +
-                            "</tr>";
-                        }
-
-                        content += "</table>";
-                        return content;
-                    }
                 });
                 $("#equip" + this.idName + "Machine" + Machine[this.machineTypeAddon[i]][key].idName).data({
                     machineType: "" + this.machineTypeAddon[i],
                     machineTier: "" + key,
-                    tooltipContent: function () {
-                        var content = "<table>";
-
-                        for (var k = 0; k < popupObjPath.incomeResource.length; k++) {
-                            content += "<tr>" +
-                                "<td>" +
-                                    "Modify work rate" +
-                                "</td>" +
-                                "<td class='left-padding right'>" +
-                                    "+" + Machine[$("#" + thisID).data("machineType")][$("#" + thisID).data("machineTier")].multiplier +
-                                "</td>" +
-                            "</tr>";
-                        }
-
-                        content += "</table>";
-                        return content;
-                    }
                 });
             }
         }

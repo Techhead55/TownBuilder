@@ -61,8 +61,8 @@ button{
     -webkit-user-select: none;
     -moz-user-select: none;
     color: #111;
-    font-family: monospace;
-    font-size: 1em;
+    font-family: monospace !important;
+    font-size: 1em !important;
     font-weight: bold;
     text-align: center;
     width: auto;
@@ -81,6 +81,13 @@ button:active{
     padding: 2px;
     border: 1px solid black;
     margin-bottom: 1px;
+}
+
+.padding-div {
+    -webkit-box-sizing: border-box;
+    -moz-box-sizing: border-box;
+    box-sizing: border-box;
+    padding: 5px;
 }
 
 /*jQuery-ui fixes*/
@@ -125,36 +132,55 @@ button:active{
 
 /*Game Frame Sortable List*/
 
-.game-layer-1 {
+.game-primary-layer-1, .game-factory-layer-1, .game-house-layer-1, .game-tool-layer-1 {
     list-style-type: none;
     margin: 0;
     padding: 0;
     float: left; 
 }
 
-.game-layer-2 {
+.game-primary-layer-2, .game-factory-layer-2, .game-house-layer-2, .game-tool-layer-2 {
     list-style-type: none; 
     margin: 0; 
     padding: 0; 
     overflow: hidden;
 }
 
-.game-layer-2 li { 
+.game-primary-layer-2>li, .game-factory-layer-2>li { 
     margin: 3px 3px 3px 0;
-    padding: 1px; 
+    padding: 5px; 
     float: left; 
-    width: 75px; 
-    height: 75px; 
+    width: 80px; 
+    height: 80px; 
     border: 2px solid #000;
     border-radius: 5px;
     background-color: #fff;
 }
 
-.game-layer-2 li:hover {
+.game-primary-layer-2>li:hover, .game-factory-layer-2>li:hover {
     background-color: #eee;
 }
 
-.game-layer-2 li:active {
+.game-primary-layer-2>li:active, .game-factory-layer-2>li:active {
+    background-color: #fff;
+}
+
+.game-house-layer-2>li {
+    margin: 3px 3px 3px 0;
+    padding: 5px; 
+    width: 250px; 
+    height: 80px; 
+    border: 2px solid #000;
+    border-radius: 5px;
+    background-color: #fff;
+}
+
+.game-tool-layer-2>li {
+    margin: 3px 3px 3px 0;
+    padding: 5px; 
+    width: 250px; 
+    border: 2px solid #000;
+    border-radius: 5px;
     background-color: #fff;
 }
 
@@ -162,6 +188,10 @@ button:active{
 
 table {
     border-collapse: collapse;
+}
+
+table.fill tr td:first-child, table.fill tr th:first-child {
+    width: 100%;
 }
 
 th.left, td.left {
@@ -214,13 +244,6 @@ th.left-padding, td.left-padding {
     width: 50%;
     float: right;
     overflow: auto;
-}
-
-#popup .padding-div {
-    -webkit-box-sizing: border-box;
-    -moz-box-sizing: border-box;
-    box-sizing: border-box;
-    padding: 5px;
 }
 
 #popup .content {

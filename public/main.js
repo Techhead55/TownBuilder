@@ -19,6 +19,27 @@ Array.prototype.min = function() {
   return Math.min.apply(null, this);
 };
 
+function newHide(element) {
+    $(element).slideUp("fast", function () {
+        $(element).addClass('hide')
+            .slideDown(0);
+    });
+}
+
+function newShow(element) {
+    $(element).slideUp(0, function () {
+        $(element).removeClass('hide')
+            .slideDown("fast");
+    });
+}
+
+function newSlideToggle(element) {
+    if (!$(element).hasClass("hide")) {
+        newHide(element);
+    } else {
+        newShow(element);
+    }
+}
 
 // ================================
 //   ENGINE
@@ -97,6 +118,14 @@ var popup = {
 var popupObjClass = "";
 var popupObjReference = "";
 var popupObjPath = "";
+
+function craftPath() {
+    if ($("#"+ thisID).data("class") === undefined) {
+        return $("#" + thisID).data("object");
+    } else {
+        return objRef(window, $("#" + thisID).data("class") + "." + $("#" + thisID).data("subClass") + "." + $("#" + thisID).data("object")); 
+    }
+};
 
 // Day Controller
 
@@ -341,7 +370,7 @@ buildingPrimary.prototype.renderPopup = function () {
                         "<span class='" + this.idName + "Amount" + "'></span>" +
                     "</td>" +
                     "<td colspan='2'>" +
-                        "<button id='build" + this.idName + "' class='build tooltip'>Build</button>" +
+                        "<button id='craft" + this.idName + "' class='craft tooltip'>Build</button>" +
                     "</td>" +
                 "</tr>" +
                 "<tr>" +
@@ -371,7 +400,8 @@ buildingPrimary.prototype.renderPopup = function () {
         "</div></div>"
     );
 
-    $("#build" + this.idName).data({
+    $("#craft" + this.idName).data({
+        object: this,
         tooltipContent: function () {
             var content = "<table class='vseperator'>" +
                 "<tr>" +
@@ -436,7 +466,7 @@ buildingPrimary.prototype.renderPopup = function () {
         var workerTools = Object.keys(this.worker.equippedTools[this.toolType[i]])
         for (var j = 0; j < workerTools.length; j++) {
             $("#popupRightTable" + this.idName + i).append(
-                "<tr>" +
+                "<tr id='toolTooltip" + this.idName + "Tool" + Tool[this.toolType[i]][workerTools[j]].idName + "' class='tooltip'>" +
                     "<td>" +
                         Tool[this.toolType[i]][workerTools[j]].publicName +
                     "</td>" +
@@ -444,44 +474,33 @@ buildingPrimary.prototype.renderPopup = function () {
                         "<span class='" + this.idName + "Tool" + Tool[this.toolType[i]][workerTools[j]].idName + "'></span>" +
                     "</td>" +
                     "<td>" +
-                        "<button id='unequip" + this.idName + "Tool" + Tool[this.toolType[i]][workerTools[j]].idName + "' class='unequipTool tooltip'>-</button>" +
+                        "<button id='unequip" + this.idName + "Tool" + Tool[this.toolType[i]][workerTools[j]].idName + "' class='unequipTool'>-</button>" +
                     "</td>" +
                     "<td>" +
-                        "<button id='equip" + this.idName + "Tool" + Tool[this.toolType[i]][workerTools[j]].idName + "' class='equipTool tooltip'>+</button>" +
+                        "<button id='equip" + this.idName + "Tool" + Tool[this.toolType[i]][workerTools[j]].idName + "' class='equipTool'>+</button>" +
                     "</td>" +
                 "</tr>"
             );
 
-            $("#unequip" + this.idName + "Tool" + Tool[this.toolType[i]][workerTools[j]].idName).data({
+            $("#toolTooltip" + this.idName + "Tool" + Tool[this.toolType[i]][workerTools[j]].idName).data({
                 toolType: "" + this.toolType[i],
                 toolTier: "" + workerTools[j],
                 tooltipContent: function () {
                     var toolPosition = popupObjPath.toolType.indexOf($("#" + thisID).data("toolType"));
-                    var content = "<table>";
-
-                    for (var k = 0; k < popupObjPath.incomeResource.length; k++) {
-                        if (toolPosition === popupObjPath.toolIncomeRef[k]) {
-                            content += "<tr>" +
-                                "<td>" +
-                                    objRef(window, popupObjPath.incomeResource[k]).publicName +
-                                "</td>" +
-                                "<td class='left-padding right'>" +
-                                    "-" + Tool[$("#" + thisID).data("toolType")][$("#" + thisID).data("toolTier")].incomeRate +
-                                "</td>" +
-                            "</tr>";
-                        }
-                    }
-
-                    content += "</table>";
-                    return content;
-                }
-            });
-            $("#equip" + this.idName + "Tool" + Tool[this.toolType[i]][workerTools[j]].idName).data({
-                toolType: "" + this.toolType[i],
-                toolTier: "" + workerTools[j],
-                tooltipContent: function () {
-                    var toolPosition = popupObjPath.toolType.indexOf($("#" + thisID).data("toolType"));
-                    var content = "<table>";
+                    var content = "<table>" +
+                        "<tr>" +
+                            "<td>" +
+                                "Spare" +
+                            "</td>" +
+                            "<td class='right'>" +
+                                "<span class='" + Tool[$("#" + thisID).data("toolType")][$("#" + thisID).data("toolTier")].idName + "Unequipped'>" + (Tool[$("#" + thisID).data("toolType")][$("#" + thisID).data("toolTier")].amount - Tool[$("#" + thisID).data("toolType")][$("#" + thisID).data("toolTier")].equipped) + "</span>" +
+                            "</td>" +
+                        "</tr>" +
+                        "<tr>" +
+                            "<td colspan='2'>" +
+                                "<hr>" +
+                            "</td>" +
+                        "</tr>";
 
                     for (var k = 0; k < popupObjPath.incomeResource.length; k++) {
                         if (toolPosition === popupObjPath.toolIncomeRef[k]) {
@@ -499,6 +518,14 @@ buildingPrimary.prototype.renderPopup = function () {
                     content += "</table>";
                     return content;
                 }
+            })
+            $("#unequip" + this.idName + "Tool" + Tool[this.toolType[i]][workerTools[j]].idName).data({
+                toolType: "" + this.toolType[i],
+                toolTier: "" + workerTools[j]
+            });
+            $("#equip" + this.idName + "Tool" + Tool[this.toolType[i]][workerTools[j]].idName).data({
+                toolType: "" + this.toolType[i],
+                toolTier: "" + workerTools[j]
             });
         }
     }
@@ -717,7 +744,7 @@ buildingFactory.prototype.renderPopup = function () {
                         "<span class='" + this.idName + "Amount" + "'></span>" +
                     "</td>" +
                     "<td colspan='2'>" +
-                        "<button id='build" + this.idName + "' class='build tooltip'>Build</button>" +
+                        "<button id='craft" + this.idName + "' class='craft tooltip'>Build</button>" +
                     "</td>" +
                 "</tr>" +
                 "<tr>" +
@@ -764,7 +791,8 @@ buildingFactory.prototype.renderPopup = function () {
         "</div></div>"
     );
 
-    $("#build" + this.idName).data({
+    $("#craft" + this.idName).data({
+        object: this,
         tooltipContent: function () {
             var content = "<table class='vseperator'>" +
                 "<tr>" +
@@ -886,7 +914,7 @@ buildingFactory.prototype.renderPopup = function () {
 
     for (var key in Machine[this.machineType]) {
         $("#popupRightTable" + this.idName).append(
-            "<tr>" +
+            "<tr id='machineTooltip" + this.idName + "Machine" + Machine[this.machineType][key].idName + "' class='tooltip''>" +
                 "<td>" +
                     Machine[this.machineType][key].publicName +
                 "</td>" +
@@ -894,19 +922,32 @@ buildingFactory.prototype.renderPopup = function () {
                     "<span class='" + this.idName + "Machine" + Machine[this.machineType][key].idName + "'></span>" +
                 "</td>" +
                 "<td>" +
-                    "<button id='unequip" + this.idName + "Machine" + Machine[this.machineType][key].idName + "' class='unequipMachine tooltip'>-</button>" +
+                    "<button id='unequip" + this.idName + "Machine" + Machine[this.machineType][key].idName + "' class='unequipMachine'>-</button>" +
                 "</td>" +
                 "<td>" +
-                    "<button id='equip" + this.idName + "Machine" + Machine[this.machineType][key].idName + "' class='equipMachine tooltip'>+</button>" +
+                    "<button id='equip" + this.idName + "Machine" + Machine[this.machineType][key].idName + "' class='equipMachine'>+</button>" +
                 "</td>" +
             "</tr>"
         );
 
-        $("#unequip" + this.idName + "Machine" + Machine[this.machineType][key].idName).data({
+        $("#machineTooltip" + this.idName + "Machine" + Machine[this.machineType][key].idName).data({
             machineType: "" + this.machineType,
             machineTier: "" + key,
             tooltipContent: function () {
-                var content = "<table>";
+                var content = "<table>" +
+                    "<tr>" +
+                        "<td>" +
+                            "Spare" +
+                        "</td>" +
+                        "<td class='right'>" +
+                            "<span class='" + Machine[$("#" + thisID).data("machineType")][$("#" + thisID).data("machineTier")].idName + "Unequipped'>" + (Machine[$("#" + thisID).data("machineType")][$("#" + thisID).data("machineTier")].amount - Machine[$("#" + thisID).data("machineType")][$("#" + thisID).data("machineTier")].equipped) + "</span>" +
+                        "</td>" +
+                    "</tr>" +
+                    "<tr>" +
+                        "<td colspan='2'>" +
+                            "<hr>" +
+                        "</td>" +
+                    "</tr>";
 
                 for (var k = 0; k < popupObjPath.incomeResource.length; k++) {
                     content += "<tr>" +
@@ -922,27 +963,14 @@ buildingFactory.prototype.renderPopup = function () {
                 content += "</table>";
                 return content;
             }
+        })
+        $("#unequip" + this.idName + "Machine" + Machine[this.machineType][key].idName).data({
+            machineType: "" + this.machineType,
+            machineTier: "" + key,
         });
         $("#equip" + this.idName + "Machine" + Machine[this.machineType][key].idName).data({
             machineType: "" + this.machineType,
             machineTier: "" + key,
-            tooltipContent: function () {
-                var content = "<table>";
-
-                for (var k = 0; k < popupObjPath.incomeResource.length; k++) {
-                    content += "<tr>" +
-                        "<td>" +
-                            "Base work rate" +
-                        "</td>" +
-                        "<td class='left-padding right'>" +
-                            Machine[$("#" + thisID).data("machineType")][$("#" + thisID).data("machineTier")].multiplier +
-                        "</td>" +
-                    "</tr>";
-                }
-
-                content += "</table>";
-                return content;
-            }
         });
     }
 
@@ -965,7 +993,7 @@ buildingFactory.prototype.renderPopup = function () {
 
             for (var key in Machine[this.machineTypeAddon[i]]) {
                 $("#popupRightTable" + this.idName + i).append(
-                    "<tr>" +
+                    "<tr id='machineTooltip" + this.idName + "Machine" + Machine[this.machineTypeAddon[i]][key].idName + "' class='tooltip'>" +
                         "<td>" +
                             Machine[this.machineTypeAddon[i]][key].publicName +
                         "</td>" +
@@ -973,14 +1001,47 @@ buildingFactory.prototype.renderPopup = function () {
                             "<span class='" + this.idName + "Machine" + Machine[this.machineTypeAddon[i]][key].idName + "'></span>" +
                         "</td>" +
                         "<td>" +
-                            "<button id='unequip" + this.idName + "Machine" + Machine[this.machineTypeAddon[i]][key].idName + "' class='unequipMachine tooltip'>-</button>" +
+                            "<button id='unequip" + this.idName + "Machine" + Machine[this.machineTypeAddon[i]][key].idName + "' class='unequipMachine'>-</button>" +
                         "</td>" +
                         "<td>" +
-                            "<button id='equip" + this.idName + "Machine" + Machine[this.machineTypeAddon[i]][key].idName + "' class='equipMachine tooltip'>+</button>" +
+                            "<button id='equip" + this.idName + "Machine" + Machine[this.machineTypeAddon[i]][key].idName + "' class='equipMachine'>+</button>" +
                         "</td>" +
                     "</tr>"
                 );
+                $("#machineTooltip" + this.idName + "Machine" + Machine[this.machineTypeAddon[i]][key].idName).data({
+                    machineType: "" + this.machineTypeAddon[i],
+                    machineTier: "" + key,
+                    tooltipContent: function () {
+                        var content = "<table>" +
+                            "<tr>" +
+                                "<td>" +
+                                    "Spare" +
+                                "</td>" +
+                                "<td class='right'>" +
+                                    "<span class='" + Machine[$("#" + thisID).data("machineType")][$("#" + thisID).data("machineTier")].idName + "Unequipped'>" + (Machine[$("#" + thisID).data("machineType")][$("#" + thisID).data("machineTier")].amount - Machine[$("#" + thisID).data("machineType")][$("#" + thisID).data("machineTier")].equipped) + "</span>" +
+                                "</td>" +
+                            "</tr>" +
+                            "<tr>" +
+                                "<td colspan='2'>" +
+                                    "<hr>" +
+                                "</td>" +
+                            "</tr>";
 
+                        for (var k = 0; k < popupObjPath.incomeResource.length; k++) {
+                            content += "<tr>" +
+                                "<td>" +
+                                    "Modify work rate" +
+                                "</td>" +
+                                "<td class='left-padding right'>" +
+                                    "+" + Machine[$("#" + thisID).data("machineType")][$("#" + thisID).data("machineTier")].multiplier +
+                                "</td>" +
+                            "</tr>";
+                        }
+
+                        content += "</table>";
+                        return content;
+                    }
+                })
                 $("#unequip" + this.idName + "Machine" + Machine[this.machineTypeAddon[i]][key].idName).data({
                     machineType: "" + this.machineTypeAddon[i],
                     machineTier: "" + key,
@@ -990,7 +1051,7 @@ buildingFactory.prototype.renderPopup = function () {
                         for (var k = 0; k < popupObjPath.incomeResource.length; k++) {
                             content += "<tr>" +
                                 "<td>" +
-                                    "Efficiency work rate" +
+                                    "Modify work rate" +
                                 "</td>" +
                                 "<td class='left-padding right'>" +
                                     "-" + Machine[$("#" + thisID).data("machineType")][$("#" + thisID).data("machineTier")].multiplier +
@@ -1257,8 +1318,16 @@ function buildingHouse(strPublicName, strIdName, intBasePop, arrCraftType, arrCr
     this.craftAmount = arrCraftAmount;
 }
 
-// Update the HTML on the page
 buildingHouse.prototype.renderAmount = function () {
+    $("." + this.idName + "Amount").html(this.amount);
+};
+
+buildingHouse.prototype.renderPopulation = function () {
+    $("." + this.idName + "Population").html(this.amount * this.basePop)
+};
+
+// Update the HTML on the page
+buildingHouse.prototype.renderAmountOld = function () {
     $("#" + this.idName + "Old").html(this.publicName + "s: " + this.amount + " - Population: " + (this.amount * this.basePop));
 };
 
@@ -1266,7 +1335,9 @@ buildingHouse.prototype.renderAmount = function () {
 buildingHouse.prototype.changeAmount = function (num) {
     this.amount += num;
     calculateHousing();
+    this.renderAmountOld();
     this.renderAmount();
+    this.renderPopulation();
 };
 
 buildingHouse.prototype.checkCraft = fnCheckCraft;
@@ -1291,8 +1362,20 @@ function tool(strPublicName, strIdName, intIncomeRate, arrCraftType, arrCraftAmo
     this.craftAmount = arrCraftAmount;
 }
 
-// Update the HTML on the page
 tool.prototype.renderAmount = function () {
+    $("." + this.idName + "Amount").html(this.amount);
+};
+
+tool.prototype.renderEquipped = function () {
+    $("." + this.idName + "Equipped").html(this.equipped);
+};
+
+tool.prototype.renderUnequipped = function () {
+    $("." + this.idName + "Unequipped").html(this.amount - this.equipped);
+};
+
+// Update the HTML on the page
+tool.prototype.renderAmountOld = function () {
     $("#" + this.idName + "Old").html(this.publicName + ": " + this.equipped + "/" + this.amount);
 };
 
@@ -1306,13 +1389,17 @@ tool.prototype.changeAmount = function (num) {
             this.amount += num;
         }
     }
+    this.renderAmountOld();
     this.renderAmount();
+    this.renderUnequipped();
 };
 
 // Changes equipped total
 tool.prototype.changeEquipped = function (num) {
-    this.equipped += num; // Temporary
-    this.renderAmount();
+    this.equipped += num; // TODO: Temporary
+    this.renderAmountOld();
+    this.renderEquipped();
+    this.renderUnequipped();
 };
 
 tool.prototype.checkCraft = fnCheckCraft;
@@ -1338,17 +1425,33 @@ function machine(strPublicName, strIdName, intMultiplier, arrCraftType, arrCraft
 }
 
 machine.prototype.renderAmount = function () {
+    $("." + this.idName + "Amount").html(this.amount);
+};
+
+machine.prototype.renderEquipped = function () {
+    $("." + this.idName + "Equipped").html(this.equipped);
+};
+
+machine.prototype.renderUnequipped = function () {
+    $("." + this.idName + "Unequipped").html(this.amount - this.equipped);
+};
+
+machine.prototype.renderAmountOld = function () {
     $("#" + this.idName + "Old").html(this.publicName + ": " + this.equipped + "/" + this.amount);
 };
 
 machine.prototype.changeAmount = function (num) {
     this.amount += num;
+    this.renderAmountOld();
     this.renderAmount();
+    this.renderUnequipped();
 };
 
 machine.prototype.changeEquipped = function (num) {
     this.equipped += num;
-    this.renderAmount();
+    this.renderAmountOld();
+    this.renderEquipped();
+    this.renderUnequipped();
 };
 
 machine.prototype.checkCraft = fnCheckCraft;
@@ -1918,7 +2021,7 @@ function pageBuildTabs(){
                     "<li><a href='#game-tab-tool'>Tools</a></li>" +
                     "<li><a href='#game-tab-machine'>Machines</a></li>" +
                     "<li><a href='#game-tab-item'>Items</a></li>" +
-                    //"<li><a href='#game-tab-test'>Test</a></li>" +
+                    "<li><a href='#game-tab-test'>Test</a></li>" +
                 "</ul>" +
             "</div>" +
             "<div class='scroller'>" +
@@ -1936,8 +2039,8 @@ function pageBuildTabs(){
                 "</div>" +
                 "<div id='game-tab-item'>" +
                 "</div>" +
-                //"<div id='game-tab-test'>" +
-                //"</div>" +
+                "<div id='game-tab-test'>" +
+                "</div>" +
             "</div>" +
         "</div>" +
         "<div id='popup' class='shadow hide'></div>"
@@ -1956,7 +2059,7 @@ function pageBuildTabs(){
 
 function pageButtonEvents() {
     $(document.body).on("click", ".toggleContainer", function () {
-        $(this).next().slideToggle();
+        newSlideToggle($(this).next());
     });
 
     $(document.body).on("click", ".popupButton", function () {
@@ -1987,8 +2090,8 @@ function pageButtonEvents() {
         }
     });
 
-    $(document).on("click", ".build", function () {
-        popupObjPath.applyCraft();
+    $(document).on("click", ".craft", function () {
+        craftPath().applyCraft();
     });
 
     $(document).tooltip({
@@ -2066,18 +2169,18 @@ function gameGenerateResource() {
 
 function gameGeneratePrimary() {
     $("#game-tab-primary").append(
-        "<ul id='game-tab-primary-list' class='game-layer-1'>" +
+        "<ul id='game-tab-primary-list' class='game-primary-layer-1'>" +
             "<li>" +
                 "<h3 class='toggleContainer'>Primary Resources</h3>" +
-                "<ul id='primary-Primary' class='game-layer-2'></ul>" +
+                "<ul id='primary-Primary' class='game-primary-layer-2'></ul>" +
             "</li>" +
             "<li>" +
                 "<h3 class='toggleContainer'>Mines</h3>" +
-                "<ul id='primary-Mine' class='game-layer-2'></ul>" +
+                "<ul id='primary-Mine' class='game-primary-layer-2'></ul>" +
             "</li>" +
             "<li>" +
                 "<h3 class='toggleContainer'>Farms</h3>" +
-                "<ul id='primary-Farm' class='game-layer-2'></ul>" +
+                "<ul id='primary-Farm' class='game-primary-layer-2'></ul>" +
             "</li>" +
         "</ul>"
     );
@@ -2110,14 +2213,14 @@ function gameGeneratePrimary() {
 
 function gameGenerateFactory() {
     $("#game-tab-factory").append(
-        "<ul id='game-tab-factory-list' class='game-layer-1'>" +
+        "<ul id='game-tab-factory-list' class='game-factory-layer-1'>" +
             "<li>" +
                 "<h3 class='toggleContainer'>Construction</h3>" +
-                "<ul id='factory-Construction' class='game-layer-2'></ul>" +
+                "<ul id='factory-Construction' class='game-factory-layer-2'></ul>" +
             "</li>" +
             "<li>" +
                 "<h3 class='toggleContainer'>Smelters</h3>" +
-                "<ul id='factory-Smelter' class='game-layer-2'></ul>" +
+                "<ul id='factory-Smelter' class='game-factory-layer-2'></ul>" +
             "</li>" +
         "</ul>"
     );
@@ -2150,83 +2253,241 @@ function gameGenerateFactory() {
 
 function gameGenerateHouse() {
     $("#game-tab-house").append(
-        "<div id='house-Tent'>" +
-            "<h3>Tents</h3>" +
-        "</div>" +
-        "<div id='house-Hut'>" +
-            "<h3>Huts</h3>" +
-        "</div>"
+        "<ul id='game-tab-house-list' class='game-house-layer-1'>" +
+            "<li>" +
+                "<h3 class='toggleContainer'>Tents</h3>" +
+                "<ul id='house-Tent' class='game-house-layer-2'></ul>" +
+            "</li>" +
+            "<li>" +
+                "<h3 class='toggleContainer'>Huts</h3>" +
+                "<ul id='house-Hut' class='game-house-layer-2'></ul>" +
+            "</li>" +
+        "</ul>"
     );
 
     for (var key in BuildingHouse) {
         for (var subkey in BuildingHouse[key]) {
             $("#house-" + key).append(
-                "<div class='border'>" +
-                    "<button onclick='BuildingHouse." + key + "." + subkey + ".applyCraft()'>Build</button>" +
-                    "<div id='" + BuildingHouse[key][subkey].idName + "Old' style='display: inline'></div>" +
-                    "<div id='" + BuildingHouse[key][subkey].idName + "Cost'><b>Cost</b> | </div>" +
-                "</div>"
+                "<li id='house-list-" + BuildingHouse[key][subkey].idName + "'></li>"
             );
-            for (var i = 0; i < BuildingHouse[key][subkey].craftType.length; i++) {
-                $("#" + BuildingHouse[key][subkey].idName + "Cost").append(
-                    objRef(window, BuildingHouse[key][subkey].craftType[i]).publicName + ": " + BuildingHouse[key][subkey].craftAmount[i] + " | "
-                );
-            }
+            $("#house-list-" + BuildingHouse[key][subkey].idName).html(
+                "<table class='fill'>" +
+                    "<tr>" +
+                        "<td>" +
+                            BuildingHouse[key][subkey].publicName +
+                        "</td>" +
+                        "<td class='right'>" +
+                            "<span class='" + BuildingHouse[key][subkey].idName + "Amount" + "'></span>" +
+                        "</td>" +
+                        "<td class='right'>" +
+                            "<button id='craft" + BuildingHouse[key][subkey].idName + "' class='craft tooltip'>Build</button>" +
+                        "</td>" +
+                    "</tr>" +
+                    "<tr>" +
+                        "<td>" +
+                            "Population" +
+                        "</td>" +
+                        "<td>" +
+                        "</td>" +
+                        "<td class='right'>" +
+                            "<span class='" + BuildingHouse[key][subkey].idName + "Population'></span>" +
+                        "</td>" +
+                    "</tr>" +
+                    "<tr>" +
+                        "<td>" +
+                            "Population Each" +
+                        "</td>" +
+                        "<td>" +
+                        "</td>" +
+                        "<td class='right'>" +
+                            BuildingHouse[key][subkey].basePop +
+                        "</td>" +
+                    "</tr>" +
+                "</table>"
+            );
+
+            $("#craft" + BuildingHouse[key][subkey].idName).data({
+                class: "BuildingHouse",
+                subClass: key,
+                object: subkey,
+                tooltipContent: function () {
+                    var content = "<table class='vseperator'>" +
+                        "<tr>" +
+                            "<th class='left'>" +
+                                "Required Material" +
+                            "</th>" +
+                            "<th class='right'>" +
+                                "Need" +
+                            "</th>" +
+                            "<th class='right'>" +
+                                "Have" +
+                            "</th>" +
+                        "</tr>";
+
+                    for (var i = 0; i < craftPath().craftType.length; i++) {
+                        content +=
+                            "<tr>" +
+                                "<td>" +
+                                    objRef(window, craftPath().craftType[i]).publicName +
+                                "</td>" +
+                                "<td class='right'>" +
+                                    craftPath().craftAmount[i] +
+                                "</td>" +
+                                "<td class='right'>" +
+                                    "<span class='" + objRef(window, craftPath().craftType[i]).idName + "Amount'>" + objRef(window, craftPath().craftType[i]).amount + "</span>" +
+                                "</td>" +
+                            "</tr>";
+                    }
+
+                    content += "</table>";
+                    return content;
+                }
+            })
+
             BuildingHouse[key][subkey].renderAmount();
+            BuildingHouse[key][subkey].renderPopulation();
         }
+    }
+
+
+
+    $("#game-tab-house-list").sortable({
+        placeholder: "ui-state-highlight",
+        start: function (e, ui) {
+            ui.placeholder.height(ui.item.height());
+            ui.placeholder.width(ui.item.width());
+        }
+    });
+    for (var key in BuildingHouse) {
+        $("#house-" + key).sortable({
+            placeholder: "ui-state-highlight"
+        });
     }
 }
 
 function gameGenerateTool() {
     $("#game-tab-tool").append(
-        "<div id='tool-Axe'>" +
-            "<h3>Axes</h3>" +
-        "</div>" +
-        "<div id='tool-Pickaxe'>" +
-            "<h3>Pickaxes</h3>" +
-        "</div>" +
-        "<div id='tool-Hoe'>" +
-            "<h3>Hoes</h3>" +
-        "</div>" +
-        "<div id='tool-Shovel'>" +
-            "<h3>Shovels</h3>" +
-        "</div>" +
-        "<div id='tool-Sickle'>" +
-            "<h3>Sickles</h3>" +
-        "</div>" +
-        "<div id='tool-Scythe'>" +
-            "<h3>Scythes</h3>" +
-        "</div>" +
-        "<div id='tool-Hammer'>" +
-            "<h3>Hammers</h3>" +
-        "</div>" +
-        "<div id='tool-Hunting'>" +
-            "<h3>Hunting Equipment</h3>" +
-        "</div>" +
-        "<div id='tool-Knife'>" +
-            "<h3>Knives</h3>" +
-        "</div>" +
-        "<div id='tool-Fishing'>" +
-            "<h3>Fishing Equipment</h3>" +
-        "</div>"
+        "<ul id='game-tab-tool-list' class='game-tool-layer-1'>" +
+            "<li>" +
+                "<h3 class='toggleContainer'>Axes</h3>" +
+                "<ul id='tool-Axe' class='game-tool-layer-2 hide'></ul>" +
+            "</li>" +
+            "<li>" +
+                "<h3 class='toggleContainer'>Pickaxes</h3>" +
+                "<ul id='tool-Pickaxe' class='game-tool-layer-2 hide'></ul>" +
+            "</li>" +
+            "<li>" +
+                "<h3 class='toggleContainer'>Hoes</h3>" +
+                "<ul id='tool-Hoe' class='game-tool-layer-2 hide'></ul>" +
+            "</li>" +
+            "<li>" +
+                "<h3 class='toggleContainer'>Shovels</h3>" +
+                "<ul id='tool-Shovel' class='game-tool-layer-2 hide'></ul>" +
+            "</li>" +
+            "<li>" +
+                "<h3 class='toggleContainer'>Sickles</h3>" +
+                "<ul id='tool-Sickle' class='game-tool-layer-2 hide'></ul>" +
+            "</li>" +
+            "<li>" +
+                "<h3 class='toggleContainer'>Scythes</h3>" +
+                "<ul id='tool-Scythe' class='game-tool-layer-2 hide'></ul>" +
+            "</li>" +
+            "<li>" +
+                "<h3 class='toggleContainer'>Hammers</h3>" +
+                "<ul id='tool-Hammer' class='game-tool-layer-2 hide'></ul>" +
+            "</li>" +
+            "<li>" +
+                "<h3 class='toggleContainer'>Hunting Equipment</h3>" +
+                "<ul id='tool-Hunting' class='game-tool-layer-2 hide'></ul>" +
+            "</li>" +
+            "<li>" +
+                "<h3 class='toggleContainer'>Knives</h3>" +
+                "<ul id='tool-Knife' class='game-tool-layer-2 hide'></ul>" +
+            "</li>" +
+            "<li>" +
+                "<h3 class='toggleContainer'>Fishing Equipment</h3>" +
+                "<ul id='tool-Fishing' class='game-tool-layer-2 hide'></ul>" +
+            "</li>" +
+        "</ul>"
     );
 
-    for (var key in Tool){
-        for (var subkey in Tool[key]){
+    for (var key in Tool) {
+        for (var subkey in Tool[key]) {
             $("#tool-" + key).append(
-                "<div class='border'>" +
-                    "<button onclick='Tool." + key + "." + subkey + ".applyCraft()'>Craft</button>" +
-                    "<div id='" + Tool[key][subkey].idName + "Old' style='display: inline'></div>" +
-                    "<div id='" + Tool[key][subkey].idName + "Cost'><b>Cost</b> | </div>" +
-                "</div>"
+                "<li id='tool-list-" + Tool[key][subkey].idName + "'></li>"
             );
-            for (var i = 0; i < Tool[key][subkey].craftType.length; i++) {
-                $("#" + Tool[key][subkey].idName + "Cost").append(
-                    objRef(window, Tool[key][subkey].craftType[i]).publicName + ": " + Tool[key][subkey].craftAmount[i] + " | "
-                );
-            }
+            $("#tool-list-" + Tool[key][subkey].idName).html(
+                "<table class='fill'>" +
+                    "<tr>" +
+                        "<td>" +
+                            Tool[key][subkey].publicName +
+                        "</td>" +
+                        "<td class='right'>" +
+                            "<span class='" + Tool[key][subkey].idName + "Equipped" + "'></span>/<span class='" + Tool[key][subkey].idName + "Amount" + "'></span>" +
+                        "</td>" +
+                        "<td class='right'>" +
+                            "<button id='craft" + Tool[key][subkey].idName + "' class='craft tooltip'>Craft</button>" +
+                        "</td>" +
+                    "</tr>" +
+                "</table>"
+            );
+
+            $("#craft" + Tool[key][subkey].idName).data({
+                class: "Tool",
+                subClass: key,
+                object: subkey,
+                tooltipContent: function () {
+                    var content = "<table class='vseperator'>" +
+                        "<tr>" +
+                            "<th class='left'>" +
+                                "Required Material" +
+                            "</th>" +
+                            "<th class='right'>" +
+                                "Need" +
+                            "</th>" +
+                            "<th class='right'>" +
+                                "Have" +
+                            "</th>" +
+                        "</tr>";
+
+                    for (var i = 0; i < craftPath().craftType.length; i++) {
+                        content +=
+                            "<tr>" +
+                                "<td>" +
+                                    objRef(window, craftPath().craftType[i]).publicName +
+                                "</td>" +
+                                "<td class='right'>" +
+                                    craftPath().craftAmount[i] +
+                                "</td>" +
+                                "<td class='right'>" +
+                                    "<span class='" + objRef(window, craftPath().craftType[i]).idName + "Amount'>" + objRef(window, craftPath().craftType[i]).amount + "</span>" +
+                                "</td>" +
+                            "</tr>";
+                    }
+
+                    content += "</table>";
+                    return content;
+                }
+            })
+
             Tool[key][subkey].renderAmount();
+            Tool[key][subkey].renderEquipped();
         }
+    }
+
+
+
+    $("#game-tab-tool-list").sortable({
+        placeholder: "ui-state-highlight",
+        start: function (e, ui) {
+            ui.placeholder.height(ui.item.height());
+            ui.placeholder.width(ui.item.width());
+        }
+    });
+    for (var key in Tool) {
+        $("#tool-" + key).sortable({
+            placeholder: "ui-state-highlight"
+        });
     }
 }
 
@@ -2266,7 +2527,7 @@ function gameGenerateMachine() {
                     objRef(window, Machine[key][subkey].craftType[i]).publicName + ": " + Machine[key][subkey].craftAmount[i] + " | "
                 );
             }
-            Machine[key][subkey].renderAmount();
+            Machine[key][subkey].renderAmountOld();
         }
     }
 }
@@ -2300,45 +2561,131 @@ function gameGenerateItem() {
     }
 }
 
-//function gameGenerateTest() {
-//    $("#game-tab-test").append(
-//        "<ul id='game-tab-factory-list' class='game-layer-1'>" +
-//            "<li>" +
-//                "<h3 class='toggleContainer'>Construction</h3>" +
-//                "<ul id='test-Construction' class='game-layer-2'></ul>" +
-//            "</li>" +
-//            "<li>" +
-//                "<h3 class='toggleContainer'>Smelters</h3>" +
-//                "<ul id='test-Smelter' class='game-layer-2'></ul>" +
-//            "</li>" +
-//        "</ul>"
-//    );
+function gameGenerateTest() {
+    $("#game-tab-test").append(
+        "<ul id='game-tab-tool-list' class='game-tool-layer-1'>" +
+            "<li>" +
+                "<h3 class='toggleContainer'>Axes</h3>" +
+                "<ul id='test-Axe' class='game-tool-layer-2 hide'></ul>" +
+            "</li>" +
+            "<li>" +
+                "<h3 class='toggleContainer'>Pickaxes</h3>" +
+                "<ul id='test-Pickaxe' class='game-tool-layer-2 hide'></ul>" +
+            "</li>" +
+            "<li>" +
+                "<h3 class='toggleContainer'>Hoes</h3>" +
+                "<ul id='test-Hoe' class='game-tool-layer-2 hide'></ul>" +
+            "</li>" +
+            "<li>" +
+                "<h3 class='toggleContainer'>Shovels</h3>" +
+                "<ul id='test-Shovel' class='game-tool-layer-2 hide'></ul>" +
+            "</li>" +
+            "<li>" +
+                "<h3 class='toggleContainer'>Sickles</h3>" +
+                "<ul id='test-Sickle' class='game-tool-layer-2 hide'></ul>" +
+            "</li>" +
+            "<li>" +
+                "<h3 class='toggleContainer'>Scythes</h3>" +
+                "<ul id='test-Scythe' class='game-tool-layer-2 hide'></ul>" +
+            "</li>" +
+            "<li>" +
+                "<h3 class='toggleContainer'>Hammers</h3>" +
+                "<ul id='test-Hammer' class='game-tool-layer-2 hide'></ul>" +
+            "</li>" +
+            "<li>" +
+                "<h3 class='toggleContainer'>Hunting Equipment</h3>" +
+                "<ul id='test-Hunting' class='game-tool-layer-2 hide'></ul>" +
+            "</li>" +
+            "<li>" +
+                "<h3 class='toggleContainer'>Knives</h3>" +
+                "<ul id='test-Knife' class='game-tool-layer-2 hide'></ul>" +
+            "</li>" +
+            "<li>" +
+                "<h3 class='toggleContainer'>Fishing Equipment</h3>" +
+                "<ul id='test-Fishing' class='game-tool-layer-2 hide'></ul>" +
+            "</li>" +
+        "</ul>"
+    );
 
-//    for (var key in BuildingFactory) {
-//        for (var subkey in BuildingFactory[key]) {
-//            $("#test-" + key).append(
-//                "<li id='popupButton" + BuildingFactory[key][subkey].idName + "' class='popupButton'>" + BuildingFactory[key][subkey].publicName + "</li>"
-//            );
-//            $("#popupButton" + BuildingFactory[key][subkey].idName).data({
-//                objClass: "BuildingFactory",
-//                objReference: key + "." + subkey
-//            })
-//        }
-//    }
+    for (var key in Tool) {
+        for (var subkey in Tool[key]) {
+            $("#test-" + key).append(
+                "<li id='tool-list-" + Tool[key][subkey].idName + "'></li>"
+            );
+            $("#tool-list-" + Tool[key][subkey].idName).html(
+                "<table class='fill'>" +
+                    "<tr>" +
+                        "<td>" +
+                            Tool[key][subkey].publicName +
+                        "</td>" +
+                        "<td class='right'>" +
+                            "<span class='" + Tool[key][subkey].idName + "Equipped" + "'></span>/<span class='" + Tool[key][subkey].idName + "Amount" + "'></span>" +
+                        "</td>" +
+                        "<td class='right'>" +
+                            "<button id='craft" + Tool[key][subkey].idName + "' class='craft tooltip'>Craft</button>" +
+                        "</td>" +
+                    "</tr>" +
+                "</table>"
+            );
 
-//    $("#game-tab-factory-list").sortable({
-//        placeholder: "ui-state-highlight",
-//        start: function (e, ui) {
-//            ui.placeholder.height(ui.item.height());
-//            ui.placeholder.width(ui.item.width());
-//        }
-//    });
-//    for (var key in BuildingFactory) {
-//        $("#test-" + key).sortable({
-//            placeholder: "ui-state-highlight"
-//        });
-//    }
-//}
+            $("#craft" + Tool[key][subkey].idName).data({
+                class: "Tool",
+                subClass: key,
+                object: subkey,
+                tooltipContent: function () {
+                    var content = "<table class='vseperator'>" +
+                        "<tr>" +
+                            "<th class='left'>" +
+                                "Required Material" +
+                            "</th>" +
+                            "<th class='right'>" +
+                                "Need" +
+                            "</th>" +
+                            "<th class='right'>" +
+                                "Have" +
+                            "</th>" +
+                        "</tr>";
+
+                    for (var i = 0; i < craftPath().craftType.length; i++) {
+                        content +=
+                            "<tr>" +
+                                "<td>" +
+                                    objRef(window, craftPath().craftType[i]).publicName +
+                                "</td>" +
+                                "<td class='right'>" +
+                                    craftPath().craftAmount[i] +
+                                "</td>" +
+                                "<td class='right'>" +
+                                    "<span class='" + objRef(window, craftPath().craftType[i]).idName + "Amount'>" + objRef(window, craftPath().craftType[i]).amount + "</span>" +
+                                "</td>" +
+                            "</tr>";
+                    }
+
+                    content += "</table>";
+                    return content;
+                }
+            })
+
+            Tool[key][subkey].renderAmount();
+            Tool[key][subkey].renderEquipped();
+        }
+    }
+
+
+
+    $("#game-tab-tool-list").sortable({
+        placeholder: "ui-state-highlight",
+        start: function (e, ui) {
+            ui.placeholder.height(ui.item.height());
+            ui.placeholder.width(ui.item.width());
+        }
+    });
+    for (var key in Tool) {
+        $("#test-" + key).sortable({
+            placeholder: "ui-state-highlight"
+        });
+    }
+}
 
 // Debugging Menu
 

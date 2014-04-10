@@ -132,18 +132,26 @@ button:active{
 
 /*Game Frame Sortable List*/
 
-.game-primary-layer-1, .game-factory-layer-1, .game-house-layer-1, .game-tool-layer-1 {
+.game-resource-layer-1, .game-primary-layer-1, .game-factory-layer-1, .game-house-layer-1, .game-tool-layer-1, .game-machine-layer-1, .game-item-layer-1 {
     list-style-type: none;
     margin: 0;
     padding: 0;
     float: left; 
 }
 
-.game-primary-layer-2, .game-factory-layer-2, .game-house-layer-2, .game-tool-layer-2 {
+.game-resource-layer-2, .game-primary-layer-2, .game-factory-layer-2, .game-house-layer-2, .game-tool-layer-2, .game-machine-layer-2, .game-item-layer-2 {
     list-style-type: none; 
     margin: 0; 
     padding: 0; 
     overflow: hidden;
+}
+
+.game-resource-layer-2 {
+    width: 300px;
+}
+
+.game-resource-layer-2 th:first-child, .game-resource-layer-2 td:first-child {
+    width: 100%;
 }
 
 .game-primary-layer-2>li, .game-factory-layer-2>li { 
@@ -175,7 +183,7 @@ button:active{
     background-color: #fff;
 }
 
-.game-tool-layer-2>li {
+.game-tool-layer-2>li, .game-machine-layer-2>li, .game-item-layer-2>li {
     margin: 3px 3px 3px 0;
     padding: 5px; 
     width: 250px; 

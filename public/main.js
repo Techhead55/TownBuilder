@@ -1,9 +1,5 @@
 ﻿/// <reference path="scripts/jquery-1.11.0-vsdoc.js" />
 
-function gid(id) {
-    return document.getElementById(id);
-}
-
 function objRef(obj, str) {
     str = str.split(".");
     for (var i = 0; i < str.length; i++)
@@ -33,11 +29,15 @@ function newShow(element) {
     });
 }
 
-function newSlideToggle(element) {
-    if (!$(element).hasClass("hide")) {
-        newHide(element);
+function newSlideToggle(e) {
+    var $next = $(e).next();
+    var $arrow = $(e).find(">:first-child");
+    if (!$($next).hasClass("hide")) {
+        $arrow.html("►")
+        newHide($next);
     } else {
-        newShow(element);
+        $arrow.html("▼")
+        newShow($next);
     }
 }
 
@@ -86,7 +86,7 @@ function countdown(elementID, fn, seconds){
         if (remainingSeconds < 10) {
             remainingSeconds = "0" + remainingSeconds;
         }
-        gid(elementID).innerHTML = minutes + ":" + remainingSeconds;
+        $("#" + elementID).html(minutes + ":" + remainingSeconds);
         if (seconds === 0) {
             clearInterval(interval);
             fn();
@@ -142,13 +142,13 @@ function dayRender(){
     var day = dayCount % 7 + 1;
     var week = Math.floor(dayCount / 7) + 1;
     
-    gid("dayCounter").innerHTML = " - Week: " + week + " - Day: " + day;
+    $("#dayCounter").html(" - W" + week + "D" + day + " - ");
 }
 
 function dayIncome() {
-    for (var key in Resource) {
-        for (var subkey in Resource[key]){
-            Resource[key][subkey].changeAmount(Resource[key][subkey].income);
+    for (var key in BuildingPrimary) {
+        for (var subkey in BuildingPrimary[key]){
+            BuildingPrimary[key][subkey].dayCycle();
         }
     }
     for (var key in BuildingFactory){
@@ -172,7 +172,7 @@ var Population = {
     labourer:           function () { return Population.cap - Population.assigned; },
     cap:                0,
 
-    updatePopulation:   function () { gid("Population").innerHTML = "Employed Workers: " + Population.assigned + "/" + Population.cap; }
+    updatePopulation:   function () { $("#Population").html("Employed Workers: " + Population.assigned + "/" + Population.cap); }
 };
 
 function calculateHousing(){
@@ -300,10 +300,8 @@ resource.prototype.renderProfit = function () {
     $("." + this.idName + "Profit").html(function () {
         if (profit > 0) {
             return "+" + profit;
-        } else if (profit < 0) {
-            return "-" + profit;
         } else {
-            return "0"
+            return profit;
         }
     });
 };
@@ -687,6 +685,12 @@ buildingPrimary.prototype.applyIncomeByToolType = function (toolType, oldIncome)
         }
     }
 };
+
+buildingPrimary.prototype.dayCycle = function () {
+    for (var i = 0; i < this.incomeRate.length; i++) {
+        objRef(window, this.incomeResource[i]).changeAmount(this.incomeRate[i]);
+    }
+}
 
 buildingPrimary.prototype.checkCraft = fnCheckCraft;
 
@@ -1168,9 +1172,14 @@ buildingFactory.prototype.changeEquippedMachine = function (num, machineType, ma
         return;
     }
 
+
+
     this.equippedMachines[machineType][machineTier] += num;
     Machine[machineType][machineTier].changeEquipped(num);
     this.workCalc();
+
+
+
     this.renderMachine();
 };
 
@@ -1182,6 +1191,16 @@ buildingFactory.prototype.workCalc = function () {
         i: 0
     };
     var addonMachine = {};
+
+    var oldIncome = this.income;
+    var oldExpense = this.expense;
+
+    for (var i = 0; i < this.income.length; i++) {
+        objRef(window, this.incomeResource[i]).changeIncome(oldIncome[i] * -1);
+    }
+    for (var i = 0; i < this.expense.length; i++) {
+        objRef(window, this.expenseResource[i]).changeExpense(oldExpense[i] * -1);
+    }
 
     // Build addonMachine sub objects
     if (this.machineTypeAddon !== null) {
@@ -1258,6 +1277,17 @@ buildingFactory.prototype.workCalc = function () {
 
     this.workRate = resourceTotal;
     this.calcIncome();
+
+    var newIncome = this.income;
+    var newExpense = this.expense;
+
+    for (var i = 0; i < this.income.length; i++) {
+        objRef(window, this.incomeResource[i]).changeIncome(newIncome[i]);
+    }
+    for (var i = 0; i < this.expense.length; i++) {
+        objRef(window, this.expenseResource[i]).changeExpense(newExpense[i]);
+    }
+
     this.renderWorkRate();
 };
 
@@ -1477,13 +1507,9 @@ item.prototype.renderAmount = function () {
     $("." + this.idName + "Amount").html(this.amount);
 };
 
-item.prototype.renderAmountOld = function () {
-    $("#" + this.idName + "Old").html(this.publicName + ": " + this.amount);
-};
-
 item.prototype.changeAmount = function (num) {
     this.amount += num;
-    this.renderAmountOld();
+    this.renderAmount();
 };
 
 item.prototype.checkCraft = fnCheckCraft;
@@ -1981,6 +2007,7 @@ function newGame() {
 }
 
 function pageLayout(){
+    pageBuildFrame();
     pageBuildHeader();
     pageBuildTabs();
 
@@ -2000,22 +2027,28 @@ function init(){
     newGame();
 }
 
-function pageBuildHeader(){
+function pageBuildFrame() {
     $("#game").append(
-        "<div id='game-header'>" +
-            "<div id='city-name' style='display: inline'></div>" +
-            "<button onclick='cityName.changeName()'>Change</button>" +
-            "<div id='dayTimer' style='display: inline'></div> " +
-            "<div id='dayCounter' style='display: inline'></div> " +
-            "<div id='Population' style='display: inline'></div>" +
-        "</div>"
+        "<div id='game-header'></div>" +
+        "<div id='game-header-filler'></div>" +
+        "<div id='game-content'></div>"
+    );
+}
+
+function pageBuildHeader(){
+    $("#game-header").append(
+        "<div id='city-name' style='display: inline'></div>" +
+        "<button onclick='cityName.changeName()'>Change</button>" +
+        "<div id='dayTimer' style='display: inline'></div> " +
+        "<div id='dayCounter' style='display: inline'></div> " +
+        "<div id='Population' style='display: inline'></div>"
     );
 }
 
 function pageBuildTabs(){
-    $("#game").append(
+    $("#game-content").append(
         "<div id='game-tabs'>" +
-            "<div class='scroller'>" +
+            "<div id='game-tab-selector' class='scroller'>" +
                 "<ul>" +
                     "<li><a href='#game-tab-resource'>Resources</a></li>" +
                     "<li><a href='#game-tab-primary'>Primary Production</a></li>" +
@@ -2024,10 +2057,9 @@ function pageBuildTabs(){
                     "<li><a href='#game-tab-tool'>Tools</a></li>" +
                     "<li><a href='#game-tab-machine'>Machines</a></li>" +
                     "<li><a href='#game-tab-item'>Items</a></li>" +
-                    "<li><a href='#game-tab-test'>Test</a></li>" +
                 "</ul>" +
             "</div>" +
-            "<div class='scroller'>" +
+            "<div id='game-tab-content' class='scroller'>" +
                 "<div id='game-tab-resource'>" +
                 "</div>" +
                 "<div id='game-tab-primary'>" +
@@ -2042,8 +2074,6 @@ function pageBuildTabs(){
                 "</div>" +
                 "<div id='game-tab-item'>" +
                 "</div>" +
-                "<div id='game-tab-test'>" +
-                "</div>" +
             "</div>" +
         "</div>" +
         "<div id='popup' class='shadow hide'></div>"
@@ -2057,12 +2087,11 @@ function pageBuildTabs(){
     gameGenerateTool();
     gameGenerateMachine();
     gameGenerateItem();
-    //gameGenerateTest();
 }
 
 function pageButtonEvents() {
     $(document.body).on("click", ".toggleContainer", function () {
-        newSlideToggle($(this).next());
+        newSlideToggle(this);
     });
 
     $(document.body).on("click", ".popupButton", function () {
@@ -2134,36 +2163,36 @@ function gameGenerateResource() {
     $("#game-tab-resource").append(
         "<ul id='game-tab-resource-list' class='game-resource-layer-1'>" +
             "<li>" +
-                "<h3 class='toggleContainer'>Raw Materials</h3>" +
-                "<table id='resource-RawMaterial' class='game-resource-layer-2'></table>" +
+                "<div class='toggleContainer'><div>▼</div><div>Raw Materials</div></div>" +
+                "<div><table id='resource-RawMaterial' class='game-resource-layer-2'></table></div>" +
             "</li>" +
             "<li>" +
-                "<h3 class='toggleContainer'>Construction Materials</h3>" +
-                "<table id='resource-Construction' class='game-resource-layer-2'></table>" +
+                "<div class='toggleContainer'><div>▼</div><div>Construction Materials</div></div>" +
+                "<div><table id='resource-Construction' class='game-resource-layer-2'></table></div>" +
             "</li>" +
             "<li>" +
-                "<h3 class='toggleContainer'>Fuel</h3>" +
-                "<table id='resource-Fuel' class='game-resource-layer-2'></table>" +
+                "<div class='toggleContainer'><div>▼</div><div>Fuel</div></div>" +
+                "<div><table id='resource-Fuel' class='game-resource-layer-2'></table></div>" +
             "</li>" +
             "<li>" +
-                "<h3 class='toggleContainer'>Ore</h3>" +
-                "<table id='resource-Ore' class='game-resource-layer-2'></table>" +
+                "<div class='toggleContainer'><div>▼</div><div>Ore</div></div>" +
+                "<div><table id='resource-Ore' class='game-resource-layer-2'></table></div>" +
             "</li>" +
             "<li>" +
-                "<h3 class='toggleContainer'>Metal Ingots</h3>" +
-                "<table id='resource-Ingot' class='game-resource-layer-2'></table>" +
+                "<div class='toggleContainer'><div>▼</div><div>Metal Ingots</div></div>" +
+                "<div><table id='resource-Ingot' class='game-resource-layer-2'></table></div>" +
             "</li>" +
             "<li>" +
-                "<h3 class='toggleContainer'>Raw Food</h3>" +
-                "<table id='resource-FoodRaw' class='game-resource-layer-2'></table>" +
+                "<div class='toggleContainer'><div>▼</div><div>Raw Food</div></div>" +
+                "<div><table id='resource-FoodRaw' class='game-resource-layer-2'></table></div>" +
             "</li>" +
             "<li>" +
-                "<h3 class='toggleContainer'>Ingredients</h3>" +
-                "<table id='resource-FoodIngredient' class='game-resource-layer-2'></table>" +
+                "<div class='toggleContainer'><div>▼</div><div>Ingredients</div></div>" +
+                "<div><table id='resource-FoodIngredient' class='game-resource-layer-2'></table></div>" +
             "</li>" +
             "<li>" +
-                "<h3 class='toggleContainer'>Cooked Food</h3>" +
-                "<table id='resource-FoodCooked' class='game-resource-layer-2'></table>" +
+                "<div class='toggleContainer'><div>▼</div><div>Cooked Food</div></div>" +
+                "<div><table id='resource-FoodCooked' class='game-resource-layer-2'></table></div>" +
             "</li>" +
         "</ul>"
     );
@@ -2172,7 +2201,7 @@ function gameGenerateResource() {
         $("#resource-" + key).append (
             "<thead>" +
                 "<tr>" +
-                    "<th>" +
+                    "<th class='left'>" +
                         "Name" +
                     "</td>" +
                     "<th class='right left-padding'>" +
@@ -2265,16 +2294,16 @@ function gameGeneratePrimary() {
     $("#game-tab-primary").append(
         "<ul id='game-tab-primary-list' class='game-primary-layer-1'>" +
             "<li>" +
-                "<h3 class='toggleContainer'>Primary Resources</h3>" +
-                "<ul id='primary-Primary' class='game-primary-layer-2'></ul>" +
+                "<div class='toggleContainer'><div>▼</div><div>Primary Resources</div></div>" +
+                "<div><ul id='primary-Primary' class='game-primary-layer-2'></ul></div>" +
             "</li>" +
             "<li>" +
-                "<h3 class='toggleContainer'>Mines</h3>" +
-                "<ul id='primary-Mine' class='game-primary-layer-2'></ul>" +
+                "<div class='toggleContainer'><div>▼</div><div>Mines</div></div>" +
+                "<div><ul id='primary-Mine' class='game-primary-layer-2'></ul></div>" +
             "</li>" +
             "<li>" +
-                "<h3 class='toggleContainer'>Farms</h3>" +
-                "<ul id='primary-Farm' class='game-primary-layer-2'></ul>" +
+                "<div class='toggleContainer'><div>▼</div><div>Farms</div></div>" +
+                "<div><ul id='primary-Farm' class='game-primary-layer-2'></ul></div>" +
             "</li>" +
         "</ul>"
     );
@@ -2309,12 +2338,12 @@ function gameGenerateFactory() {
     $("#game-tab-factory").append(
         "<ul id='game-tab-factory-list' class='game-factory-layer-1'>" +
             "<li>" +
-                "<h3 class='toggleContainer'>Construction</h3>" +
-                "<ul id='factory-Construction' class='game-factory-layer-2'></ul>" +
+                "<div class='toggleContainer'><div>▼</div><div>Construction</div></div>" +
+                "<div><ul id='factory-Construction' class='game-factory-layer-2'></ul></div>" +
             "</li>" +
             "<li>" +
-                "<h3 class='toggleContainer'>Smelters</h3>" +
-                "<ul id='factory-Smelter' class='game-factory-layer-2'></ul>" +
+                "<div class='toggleContainer'><div>▼</div><div>Smelters</div></div>" +
+                "<div><ul id='factory-Smelter' class='game-factory-layer-2'></ul></div>" +
             "</li>" +
         "</ul>"
     );
@@ -2349,12 +2378,12 @@ function gameGenerateHouse() {
     $("#game-tab-house").append(
         "<ul id='game-tab-house-list' class='game-house-layer-1'>" +
             "<li>" +
-                "<h3 class='toggleContainer'>Tents</h3>" +
-                "<ul id='house-Tent' class='game-house-layer-2'></ul>" +
+                "<div class='toggleContainer'><div>▼</div><div>Tents</div></div>" +
+                "<div><ul id='house-Tent' class='game-house-layer-2'></ul></div>" +
             "</li>" +
             "<li>" +
-                "<h3 class='toggleContainer'>Huts</h3>" +
-                "<ul id='house-Hut' class='game-house-layer-2'></ul>" +
+                "<div class='toggleContainer'><div>▼</div><div>Huts</div></div>" +
+                "<div><ul id='house-Hut' class='game-house-layer-2'></ul></div>" +
             "</li>" +
         "</ul>"
     );
@@ -2463,44 +2492,44 @@ function gameGenerateTool() {
     $("#game-tab-tool").append(
         "<ul id='game-tab-tool-list' class='game-tool-layer-1'>" +
             "<li>" +
-                "<h3 class='toggleContainer'>Axes</h3>" +
-                "<ul id='tool-Axe' class='game-tool-layer-2 hide'></ul>" +
+                "<div class='toggleContainer'><div>►</div><div>Axes</div></div>" +
+                "<div class='hide'><ul id='tool-Axe' class='game-tool-layer-2'></ul></div>" +
             "</li>" +
             "<li>" +
-                "<h3 class='toggleContainer'>Pickaxes</h3>" +
-                "<ul id='tool-Pickaxe' class='game-tool-layer-2 hide'></ul>" +
+                "<div class='toggleContainer'><div>►</div><div>Pickaxes</div></div>" +
+                "<div class='hide'><ul id='tool-Pickaxe' class='game-tool-layer-2'></ul></div>" +
             "</li>" +
             "<li>" +
-                "<h3 class='toggleContainer'>Hoes</h3>" +
-                "<ul id='tool-Hoe' class='game-tool-layer-2 hide'></ul>" +
+                "<div class='toggleContainer'><div>►</div><div>Hoes</div></div>" +
+                "<div class='hide'><ul id='tool-Hoe' class='game-tool-layer-2'></ul></div>" +
             "</li>" +
             "<li>" +
-                "<h3 class='toggleContainer'>Shovels</h3>" +
-                "<ul id='tool-Shovel' class='game-tool-layer-2 hide'></ul>" +
+                "<div class='toggleContainer'><div>►</div><div>Shovels</div></div>" +
+                "<div class='hide'><ul id='tool-Shovel' class='game-tool-layer-2'></ul></div>" +
             "</li>" +
             "<li>" +
-                "<h3 class='toggleContainer'>Sickles</h3>" +
-                "<ul id='tool-Sickle' class='game-tool-layer-2 hide'></ul>" +
+                "<div class='toggleContainer'><div>►</div><div>Sickles</div></div>" +
+                "<div class='hide'><ul id='tool-Sickle' class='game-tool-layer-2'></ul></div>" +
             "</li>" +
             "<li>" +
-                "<h3 class='toggleContainer'>Scythes</h3>" +
-                "<ul id='tool-Scythe' class='game-tool-layer-2 hide'></ul>" +
+                "<div class='toggleContainer'><div>►</div><div>Scythes</div></div>" +
+                "<div class='hide'><ul id='tool-Scythe' class='game-tool-layer-2'></ul></div>" +
             "</li>" +
             "<li>" +
-                "<h3 class='toggleContainer'>Hammers</h3>" +
-                "<ul id='tool-Hammer' class='game-tool-layer-2 hide'></ul>" +
+                "<div class='toggleContainer'><div>►</div><div>Hammers</div></div>" +
+                "<div class='hide'><ul id='tool-Hammer' class='game-tool-layer-2'></ul></div>" +
             "</li>" +
             "<li>" +
-                "<h3 class='toggleContainer'>Hunting Equipment</h3>" +
-                "<ul id='tool-Hunting' class='game-tool-layer-2 hide'></ul>" +
+                "<div class='toggleContainer'><div>►</div><div>Hunting Equipment</div></div>" +
+                "<div class='hide'><ul id='tool-Hunting' class='game-tool-layer-2'></ul></div>" +
             "</li>" +
             "<li>" +
-                "<h3 class='toggleContainer'>Knives</h3>" +
-                "<ul id='tool-Knife' class='game-tool-layer-2 hide'></ul>" +
+                "<div class='toggleContainer'><div>►</div><div>Knives</div></div>" +
+                "<div class='hide'><ul id='tool-Knife' class='game-tool-layer-2'></ul></div>" +
             "</li>" +
             "<li>" +
-                "<h3 class='toggleContainer'>Fishing Equipment</h3>" +
-                "<ul id='tool-Fishing' class='game-tool-layer-2 hide'></ul>" +
+                "<div class='toggleContainer'><div>►</div><div>Fishing Equipment</div></div>" +
+                "<div class='hide'><ul id='tool-Fishing' class='game-tool-layer-2'></ul></div>" +
             "</li>" +
         "</ul>"
     );
@@ -2589,28 +2618,28 @@ function gameGenerateMachine() {
     $("#game-tab-machine").append(
         "<ul id='game-tab-machine-list' class='game-machine-layer-1'>" +
             "<li>" +
-                "<h3 class='toggleContainer'>Charcoal</h3>" +
-                "<ul id='machine-Charcoal' class='game-machine-layer-2 hide'></ul>" +
+                "<div class='toggleContainer'><div>►</div><div>Charcoal</div></div>" +
+                "<div class='hide'><ul id='machine-Charcoal' class='game-machine-layer-2'></ul></div>" +
             "</li>" +
             "<li>" +
-                "<h3 class='toggleContainer'>Chisels</h3>" +
-                "<ul id='machine-Chisel' class='game-machine-layer-2 hide'></ul>" +
+                "<div class='toggleContainer'><div>►</div><div>Chisels</div></div>" +
+                "<div class='hide'><ul id='machine-Chisel' class='game-machine-layer-2'></ul></div>" +
             "</li>" +
             "<li>" +
-                "<h3 class='toggleContainer'>Furnaces</h3>" +
-                "<ul id='machine-Furnace' class='game-machine-layer-2 hide'></ul>" +
+                "<div class='toggleContainer'><div>►</div><div>Furnaces</div></div>" +
+                "<div class='hide'><ul id='machine-Furnace' class='game-machine-layer-2'></ul></div>" +
             "</li>" +
             "<li>" +
-                "<h3 class='toggleContainer'>Saws</h3>" +
-                "<ul id='machine-Saw' class='game-machine-layer-2 hide'></ul>" +
+                "<div class='toggleContainer'><div>►</div><div>Saws</div></div>" +
+                "<div class='hide'><ul id='machine-Saw' class='game-machine-layer-2'></ul></div>" +
             "</li>" +
             "<li>" +
-                "<h3 class='toggleContainer'>Cranes</h3>" +
-                "<ul id='machine-Crane' class='game-machine-layer-2 hide'></ul>" +
+                "<div class='toggleContainer'><div>►</div><div>Cranes</div></div>" +
+                "<div class='hide'><ul id='machine-Crane' class='game-machine-layer-2'></ul></div>" +
             "</li>" +
             "<li>" +
-                "<h3 class='toggleContainer'>Crucibles</h3>" +
-                "<ul id='machine-Crucible' class='game-machine-layer-2 hide'></ul>" +
+                "<div class='toggleContainer'><div>►</div><div>Crucibles</div></div>" +
+                "<div class='hide'><ul id='machine-Crucible' class='game-machine-layer-2'></ul></div>" +
             "</li>" +
         "</ul>"
     );
@@ -2699,12 +2728,12 @@ function gameGenerateItem() {
     $("#game-tab-item").append(
         "<ul id='game-tab-item-list' class='game-item-layer-1'>" +
             "<li>" +
-                "<h3 class='toggleContainer'>Components</h3>" +
-                "<ul id='item-Component' class='game-item-layer-2 hide'></ul>" +
+                "<div class='toggleContainer'><div>►</div><div>Components</div></div>" +
+                "<div class='hide'><ul id='item-Component' class='game-item-layer-2'></ul></div>" +
             "</li>" +
             "<li>" +
-                "<h3 class='toggleContainer'>Engineering</h3>" +
-                "<ul id='item-Engineering' class='game-item-layer-2 hide'></ul>" +
+                "<div class='toggleContainer'><div>►</div><div>Engineering</div></div>" +
+                "<div class='hide'><ul id='item-Engineering' class='game-item-layer-2'></ul></div>" +
             "</li>" +
         "</ul>"
     );
@@ -2796,137 +2825,6 @@ function gameGenerateItem() {
     }
 }
 
-function gameGenerateTest() {
-    $("#game-tab-test").append(
-        "<ul id='game-tab-resource-list' class='game-resource-layer-1'>" +
-            "<li>" +
-                "<h3 class='toggleContainer'>Raw Materials</h3>" +
-                "<table id='test-RawMaterial' class='game-resource-layer-2'></table>" +
-            "</li>" +
-            "<li>" +
-                "<h3 class='toggleContainer'>Construction Materials</h3>" +
-                "<table id='test-Construction' class='game-resource-layer-2'></table>" +
-            "</li>" +
-            "<li>" +
-                "<h3 class='toggleContainer'>Fuel</h3>" +
-                "<table id='test-Fuel' class='game-resource-layer-2'></table>" +
-            "</li>" +
-            "<li>" +
-                "<h3 class='toggleContainer'>Ore</h3>" +
-                "<table id='test-Ore' class='game-resource-layer-2'></table>" +
-            "</li>" +
-            "<li>" +
-                "<h3 class='toggleContainer'>Metal Ingots</h3>" +
-                "<table id='test-Ingot' class='game-resource-layer-2'></table>" +
-            "</li>" +
-            "<li>" +
-                "<h3 class='toggleContainer'>Raw Food</h3>" +
-                "<table id='test-FoodRaw' class='game-resource-layer-2'></table>" +
-            "</li>" +
-            "<li>" +
-                "<h3 class='toggleContainer'>Ingredients</h3>" +
-                "<table id='test-FoodIngredient' class='game-resource-layer-2'></table>" +
-            "</li>" +
-            "<li>" +
-                "<h3 class='toggleContainer'>Cooked Food</h3>" +
-                "<table id='test-FoodCooked' class='game-resource-layer-2'></table>" +
-            "</li>" +
-        "</ul>"
-    );
-
-    for (var key in Resource) {
-        $("#test-" + key).append (
-            "<thead>" +
-                "<tr>" +
-                    "<th>" +
-                        "Name" +
-                    "</td>" +
-                    "<th class='right left-padding'>" +
-                        "Amount" +
-                    "</th>" +
-                    "<th class='right left-padding'>" +
-                        "Profit" +
-                    "</th>" +
-                "</tr>" +
-            "<thead>"
-        );
-        for (var subkey in Resource[key]) {
-            $("#test-" + key).append(
-                "<tr>" +
-                    "<td>" +
-                        Resource[key][subkey].publicName +
-                    "</td>" +
-                    "<td class='right left-padding'>" +
-                        "<span class='" + Resource[key][subkey].idName + "Amount'></span>/<span class='" + Resource[key][subkey].idName + "AmountCap'></span>" +
-                    "</td>" +
-                    "<td id='" + Resource[key][subkey].idName + "Profit' class='right left-padding tooltip'>" +
-                        "<span class='" + Resource[key][subkey].idName + "Profit'></span>" +
-                    "</td>" +
-                "</tr>"
-            );
-
-            $("#" + Resource[key][subkey].idName + "Profit").data({
-                class: "Resource",
-                subClass: key,
-                object: subkey,
-                tooltipContent: function () {
-                    var content = "<table class='vseperator'>" +
-                        "<tr>" +
-                            "<th>" +
-                                "Income" +
-                            "</th>" +
-                            "<th>" +
-                                "Expense" +
-                            "</th>" +
-                        "</tr>" +
-                        "<tr>" +
-                            "<td class='right'>";
-
-                    if (tooltipPath().income > 0) {
-                        content += "<span class='" + tooltipPath().idName + "Income'>+" + tooltipPath().income + "</span>";
-                    } else {
-                        content += "<span class='" + tooltipPath().idName + "Income'>" + tooltipPath().income + "</span>";
-                    }
-
-                    content +=  "</td>" +
-                                "<td class='right'>";
-                    if (tooltipPath().expense > 0) {
-                        content += "<span class='" + tooltipPath().idName + "Expense'>-" + tooltipPath().expense + "</span>";
-                    } else {
-                        content += "<span class='" + tooltipPath().idName + "Expense'>" + tooltipPath().expense + "</span>";
-                    }
-
-                    content += "</td>" +
-                        "</tr>" +
-                    "</table>"
-
-                    return content;
-                }
-            })
-
-            Resource[key][subkey].renderAmount();
-            Resource[key][subkey].renderAmountCap();
-            Resource[key][subkey].renderProfit();
-            Resource[key][subkey].renderIncome();
-            Resource[key][subkey].renderExpense();
-        }
-    }
-
-    $("#game-tab-resource-list").sortable({
-        placeholder: "ui-state-highlight",
-        start: function (e, ui) {
-            ui.placeholder.height(ui.item.height());
-            ui.placeholder.width(ui.item.width());
-        }
-    });
-    for (var key in Resource) {
-        $("#test-" + key + " tbody").sortable({
-            helper: sortHelper,
-            placeholder: "ui-state-highlight"
-        });
-    }
-}
-
 // Debugging Menu
 
 $(document).ready(function () {
@@ -2980,10 +2878,10 @@ function debugHTMLLoad() {
 };
 
 function debugChangeInputValue(num, id){
-    var v = parseInt(gid(id).value);
+    var v = parseInt($("#" + id).val());
     v = isNaN(v) ? 0 : v;
     v += num;
-    gid(id).value = v;
+    $("#" + id).val(v);
 }
 
 function debugGenerateResources(){
@@ -2997,7 +2895,7 @@ function debugGenerateResources(){
                     "<input type='text' class='debugInput' id='debugInput" + Resource[key][subkey].idName + "' value='0' />" +
                     "<button onclick='debugChangeInputValue(1, \"debugInput" + Resource[key][subkey].idName + "\")'>+</button>" +
                     "<button onclick='debugChangeInputValue(10, \"debugInput" + Resource[key][subkey].idName + "\")'>++</button>" +
-                    "<button onclick='Resource." + key + "." + subkey + ".changeAmount(parseInt(gid(\"debugInput" + Resource[key][subkey].idName + "\").value))'>Apply</button>" +
+                    "<button onclick='Resource." + key + "." + subkey + ".changeAmount(parseInt($(\"#debugInput" + Resource[key][subkey].idName + "\").val()))'>Apply</button>" +
                 "</div>"
             );
         }
@@ -3015,7 +2913,7 @@ function debugGenerateTools(){
                     "<input type='text' class='debugInput' id='debugInput" + Tool[key][subkey].idName + "' value='0' />" +
                     "<button onclick='debugChangeInputValue(1, \"debugInput" + Tool[key][subkey].idName + "\")'>+</button>" +
                     "<button onclick='debugChangeInputValue(10, \"debugInput" + Tool[key][subkey].idName + "\")'>++</button>" +
-                    "<button onclick='Tool." + key + "." + subkey + ".changeAmount(parseInt(gid(\"debugInput" + Tool[key][subkey].idName + "\").value))'>Apply</button>" +
+                    "<button onclick='Tool." + key + "." + subkey + ".changeAmount(parseInt($(\"#debugInput" + Tool[key][subkey].idName + "\").val()))'>Apply</button>" +
                 "</div>"
             )
         }
@@ -3033,7 +2931,7 @@ function debugGenerateBuildingPrimary(){
                     "<input type='text' class='debugInput' id='debugInput" + BuildingPrimary[key][subkey].idName + "' value='0' />" +
                     "<button onclick='debugChangeInputValue(1, \"debugInput" + BuildingPrimary[key][subkey].idName + "\")'>+</button>" +
                     "<button onclick='debugChangeInputValue(10, \"debugInput" + BuildingPrimary[key][subkey].idName + "\")'>++</button>" +
-                    "<button onclick='BuildingPrimary." + key + "." + subkey + ".changeAmount(parseInt(gid(\"debugInput" + BuildingPrimary[key][subkey].idName + "\").value))'>Apply</button>" +
+                    "<button onclick='BuildingPrimary." + key + "." + subkey + ".changeAmount(parseInt($(\"#debugInput" + BuildingPrimary[key][subkey].idName + "\").val()))'>Apply</button>" +
                 "</div>"
             );
         }
@@ -3051,7 +2949,7 @@ function debugGenerateBuildingFactory(){
                     "<input type='text' class='debugInput' id='debugInput" + BuildingFactory[key][subkey].idName + "' value='0' />" +
                     "<button onclick='debugChangeInputValue(1, \"debugInput" + BuildingFactory[key][subkey].idName + "\")'>+</button>" +
                     "<button onclick='debugChangeInputValue(10, \"debugInput" + BuildingFactory[key][subkey].idName + "\")'>++</button>" +
-                    "<button onclick='BuildingFactory." + key + "." + subkey + ".changeAmount(parseInt(gid(\"debugInput" + BuildingFactory[key][subkey].idName + "\").value))'>Apply</button>" +
+                    "<button onclick='BuildingFactory." + key + "." + subkey + ".changeAmount(parseInt($(\"#debugInput" + BuildingFactory[key][subkey].idName + "\").val()))'>Apply</button>" +
                 "</div>"
             );
         }
@@ -3069,7 +2967,7 @@ function debugGenerateBuildingHouse(){
                     "<input type='text' class='debugInput' id='debugInput" + BuildingHouse[key][subkey].idName + "' value='0' />" +
                     "<button onclick='debugChangeInputValue(1, \"debugInput" + BuildingHouse[key][subkey].idName + "\")'>+</button>" +
                     "<button onclick='debugChangeInputValue(10, \"debugInput" + BuildingHouse[key][subkey].idName + "\")'>++</button>" +
-                    "<button onclick='BuildingHouse." + key + "." + subkey + ".changeAmount(parseInt(gid(\"debugInput" + BuildingHouse[key][subkey].idName + "\").value))'>Apply</button>" +
+                    "<button onclick='BuildingHouse." + key + "." + subkey + ".changeAmount(parseInt($(\"#debugInput" + BuildingHouse[key][subkey].idName + "\").val()))'>Apply</button>" +
                 "</div>"
             );
         }

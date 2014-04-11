@@ -1,4 +1,5 @@
 body {
+    margin: 0px;
 }
 
 .hide {
@@ -90,10 +91,66 @@ button:active{
     padding: 5px;
 }
 
+div.toggleContainer {
+    border: 1px solid #ccc;
+    font-size: 14px;
+    font-weight: bold;
+}
+
+div.toggleContainer>div {
+    padding: 5px;
+    display: inline-table;
+}
+
+div.toggleContainer>div:last-child{
+    padding-left: 0px;
+}
+
+div.toggleContainer:hover {
+    background: #eee;
+}
+
 /*jQuery-ui fixes*/
 
 .ui-widget {
 	font-size: 12px;
+}
+
+.ui-tabs {
+    padding: 0px;
+}
+.ui-tabs .ui-tabs-nav {
+    padding: 0px;
+}
+
+/*Game Header*/
+
+#game-header {
+    top:  0px;
+    left: 0px;
+    position: fixed;
+    width: 100%;
+    height: 30px;
+    background: #fff;
+    padding: 5px;
+    border-bottom: 2px solid #111;
+    z-index: 99;
+    overflow: auto;
+}
+
+#game-header-filler {
+    top: 0px;
+    height: 71px;
+    width: 100%;
+}
+
+#game-tab-selector {
+    top: 42px;
+    position: fixed;
+    width: 100%;
+    background: #fff;
+    border: none; 
+    overflow: auto;
 }
 
 /*Game Frame*/
@@ -102,9 +159,7 @@ button:active{
     background: #fff; 
     border: none; 
 } 
-#game-tabs .scroller {
-    overflow: auto;
-}
+
 #game-tabs .ui-widget-header { 
     background: transparent; 
     border: none; 
@@ -136,12 +191,11 @@ button:active{
     list-style-type: none;
     margin: 0;
     padding: 0;
-    float: left; 
 }
 
 .game-resource-layer-2, .game-primary-layer-2, .game-factory-layer-2, .game-house-layer-2, .game-tool-layer-2, .game-machine-layer-2, .game-item-layer-2 {
     list-style-type: none; 
-    margin: 0; 
+    margin: 10px; 
     padding: 0; 
     overflow: hidden;
 }

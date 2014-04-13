@@ -2029,7 +2029,7 @@ function init(){
 
 function pageBuildFrame() {
     $("#game").append(
-        "<div id='game-header'></div>" +
+        "<center><div id='game-header'></div></center>" +
         "<div id='game-header-filler'></div>" +
         "<div id='game-content'></div>"
     );
@@ -2845,7 +2845,7 @@ function debugHTMLLoad() {
             "<div style='height: 21px'><div id='debug-button'>Debug</div></div>" +
             "<div id='debug-div'>" +
                 "<div id='debug-tabs'>" +
-                    "<div class='scroller'>" +
+                    "<div class='scroller'><center>" +
                         "<ul>" +
                             "<li><a href='#debug-tab-resources'>Resources</a></li>" +
                             "<li><a href='#debug-tab-tools'>Tools</a></li>" +
@@ -2853,7 +2853,7 @@ function debugHTMLLoad() {
                             "<li><a href='#debug-tab-factories'>Factory Buildings</a></li>" +
                             "<li><a href='#debug-tab-houses'>Housing</a></li>" +
                         "</ul>" +
-                    "</div>" +
+                    "</center></div>" +
                     "<div class='scroller content'>" +
                         "<div id='debug-tab-resources'>" +
                         "</div>" +
